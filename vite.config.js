@@ -13,13 +13,7 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 5173,
-    allowedHosts: [
-      'localhost',
-      'admin.moonlauncher.org',
-      'app.moonlauncher.org',
-      'login.moonlauncher.org',
-      '.moonlauncher.org',
-    ],
+    allowedHosts: true,
     proxy: {
       '/api': 'http://localhost:8000',
       '/media': 'http://localhost:8000',

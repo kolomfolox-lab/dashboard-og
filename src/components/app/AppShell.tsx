@@ -1,4 +1,4 @@
-﻿import { Bell, BookOpenText, ChevronDown, CreditCard, LayoutDashboard, LineChart, LockKeyhole, Palette, Settings2, Store, UsersRound, Waves } from 'lucide-react';
+import { Bell, BookOpenText, Boxes, ChevronDown, CreditCard, LayoutDashboard, LineChart, LockKeyhole, Palette, Settings2, Store, UsersRound, Waves } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { BrandMark } from '@/components/app/BrandMark';
@@ -20,6 +20,7 @@ const navByRole = {
     { to: '/dashboard', labelKey: 'nav_dashboard', fallback: 'Overview', icon: LayoutDashboard },
     { to: '/restaurants', labelKey: 'nav_restaurants', fallback: 'Restaurants', icon: Store },
     { to: '/tables', labelKey: 'nav_tables', fallback: 'Tables', icon: UsersRound },
+    { to: '/inventory', labelKey: 'nav_inventory', fallback: 'Inventory', icon: Boxes },
     { to: '/analytics', labelKey: 'nav_analytics', fallback: 'Analytics', icon: LineChart },
     { to: '/brand-studio', labelKey: 'nav_brand_studio', fallback: 'Brand Studio', icon: Palette },
     { to: '/online-menu-studio', labelKey: 'nav_online_menu', fallback: 'Online Menu', icon: BookOpenText },
@@ -30,6 +31,7 @@ const navByRole = {
     { to: '/dashboard', labelKey: 'nav_dashboard', fallback: 'Overview', icon: LayoutDashboard },
     { to: '/restaurants', labelKey: 'nav_restaurants', fallback: 'Operations', icon: Store },
     { to: '/tables', labelKey: 'nav_tables', fallback: 'Tables', icon: UsersRound },
+    { to: '/inventory', labelKey: 'nav_inventory', fallback: 'Inventory', icon: Boxes },
     { to: '/analytics', labelKey: 'nav_analytics', fallback: 'Performance', icon: LineChart },
     { to: '/users', labelKey: 'nav_team', fallback: 'Team', icon: UsersRound },
     { to: '/brand-studio', labelKey: 'nav_brand_studio', fallback: 'Brand Studio', icon: Palette },
@@ -65,6 +67,12 @@ export function AppShell({ title, subtitle, eyebrow, restaurants = [], selectedR
     CHAIN_OWNER: t('role_chain_owner', 'Chain owner'),
     RESTAURANT_OWNER: t('role_restaurant_owner', 'Restaurant owner'),
   };
+  const profileData = {
+    name: user?.full_name || t('profile_workspace_user', 'Workspace user'),
+    email: user?.email || 'admin@waitly.local',
+    subscription: user?.role === 'SUPER_ADMIN' ? t('profile_control', 'Control') : t('profile_owner', 'Owner'),
+    workspace: activeWorkspace,
+  };
   const links = navItems.map((item) => ({ label: t(item.labelKey, item.fallback), href: item.to, icon: <item.icon className="h-5 w-5 flex-shrink-0 text-white/72" /> }));
   const handleLogout = () => { logout(); navigate('/login'); };
   const openNotification = () => {
@@ -91,17 +99,14 @@ export function AppShell({ title, subtitle, eyebrow, restaurants = [], selectedR
                 {links.map((link, idx) => <SidebarLink key={idx} link={link} className={location.pathname === link.href ? 'rounded-2xl border border-white/10 bg-white/[0.08] px-3' : 'rounded-2xl px-3 hover:bg-white/[0.05]'} />)}
               </div>
             </div>
-            <div>
-              <div className="mb-4 rounded-[28px] border border-white/8 bg-black/15 p-4">
-                <div className="flex items-center gap-3">
-                  <div className="grid h-11 w-11 place-items-center rounded-2xl bg-[linear-gradient(135deg,rgba(125,211,252,0.3),rgba(52,211,153,0.15))]"><Waves className="h-5 w-5 text-[#8fd4ff]" /></div>
-                  <div>
-                    <div className="text-xs uppercase tracking-[0.26em] text-white/38">{t('shell_current_role', 'Current role')}</div>
-                    <div className="mt-1 font-display text-base text-white">{roleLabels[user?.role || ''] || t('shell_workspace_member', 'Workspace member')}</div>
-                  </div>
+            <div className="rounded-[28px] border border-white/8 bg-black/15 p-4">
+              <div className="flex items-center gap-3">
+                <div className="grid h-11 w-11 place-items-center rounded-2xl bg-[linear-gradient(135deg,rgba(125,211,252,0.3),rgba(52,211,153,0.15))]"><Waves className="h-5 w-5 text-[#8fd4ff]" /></div>
+                <div>
+                  <div className="text-xs uppercase tracking-[0.26em] text-white/38">{t('shell_current_role', 'Current role')}</div>
+                  <div className="mt-1 font-display text-base text-white">{roleLabels[user?.role || ''] || t('shell_workspace_member', 'Workspace member')}</div>
                 </div>
               </div>
-              <ProfileDropdown data={{ name: user?.full_name || t('profile_workspace_user', 'Workspace user'), email: user?.email || 'admin@waitly.local', subscription: user?.role === 'SUPER_ADMIN' ? t('profile_control', 'Control') : t('profile_owner', 'Owner'), workspace: activeWorkspace }} onSignOut={handleLogout} />
             </div>
           </SidebarBody>
         </Sidebar>
@@ -117,10 +122,11 @@ export function AppShell({ title, subtitle, eyebrow, restaurants = [], selectedR
                   </div>
                   <p className="mt-3 max-w-4xl text-sm leading-7 text-white/56">{subtitle}</p>
                 </div>
-                <div className="flex flex-col gap-3 lg:min-w-[420px] sm:flex-row sm:items-center sm:justify-end">
-                  <label className="flex items-center gap-2 rounded-2xl border border-white/10 bg-black/14 px-4 py-3 text-sm text-white/72"><span className="text-white/46">{t('shell_language', 'Language')}</span><div className="relative"><select value={locale} onChange={(event) => setLocale(event.target.value as 'ru' | 'uz')} className="appearance-none bg-transparent pr-7 text-sm font-semibold text-white outline-none"><option value="ru" className="bg-slate-900">RU</option><option value="uz" className="bg-slate-900">UZ</option></select><ChevronDown className="pointer-events-none absolute right-0 top-1/2 h-4 w-4 -translate-y-1/2 text-white/42" /></div></label>
+                <div className="flex flex-col gap-3 lg:min-w-[520px] sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
+                  <label className="flex items-center gap-2 rounded-2xl border border-white/10 bg-black/14 px-4 py-3 text-sm text-white/72"><span className="text-white/46">{t('shell_language', 'Language')}</span><div className="relative"><select value={locale} onChange={(event) => setLocale(event.target.value as 'ru' | 'en' | 'uz')} className="appearance-none bg-transparent pr-7 text-sm font-semibold text-white outline-none"><option value="ru" className="bg-slate-900">RU</option><option value="en" className="bg-slate-900">EN</option><option value="uz" className="bg-slate-900">UZ</option></select><ChevronDown className="pointer-events-none absolute right-0 top-1/2 h-4 w-4 -translate-y-1/2 text-white/42" /></div></label>
                   {restaurants.length > 0 && onRestaurantChange ? <label className="flex items-center gap-2 rounded-2xl border border-white/10 bg-black/14 px-4 py-3 text-sm text-white/72"><span className="text-white/46">{t('shell_workspace_select', 'Workspace')}</span><div className="relative"><select value={selectedRestaurantId} onChange={(event) => onRestaurantChange(event.target.value)} className="appearance-none bg-transparent pr-7 text-sm font-semibold text-white outline-none">{restaurants.map((restaurant) => <option key={restaurant.id} value={restaurant.id} className="bg-slate-900">{restaurant.name}</option>)}</select><ChevronDown className="pointer-events-none absolute right-0 top-1/2 h-4 w-4 -translate-y-1/2 text-white/42" /></div></label> : null}
                   <div className="relative"><Button variant="ghost" size="icon" className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10" onClick={openNotification}><Bell className="h-4 w-4 text-white transition-transform group-hover:scale-110" /><span className="absolute right-2 top-2 flex h-1.5 w-1.5 rounded-full bg-[#f97360]" /></Button></div>
+                  <ProfileDropdown className="w-full sm:w-auto" data={profileData} onSignOut={handleLogout} />
                   <div id="waitly-notification" className="pointer-events-none fixed bottom-8 right-8 z-[100] flex w-80 translate-y-full items-start gap-4 rounded-3xl border border-white/10 bg-[#0c1420] p-5 opacity-0 shadow-[0_20px_50px_rgba(0,0,0,0.4)] transition-all duration-500 ease-out"><div className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl border border-[#f97360]/20 bg-[#f97360]/10"><Waves className="h-5 w-5 text-[#f97360]" /></div><div><div className="text-xs font-bold uppercase tracking-widest text-white/30">Waitly Pulse</div><p className="mt-1 text-sm leading-relaxed text-white/80">{effectiveSubscriptionGate && !effectiveSubscriptionGate.active ? 'Subscription is inactive. Open the activation page to restore this workspace.' : t('shell_notifications', 'System sync successful. All core modules are running.')}</p></div></div>
                 </div>
               </div>

@@ -22,6 +22,51 @@ export interface AuthResponse {
   user: AppUser;
 }
 
+export interface OwnerInventoryIngredient {
+  id: string;
+  name: string;
+  unit: string;
+  quantity: string;
+  minimum_quantity: string;
+  is_active: boolean;
+}
+
+export interface OwnerInventoryStockRow extends OwnerInventoryIngredient {
+  ingredient_id: string;
+  is_low: boolean;
+  is_empty: boolean;
+  updated_at: string;
+}
+
+export interface OwnerInventoryMovement {
+  id: string;
+  ingredient: string;
+  unit: string;
+  movement_type: string;
+  before_quantity: string;
+  delta: string;
+  after_quantity: string;
+  source: string;
+  created_by?: string | null;
+  created_at: string;
+  created_at_display: string;
+}
+
+export interface OwnerInventoryResponse {
+  restaurant_id: string;
+  restaurant_name: string;
+  permissions: {
+    manager_can_write_off_stock: boolean;
+    chef_can_write_off_stock: boolean;
+    cook_can_view_recipes: boolean;
+  };
+  ingredients: OwnerInventoryIngredient[];
+  stock: OwnerInventoryStockRow[];
+  low_stock_count: number;
+  empty_stock_count: number;
+  movements: OwnerInventoryMovement[];
+}
+
 export interface TelegramLinkResponse {
   link_code: string;
   expires_at: string;
@@ -469,6 +514,14 @@ export const ownerAPI = {
   deleteTable: (tableId: string) => api.delete(`/owner/tables/${tableId}/`),
   getTableQr: (tableId: string) => `${resolvedBase}/owner/tables/${tableId}/qr/`,
   getTablesQrPdf: (restaurantId?: string) => `${resolvedBase}/owner/tables/qr-pdf/${restaurantId ? `?restaurant_id=${restaurantId}` : ''}`,
+  getInventory: (restaurantId?: string) =>
+    api.get<OwnerInventoryResponse>('/owner/inventory/', { params: restaurantId ? { restaurant_id: restaurantId } : {} }),
+  createIngredient: (payload: { restaurant_id: string; name: string; unit: string; minimum_quantity: string }) =>
+    api.post<OwnerInventoryIngredient>('/owner/inventory/ingredients/', payload),
+  addSupply: (payload: { restaurant_id: string; ingredient_id: string; quantity: string; unit_price?: string; note?: string }) =>
+    api.post<OwnerInventoryStockRow>('/owner/inventory/supply/', payload),
+  writeOffStock: (payload: { restaurant_id: string; ingredient_id: string; quantity: string; reason?: string; note?: string }) =>
+    api.post<OwnerInventoryStockRow>('/owner/inventory/write-off/', payload),
   getOrders: (restaurantId?: string, period = 'all') =>
     api.get('/owner/orders/today/', { params: { ...(restaurantId ? { restaurant_id: restaurantId } : {}), period, limit: 100 } }),
 };

@@ -1,13 +1,14 @@
-﻿import { createContext, useContext, useMemo, useState } from 'react';
+import { createContext, useContext, useMemo, useState } from 'react';
 
+import en from '@/locales/en.json';
 import ru from '@/locales/ru.json';
 import uz from '@/locales/uz.json';
 
-type Locale = 'ru' | 'uz';
+type Locale = 'ru' | 'en' | 'uz';
 type Messages = Record<string, string>;
 
 const STORAGE_KEY = 'waitly-locale';
-const dictionaries: Record<Locale, Messages> = { ru, uz };
+const dictionaries: Record<Locale, Messages> = { ru, en, uz };
 
 interface LocaleContextValue {
   locale: Locale;
@@ -20,6 +21,7 @@ const LocaleContext = createContext<LocaleContextValue | null>(null);
 export function LocaleProvider({ children }: { children: React.ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved === 'en') return 'en';
     return saved === 'uz' ? 'uz' : 'ru';
   });
 
