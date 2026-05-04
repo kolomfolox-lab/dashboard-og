@@ -1,5 +1,5 @@
 ﻿import { useEffect, useState } from 'react';
-import { BadgeCheck, Building2, Mail, Pencil, RefreshCcw, ShieldPlus, Store, Trash2, UserRound, UsersRound } from 'lucide-react';
+import { BadgeCheck, Building2, Mail, Pencil, Plus, ShieldPlus, Store, Trash2, UserRound, UsersRound, X } from 'lucide-react';
 
 import { AppShell } from '@/components/app/AppShell';
 import { DataTable } from '@/components/app/DataTable';
@@ -19,6 +19,7 @@ function normalizeRows(payload: any) {
 }
 
 const STAFF_ROLES = ['WAITER', 'HEAD_WAITER', 'HOSTESS', 'CHEF', 'COOK'];
+const OWNER_ROLES = ['RESTAURANT_OWNER', 'CHAIN_OWNER'];
 const emptyForm = {
   id: '',
   full_name: '',
@@ -37,6 +38,7 @@ export default function UsersPage() {
   const [info, setInfo] = useState('');
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState(emptyForm);
+  const [staffDialogOpen, setStaffDialogOpen] = useState(false);
   const isSuperAdmin = user?.role === 'SUPER_ADMIN';
   const showSubscriptionWarning = user?.role === 'RESTAURANT_OWNER' && workspace.selectedRestaurant?.subscription_active === false;
 
@@ -69,7 +71,14 @@ export default function UsersPage() {
   };
 
   const resetForm = () => {
-    setForm(emptyForm);
+    setForm({ ...emptyForm, role: isSuperAdmin ? 'RESTAURANT_OWNER' : 'WAITER' });
+  };
+
+  const openCreateStaff = () => {
+    resetForm();
+    setError('');
+    setInfo('');
+    setStaffDialogOpen(true);
   };
 
   const handleEdit = (row: any) => {
@@ -78,14 +87,15 @@ export default function UsersPage() {
       full_name: row.full_name || '',
       phone_number: row.phone_number || row.phone || '',
       email: row.email || '',
-      role: row.role || 'WAITER',
+      role: row.role_code || row.role || (isSuperAdmin ? 'RESTAURANT_OWNER' : 'WAITER'),
     });
     setInfo('');
     setError('');
+    setStaffDialogOpen(true);
   };
 
   const handleSaveStaff = async () => {
-    if (!workspace.selectedRestaurantId) {
+    if (!isSuperAdmin && !workspace.selectedRestaurantId) {
       setError(locale === 'uz' ? 'Avval restoran tanlang.' : 'Сначала выбери ресторан.');
       return;
     }
@@ -98,7 +108,24 @@ export default function UsersPage() {
     setError('');
     setInfo('');
     try {
-      if (form.id) {
+      if (isSuperAdmin) {
+        if (form.id) {
+          await adminAPI.updateOwner(form.id, {
+            full_name: form.full_name.trim(),
+            email: form.email.trim() || undefined,
+            role: form.role,
+          });
+          setInfo(locale === 'uz' ? 'Owner yangilandi.' : 'Владелец обновлен.');
+        } else {
+          await adminAPI.createOwner({
+            full_name: form.full_name.trim(),
+            phone_number: form.phone_number.trim(),
+            email: form.email.trim() || undefined,
+            role: form.role,
+          });
+          setInfo(locale === 'uz' ? 'Owner qoshildi.' : 'Владелец добавлен.');
+        }
+      } else if (form.id) {
         await ownerAPI.updateStaff(form.id, {
           full_name: form.full_name.trim(),
           role: form.role,
@@ -115,6 +142,7 @@ export default function UsersPage() {
         setInfo(locale === 'uz' ? 'Staff qoshildi.' : 'Сотрудник добавлен.');
       }
       resetForm();
+      setStaffDialogOpen(false);
       await load();
     } catch (err: any) {
       setError(err?.response?.data?.error || (locale === 'uz' ? 'Saqlab bolmadi.' : 'Не удалось сохранить сотрудника.'));
@@ -127,8 +155,17 @@ export default function UsersPage() {
     try {
       setError('');
       setInfo('');
-      await ownerAPI.updateStaff(row.id, { is_active: !row.is_active });
-      setInfo(!row.is_active ? 'Staff activated.' : 'Staff deactivated.');
+      if (isSuperAdmin) {
+        await adminAPI.updateOwner(row.id, {
+          full_name: row.full_name,
+          email: row.email || undefined,
+          role: row.role_code || row.role,
+          is_active: !row.is_active,
+        });
+      } else {
+        await ownerAPI.updateStaff(row.id, { is_active: !row.is_active });
+      }
+      setInfo(isSuperAdmin ? (!row.is_active ? 'Owner activated.' : 'Owner deactivated.') : (!row.is_active ? 'Staff activated.' : 'Staff deactivated.'));
       await load();
     } catch (err: any) {
       setError(err?.response?.data?.error || 'Could not update staff status.');
@@ -136,16 +173,20 @@ export default function UsersPage() {
   };
 
   const handleDeleteStaff = async (row: any) => {
-    if (!window.confirm(`Delete ${row.full_name || 'this staff member'}?`)) return;
+    if (!window.confirm(`Delete ${row.full_name || (isSuperAdmin ? 'this owner' : 'this staff member')}?`)) return;
     try {
       setError('');
       setInfo('');
-      await ownerAPI.deleteStaff(row.id);
+      if (isSuperAdmin) {
+        await adminAPI.deleteOwner(row.id);
+      } else {
+        await ownerAPI.deleteStaff(row.id);
+      }
       if (form.id === row.id) resetForm();
-      setInfo('Staff member deleted.');
+      setInfo(isSuperAdmin ? 'Owner deleted.' : 'Staff member deleted.');
       await load();
     } catch (err: any) {
-      setError(err?.response?.data?.error || 'Could not delete staff.');
+      setError(err?.response?.data?.error || (isSuperAdmin ? 'Could not delete owner.' : 'Could not delete staff.'));
     }
   };
 
@@ -180,40 +221,69 @@ export default function UsersPage() {
           <MetricCard title={locale === 'uz' ? 'Joriy rol' : 'Текущая роль'} value={user?.role || 'Member'} note={locale === 'uz' ? 'Kirish darajasi' : 'Уровень доступа'} icon={UserRound} tone="sand" />
         </div>
 
-        {!isSuperAdmin ? (
-          <Panel title={form.id ? 'Edit staff member' : 'Add staff member'} eyebrow="Owner action" description="Owners can add waiters, hostesses, cooks, and other staff directly from React again.">
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              <InlineField label="Full name" value={form.full_name} onChange={(value) => setForm((current) => ({ ...current, full_name: value }))} placeholder="Ivan Perrdunov" />
-              <InlineField label="Phone number" value={form.phone_number} onChange={(value) => setForm((current) => ({ ...current, phone_number: value }))} placeholder="+998 90 000 00 00" disabled={Boolean(form.id)} />
-              <InlineField label="Email" value={form.email} onChange={(value) => setForm((current) => ({ ...current, email: value }))} placeholder="name@example.com" disabled={Boolean(form.id)} />
-              <label className="block rounded-[24px] border border-white/8 bg-black/12 p-4">
-                <div className="text-xs uppercase tracking-[0.24em] text-white/40">Role</div>
-                <select value={form.role} onChange={(event) => setForm((current) => ({ ...current, role: event.target.value }))} className="mt-3 w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white outline-none">
-                  {STAFF_ROLES.map((role) => <option key={role} value={role} className="bg-[#09131e]">{role}</option>)}
-                </select>
-              </label>
+        {staffDialogOpen ? (
+          <div className="fixed inset-0 z-[120] grid place-items-center bg-black/62 px-4 py-6 backdrop-blur-xl" onClick={() => { if (!saving) setStaffDialogOpen(false); }}>
+            <div className="w-full max-w-2xl rounded-[34px] border border-white/12 bg-[#0d1825] p-5 shadow-[0_30px_120px_rgba(0,0,0,0.5)]" onClick={(event) => event.stopPropagation()}>
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[#8fd4ff]">{isSuperAdmin ? 'Quick owner' : 'Quick staff'}</div>
+                  <h2 className="mt-2 font-display text-3xl text-white">
+                    {form.id
+                      ? isSuperAdmin
+                        ? (locale === 'uz' ? 'Ownerni tahrirlash' : 'Редактировать владельца')
+                        : (locale === 'uz' ? 'Xodimni tahrirlash' : 'Редактировать сотрудника')
+                      : isSuperAdmin
+                      ? (locale === 'uz' ? 'Yangi owner' : 'Новый владелец')
+                      : (locale === 'uz' ? 'Yangi xodim' : 'Новый сотрудник')}
+                  </h2>
+                  <p className="mt-2 text-sm leading-6 text-white/56">{isSuperAdmin ? (locale === 'uz' ? 'Owner akkauntini yarating. Keyin unga restoran yoki tarmoq biriktirish mumkin.' : 'Создай owner-аккаунт. Потом к нему можно привязать ресторан или сеть.') : (locale === 'uz' ? 'Kerakli minimal ma`lumotlarni kiriting. Taklif email bo`lsa yuboriladi.' : 'Только нужные поля. Если email указан, можно отправить приглашение.')}</p>
+                </div>
+                <Button variant="ghost" size="icon" onClick={() => setStaffDialogOpen(false)} disabled={saving}>
+                  <X className="h-5 w-5" />
+                </Button>
+              </div>
+
+              <div className="mt-5 grid gap-4 md:grid-cols-2">
+                <InlineField label={locale === 'uz' ? 'Ism' : 'Имя'} value={form.full_name} onChange={(value) => setForm((current) => ({ ...current, full_name: value }))} placeholder="Ivan Perrdunov" />
+                <InlineField label={locale === 'uz' ? 'Telefon' : 'Телефон'} value={form.phone_number} onChange={(value) => setForm((current) => ({ ...current, phone_number: value }))} placeholder="+998 90 000 00 00" disabled={Boolean(form.id)} />
+                <InlineField label="Email" value={form.email} onChange={(value) => setForm((current) => ({ ...current, email: value }))} placeholder="name@example.com" disabled={Boolean(form.id)} />
+                <label className="block rounded-[24px] border border-white/8 bg-black/12 p-4">
+                  <div className="text-xs uppercase tracking-[0.24em] text-white/40">{locale === 'uz' ? 'Rol' : 'Роль'}</div>
+                  <select value={form.role} onChange={(event) => setForm((current) => ({ ...current, role: event.target.value }))} className="mt-3 w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white outline-none">
+                    {(isSuperAdmin ? OWNER_ROLES : STAFF_ROLES).map((role) => <option key={role} value={role} className="bg-[#09131e]">{role}</option>)}
+                  </select>
+                </label>
+              </div>
+
+              {staffDialogOpen && error ? <div className="mt-4 rounded-[24px] border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-100">{error}</div> : null}
+              {staffDialogOpen && info ? <div className="mt-4 rounded-[24px] border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm text-emerald-100">{info}</div> : null}
+
+              <div className="mt-5 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                <Button variant="outline" onClick={() => { resetForm(); setError(''); setInfo(''); setStaffDialogOpen(false); }} disabled={saving}>
+                  {locale === 'uz' ? 'Bekor qilish' : 'Отмена'}
+                </Button>
+                <Button onClick={() => void handleSaveStaff()} disabled={saving || (!isSuperAdmin && !workspace.selectedRestaurantId)} className="min-w-[190px]">
+                  <ShieldPlus className="mr-2 h-4 w-4" />
+                  {saving ? (locale === 'uz' ? 'Saqlanmoqda...' : 'Сохраняю...') : form.id ? (locale === 'uz' ? 'Saqlash' : 'Сохранить') : (locale === 'uz' ? 'Qo`shish' : 'Добавить')}
+                </Button>
+              </div>
             </div>
-            <div className="mt-4 flex flex-wrap gap-3">
-              <Button onClick={() => void handleSaveStaff()} disabled={saving || !workspace.selectedRestaurantId}>
-                <ShieldPlus className="mr-2 h-4 w-4" />
-                {saving ? 'Saving...' : form.id ? 'Save staff' : 'Add staff'}
-              </Button>
-              <Button variant="secondary" onClick={() => { resetForm(); setError(''); setInfo(''); }}>
-                Reset
-              </Button>
-              <Button variant="outline" onClick={() => void load()} disabled={loading}>
-                <RefreshCcw className="mr-2 h-4 w-4" />
-                Reload
-              </Button>
-            </div>
-            {error ? <div className="mt-4 rounded-[24px] border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-100">{error}</div> : null}
-            {info ? <div className="mt-4 rounded-[24px] border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm text-emerald-100">{info}</div> : null}
-          </Panel>
+          </div>
         ) : null}
 
-        <Panel title={isSuperAdmin ? (locale === 'uz' ? 'Owner katalogi' : 'Каталог владельцев') : (locale === 'uz' ? 'Jamoa royxati' : 'Список команды')} eyebrow={locale === 'uz' ? 'Royxat' : 'Список'} description={isSuperAdmin ? (locale === 'uz' ? 'Superadmin bu yerda faqat chain owner va restaurant ownerlarni koradi.' : 'Суперадмин здесь видит только chain owner и restaurant owner.') : (locale === 'uz' ? 'Joriy restoran boyicha staff royxati.' : 'Список staff по текущему ресторану с управлением.') }>
-          {isSuperAdmin && error ? <div className="mb-4 rounded-[24px] border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-100">{error}</div> : null}
-          {isSuperAdmin && info ? <div className="mb-4 rounded-[24px] border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm text-emerald-100">{info}</div> : null}
+        <Panel
+          title={isSuperAdmin ? (locale === 'uz' ? 'Owner katalogi' : 'Каталог владельцев') : (locale === 'uz' ? 'Jamoa royxati' : 'Список команды')}
+          eyebrow={locale === 'uz' ? 'Royxat' : 'Список'}
+          description={isSuperAdmin ? (locale === 'uz' ? 'Superadmin bu yerda faqat chain owner va restaurant ownerlarni koradi.' : 'Суперадмин здесь видит только chain owner и restaurant owner.') : (locale === 'uz' ? 'Joriy restoran boyicha staff royxati.' : 'Список staff по текущему ресторану с управлением.') }
+          action={
+            <Button onClick={openCreateStaff} disabled={!isSuperAdmin && !workspace.selectedRestaurantId} className="h-11 px-5">
+              <Plus className="mr-2 h-4 w-4" />
+              {locale === 'uz' ? 'Qo`shish' : 'Добавить'}
+            </Button>
+          }
+        >
+          {!staffDialogOpen && error ? <div className="mb-4 rounded-[24px] border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-100">{error}</div> : null}
+          {!staffDialogOpen && info ? <div className="mb-4 rounded-[24px] border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm text-emerald-100">{info}</div> : null}
           <DataTable
             rows={rows}
             emptyMessage={loading ? (locale === 'uz' ? 'Yuklanmoqda...' : 'Загрузка...') : (locale === 'uz' ? 'Malumot topilmadi.' : 'Данные не найдены.')}
@@ -224,6 +294,26 @@ export default function UsersPage() {
               { label: locale === 'uz' ? 'Rol' : 'Роль', key: 'role' },
               { label: locale === 'uz' ? 'Tarmoqlar' : 'Сетей', key: 'chains', render: (row) => <div className="inline-flex items-center gap-2"><Building2 className="h-4 w-4 text-[#8fd4ff]" /> {row.chains ?? 0}</div> },
               { label: locale === 'uz' ? 'Restoranlar' : 'Ресторанов', key: 'restaurants', render: (row) => <div className="inline-flex items-center gap-2"><Store className="h-4 w-4 text-[#ffb78f]" /> {row.restaurants ?? 0}</div> },
+              { label: locale === 'uz' ? 'Holat' : 'Статус', key: 'is_active', render: (row) => row.is_active !== false ? (locale === 'uz' ? 'Faol' : 'Активен') : (locale === 'uz' ? 'Nofaol' : 'Неактивен') },
+              {
+                label: locale === 'uz' ? 'Amallar' : 'Действия',
+                key: 'id',
+                render: (row) => (
+                  <div className="flex flex-wrap gap-2">
+                    <Button variant="secondary" size="sm" onClick={() => handleEdit(row)}>
+                      <Pencil className="mr-2 h-3.5 w-3.5" />
+                      Edit
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => void handleToggleActive(row)}>
+                      {row.is_active !== false ? 'Disable' : 'Enable'}
+                    </Button>
+                    <Button variant="destructive" size="sm" onClick={() => void handleDeleteStaff(row)}>
+                      <Trash2 className="mr-2 h-3.5 w-3.5" />
+                      Delete
+                    </Button>
+                  </div>
+                ),
+              },
             ] : [
               { label: locale === 'uz' ? 'Ism' : 'Имя', key: 'full_name', render: (row) => <div className="font-semibold text-white">{row.full_name || (locale === 'uz' ? 'Nomsiz foydalanuvchi' : 'Без имени')}</div> },
               { label: locale === 'uz' ? 'Telefon' : 'Телефон', key: 'phone_number', render: (row) => row.phone_number || row.phone || '—' },

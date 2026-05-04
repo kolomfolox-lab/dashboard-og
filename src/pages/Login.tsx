@@ -58,9 +58,9 @@ export default function LoginPage() {
         }
       } else if (mode === 'code') {
         if (step === 'input') {
-          await sendOtp(identifier.trim());
+          const response = await sendOtp(identifier.trim());
           setStep('verify');
-          setInfo(locale === 'uz' ? 'Kod emailga yuborildi.' : 'Код отправлен на email.');
+          setInfo(response?.debug_code ? `SMTP fallback code: ${response.debug_code}` : (locale === 'uz' ? 'Kod emailga yuborildi.' : 'Код отправлен на email.'));
         } else {
           await verifyOtp({ email: identifier.trim(), code: otp.trim() });
           navigate('/dashboard', { replace: true });
@@ -231,7 +231,14 @@ export default function LoginPage() {
                           try {
                             if (mode === 'telegram') await requestTelegramOtp(identifier.trim());
                             else if (mode === 'forgot') await requestTelegramPasswordReset(identifier.trim());
-                            else await sendOtp(identifier.trim());
+                            else {
+                              const response = await sendOtp(identifier.trim());
+                              if (response?.debug_code) {
+                                setInfo(`SMTP fallback code: ${response.debug_code}`);
+                                setOtp('');
+                                return;
+                              }
+                            }
                             setInfo(locale === 'uz' ? 'Yangi kod yuborildi.' : 'Новый код отправлен.');
                             setOtp('');
                           } catch (err: any) {

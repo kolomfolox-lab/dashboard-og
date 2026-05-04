@@ -5,6 +5,7 @@ import { AppShell } from '@/components/app/AppShell';
 import { BarChartBlock, DoughnutChartBlock, LineChartBlock } from '@/components/app/Charts';
 import { DataTable } from '@/components/app/DataTable';
 import { MetricCard } from '@/components/app/MetricCard';
+import { OwnerComparisonStrip, type OwnerComparisonItem } from '@/components/app/OwnerComparisonStrip';
 import { Panel } from '@/components/app/Panel';
 import { SubscriptionExpired } from '@/components/app/SubscriptionExpired';
 import { VideoSplashLoader } from '@/components/app/VideoSplashLoader';
@@ -45,8 +46,8 @@ export default function DashboardPage() {
           return;
         }
 
-        if (user?.role === 'RESTAURANT_OWNER' && workspace.selectedRestaurantId) {
-          if (workspace.selectedRestaurant?.subscription_active === false) {
+        if ((user?.role === 'RESTAURANT_OWNER' || user?.role === 'CHAIN_OWNER') && workspace.selectedRestaurantId) {
+          if (user?.role === 'RESTAURANT_OWNER' && workspace.selectedRestaurant?.subscription_active === false) {
             if (active) {
               setStats(null);
               setOrders([]);
@@ -64,11 +65,6 @@ export default function DashboardPage() {
             setOrders(ordersResponse.data || []);
           }
           return;
-        }
-
-        if (user?.role === 'CHAIN_OWNER' && active) {
-          setStats(null);
-          setOrders([]);
         }
       } catch (err: any) {
         if (active) {
@@ -161,6 +157,49 @@ export default function DashboardPage() {
     }),
     [locale, stats],
   );
+
+  const ownerComparisonItems = useMemo<OwnerComparisonItem[]>(() => {
+    const days = stats?.daily_revenue || [];
+    const lastDay = days[days.length - 1] || {};
+    const previousDay = days[days.length - 2] || {};
+    const revenueToday = Number(stats?.revenue_today ?? lastDay.revenue ?? 0);
+    const revenueYesterday = Number(previousDay.revenue || 0);
+    const revenueAverage = Number(stats?.revenue_30_days || 0) / 30;
+    const ordersToday = Number(stats?.orders_today || lastDay.orders || 0);
+    const ordersAverage = Number(stats?.orders_30_days || 0) / 30;
+    const topStaff = stats?.staff_performance?.[0];
+
+    return [
+      {
+        label: locale === 'uz' ? 'Bugun vs kecha' : 'Сегодня vs вчера',
+        value: formatMoney(revenueToday),
+        detail: locale === 'uz' ? `${formatMoney(revenueYesterday)} kecha` : `${formatMoney(revenueYesterday)} вчера`,
+        delta: percentDelta(revenueToday, revenueYesterday),
+        tone: 'coral',
+      },
+      {
+        label: locale === 'uz' ? 'Bugun vs o`rtacha' : 'Сегодня vs среднее',
+        value: formatMoney(revenueToday),
+        detail: locale === 'uz' ? `${formatMoney(revenueAverage)} kunlik o'rtacha` : `${formatMoney(revenueAverage)} среднее за день`,
+        delta: percentDelta(revenueToday, revenueAverage),
+        tone: 'sand',
+      },
+      {
+        label: locale === 'uz' ? 'Buyurtmalar' : 'Заказы',
+        value: ordersToday,
+        detail: locale === 'uz' ? `${ordersAverage.toFixed(1)} kunlik o'rtacha` : `${ordersAverage.toFixed(1)} среднее за день`,
+        delta: percentDelta(ordersToday, ordersAverage),
+        tone: 'cyan',
+      },
+      {
+        label: locale === 'uz' ? 'Top xodim' : 'Топ сотрудник',
+        value: topStaff?.full_name || (locale === 'uz' ? 'Hali yo`q' : 'Пока нет'),
+        detail: topStaff ? `${formatMoney(topStaff.revenue)} · ${topStaff.delivered_orders || 0} ${locale === 'uz' ? 'buyurtma' : 'заказов'}` : (locale === 'uz' ? 'Smena ma`lumotlari kutilmoqda' : 'Ждем данные по сменам'),
+        delta: percentDelta(Number(topStaff?.revenue || 0), Number(stats?.revenue_30_days || 0) / Math.max(Number(stats?.staff_count || 1), 1)),
+        tone: 'mint',
+      },
+    ];
+  }, [locale, stats]);
 
   const platformChainData = useMemo(
     () => ({
@@ -284,25 +323,45 @@ export default function DashboardPage() {
     return (
       <AppShell
         title={workspace.profile?.chains?.[0]?.name || 'Chain Hub'}
-        subtitle={locale === 'uz' ? 'Bir oynadan bir nechta restoran nuqtalarini boshqaring.' : 'Управляйте несколькими ресторанами из одного понятного интерфейса.'}
+        subtitle={locale === 'uz' ? 'Bir oynadan filiallar, sotuvlar va jamoa ritmini ko`ring.' : 'Смотрите филиалы, продажи и ритм команды из одного интерфейса.'}
         eyebrow={locale === 'uz' ? 'Tarmoq boshqaruvi' : 'Управление сетью'}
         restaurants={workspace.restaurants}
         selectedRestaurantId={workspace.selectedRestaurantId}
         onRestaurantChange={workspace.setSelectedRestaurantId}
       >
-        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-          {(workspace.restaurants || []).map((restaurant: any) => (
-            <Panel key={restaurant.id} title={restaurant.name} eyebrow={locale === 'uz' ? 'Filial' : 'Филиал'} description={`Slug: ${restaurant.slug}`} className="h-full">
-              <div className="flex flex-col gap-4">
-                <div className="flex items-center justify-between rounded-2xl border border-white/5 bg-white/5 p-4 text-sm">
-                  <span className="text-white/40 font-medium">{locale === 'uz' ? 'Obuna holati' : 'Статус подписки'}</span>
-                  <span className={restaurant.subscription_active ? 'text-emerald-400 font-bold uppercase tracking-widest text-[10px]' : 'text-red-400 font-bold uppercase tracking-widest text-[10px]'}>
-                    {restaurant.subscription_active ? (locale === 'uz' ? 'Faol' : 'Активна') : locale === 'uz' ? 'Tugagan' : 'Неактивна'}
-                  </span>
-                </div>
-              </div>
+        <div className="space-y-6">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <MetricCard title={locale === 'uz' ? 'Filiallar' : 'Филиалы'} value={workspace.restaurants.length || 0} note={locale === 'uz' ? 'Tarmoq ichidagi nuqtalar' : 'Точки внутри сети'} icon={Store} tone="coral" />
+            <MetricCard title={locale === 'uz' ? 'Tanlangan tushum' : 'Выручка выбранного'} value={formatMoney(stats?.revenue_today)} note={locale === 'uz' ? 'Bugungi restoran' : 'Сегодня по ресторану'} icon={DollarSign} tone="sand" />
+            <MetricCard title={locale === 'uz' ? 'Buyurtmalar' : 'Заказы'} value={stats?.orders_today || 0} note={locale === 'uz' ? 'Bugungi oqim' : 'Сегодняшний поток'} icon={ShoppingBag} tone="cyan" />
+            <MetricCard title={locale === 'uz' ? 'Smenada' : 'На смене'} value={stats?.active_staff_now || 0} note={workspace.selectedRestaurant?.name || (locale === 'uz' ? 'Tanlangan restoran' : 'Выбранный ресторан')} icon={UsersRound} tone="mint" />
+          </div>
+
+          <OwnerComparisonStrip items={ownerComparisonItems} />
+
+          <div className="grid gap-6 xl:grid-cols-3">
+            <Panel title={locale === 'uz' ? 'Tanlangan filial dinamikasi' : 'Динамика выбранного филиала'} eyebrow={locale === 'uz' ? 'Savdo' : 'Продажи'} className="xl:col-span-2">
+              <div className="h-[360px]"><LineChartBlock data={ownerRevenueData} /></div>
             </Panel>
-          ))}
+            <Panel title={locale === 'uz' ? 'Buyurtma holatlari' : 'Статусы заказов'} eyebrow={locale === 'uz' ? 'Jarayon' : 'Процесс'}>
+              <div className="h-[360px]"><DoughnutChartBlock data={ownerStatusData} /></div>
+            </Panel>
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+            {(workspace.restaurants || []).map((restaurant: any) => (
+              <Panel key={restaurant.id} title={restaurant.name} eyebrow={locale === 'uz' ? 'Filial' : 'Филиал'} description={`Slug: ${restaurant.slug}`} className="h-full">
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-center justify-between rounded-2xl border border-white/5 bg-white/5 p-4 text-sm">
+                    <span className="text-white/40 font-medium">{locale === 'uz' ? 'Obuna holati' : 'Статус подписки'}</span>
+                    <span className={restaurant.subscription_active ? 'text-emerald-400 font-bold uppercase tracking-widest text-[10px]' : 'text-red-400 font-bold uppercase tracking-widest text-[10px]'}>
+                      {restaurant.subscription_active ? (locale === 'uz' ? 'Faol' : 'Активна') : locale === 'uz' ? 'Tugagan' : 'Неактивна'}
+                    </span>
+                  </div>
+                </div>
+              </Panel>
+            ))}
+          </div>
         </div>
       </AppShell>
     );
@@ -331,6 +390,8 @@ export default function DashboardPage() {
             tone="sand"
           />
         </div>
+
+        <OwnerComparisonStrip items={ownerComparisonItems} />
 
         <div className="grid gap-6 xl:grid-cols-3">
           <Panel title={locale === 'uz' ? 'Tushum dinamikasi' : 'Динамика выручки'} eyebrow={locale === 'uz' ? 'Savdo' : 'Продажи'} className="xl:col-span-2">
@@ -411,6 +472,11 @@ export default function DashboardPage() {
       </div>
     </AppShell>
   );
+}
+
+function percentDelta(current: number, baseline: number) {
+  if (!baseline) return current ? 100 : null;
+  return ((current - baseline) / Math.abs(baseline)) * 100;
 }
 
 

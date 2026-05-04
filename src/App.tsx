@@ -21,6 +21,7 @@ import GuestTrackingPage from '@/pages/public/GuestTrackingPage.tsx';
 import OnlineMenuPage from '@/pages/public/OnlineMenuPage.tsx';
 import ReviewsHubPage from '@/pages/public/ReviewsHubPage.tsx';
 import ReviewsRestaurantPage from '@/pages/public/ReviewsRestaurantPage.tsx';
+import TelegramMiniAppPage from '@/pages/public/TelegramMiniAppPage.tsx';
 import { isLocalHost, isMarketingHost, isReviewHubHost, shouldUseReviewsRoot } from '@/lib/publicHost';
 
 let authSplashShown = false;
@@ -73,6 +74,8 @@ function AppRoutes() {
       <Route path="/landing" element={<LandingPage />} />
       <Route path="/tv/:restaurantSlug/:kitchenToken" element={<KitchenDisplayPage />} />
       <Route path="/qr/:restaurantSlug/table:tableNumber/*" element={<GuestTrackingPage />} />
+      <Route path="/telegram-mini-app" element={<TelegramMiniAppPage />} />
+      <Route path="/telegram-mini-app/:restaurantSlug/table:tableNumber" element={<TelegramMiniAppPage />} />
       <Route path="/menu/:restaurantSlug/*" element={<OnlineMenuPage />} />
       <Route path="/restaurants/:restaurantSubdomain/*" element={<ReviewsRestaurantPage />} />
       <Route path="/chains/:chainSubdomain/:restaurantSlug/*" element={<ReviewsRestaurantPage />} />

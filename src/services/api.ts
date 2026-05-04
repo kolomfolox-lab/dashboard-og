@@ -22,6 +22,47 @@ export interface AuthResponse {
   user: AppUser;
 }
 
+export interface TelegramMiniAppAuthResponse extends AuthResponse {
+  telegram_user: {
+    id: number;
+    username: string;
+    first_name: string;
+  };
+}
+
+export interface TelegramMiniAppMenuItem {
+  id: string;
+  title: string;
+  description: string;
+  price: string;
+  is_available: boolean;
+  category?: string | null;
+}
+
+export interface TelegramMiniAppMenuResponse {
+  restaurant: {
+    id: string;
+    name: string;
+    address: string;
+  };
+  table?: {
+    id: string;
+    number: string;
+  } | null;
+  currency: 'UZS' | string;
+  items: TelegramMiniAppMenuItem[];
+}
+
+export interface TelegramMiniAppWaiterCallResponse {
+  id: string;
+  table_id: string;
+  table_number: string;
+  restaurant_id: string;
+  telegram_user_id?: number | null;
+  status: string;
+  created_at: string;
+}
+
 export interface OwnerInventoryIngredient {
   id: string;
   name: string;
@@ -443,6 +484,7 @@ api.interceptors.request.use((config) => {
 
 export const authAPI = {
   loginWithPassword: (payload: { phone_number: string; password: string }) => api.post<AuthResponse>('/auth/login/', payload),
+  loginWithTelegramMiniApp: (payload: { initData: string }) => api.post<TelegramMiniAppAuthResponse>('/v1/auth/telegram/', payload),
   sendOtp: (payload: { email: string }) => api.post('/auth/otp/send/', payload),
   verifyOtp: (payload: { email: string; code: string }) => api.post<AuthResponse>('/auth/otp/verify/', payload),
   requestTelegramOtp: (payload: { identifier: string }) => api.post('/auth/telegram/request/', payload),
@@ -457,12 +499,28 @@ export const authAPI = {
   getCurrentUser: () => api.get<AppUser>('/auth/users/me/'),
 };
 
+export const telegramMiniAppAPI = {
+  bootstrap: (restaurantSlug: string, tableNumber: string | number) =>
+    api.get<TelegramMiniAppMenuResponse>(`/v1/telegram-mini-app/${restaurantSlug}/table${tableNumber}/`),
+  getMenu: (restaurantId: string, tableId?: string) =>
+    api.get<TelegramMiniAppMenuResponse>(`/v1/restaurants/${restaurantId}/menu/`, {
+      params: tableId ? { table_id: tableId } : {},
+    }),
+  callWaiter: (tableId: string) =>
+    api.post<TelegramMiniAppWaiterCallResponse>(`/v1/tables/${tableId}/call-waiter/`),
+};
+
 export const adminAPI = {
   getSuperAdminStats: () => api.get('/admin/stats/super/'),
   getDashboard: () => api.get('/admin/dashboard/'),
   getChains: () => api.get('/admin/chains/'),
   getRestaurants: () => api.get('/admin/restaurants/'),
   getOwners: () => api.get('/admin/owners/'),
+  createOwner: (payload: { full_name: string; phone_number: string; email?: string; role: string }) =>
+    api.post('/admin/owners/create/', payload),
+  updateOwner: (ownerId: string, payload: { full_name: string; email?: string; role: string; is_active?: boolean }) =>
+    api.put(`/admin/owners/${ownerId}/`, payload),
+  deleteOwner: (ownerId: string) => api.delete(`/admin/owners/${ownerId}/`),
   deleteChain: (chainId: string) => api.delete(`/admin/chains/${chainId}/`),
   deleteRestaurant: (restaurantId: string) => api.delete(`/admin/restaurants/${restaurantId}/`),
   getKeys: () => api.get('/admin/keys/'),

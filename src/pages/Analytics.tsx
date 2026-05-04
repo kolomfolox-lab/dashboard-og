@@ -5,6 +5,7 @@ import { AppShell } from '@/components/app/AppShell';
 import { BarChartBlock, DoughnutChartBlock, LineChartBlock } from '@/components/app/Charts';
 import { DataTable } from '@/components/app/DataTable';
 import { MetricCard } from '@/components/app/MetricCard';
+import { OwnerComparisonStrip, type OwnerComparisonItem } from '@/components/app/OwnerComparisonStrip';
 import { Panel } from '@/components/app/Panel';
 import { SubscriptionExpired } from '@/components/app/SubscriptionExpired';
 import { useAuth } from '@/context/AuthContext';
@@ -138,6 +139,49 @@ export default function AnalyticsPage() {
     }),
     [locale, stats],
   );
+
+  const ownerComparisonItems = useMemo<OwnerComparisonItem[]>(() => {
+    const days = stats?.daily_revenue || [];
+    const lastDay = days[days.length - 1] || {};
+    const previousDay = days[days.length - 2] || {};
+    const revenueToday = Number(stats?.revenue_today ?? lastDay.revenue ?? 0);
+    const revenueYesterday = Number(previousDay.revenue || 0);
+    const revenueAverage = Number(stats?.revenue_30_days || 0) / 30;
+    const ordersToday = Number(stats?.orders_today || lastDay.orders || 0);
+    const ordersAverage = Number(stats?.orders_30_days || 0) / 30;
+    const topDish = stats?.top_dishes?.[0];
+
+    return [
+      {
+        label: locale === 'uz' ? 'Savdo impulsi' : 'Импульс продаж',
+        value: formatMoney(revenueToday),
+        detail: locale === 'uz' ? `${formatMoney(revenueYesterday)} kecha` : `${formatMoney(revenueYesterday)} вчера`,
+        delta: percentDelta(revenueToday, revenueYesterday),
+        tone: 'coral',
+      },
+      {
+        label: locale === 'uz' ? 'Kunlik norma' : 'Дневная норма',
+        value: formatMoney(revenueAverage),
+        detail: locale === 'uz' ? '30 kunlik tushumdan hisoblangan' : 'Считается от выручки за 30 дней',
+        delta: percentDelta(revenueToday, revenueAverage),
+        tone: 'sand',
+      },
+      {
+        label: locale === 'uz' ? 'Buyurtma ritmi' : 'Ритм заказов',
+        value: ordersToday,
+        detail: locale === 'uz' ? `${ordersAverage.toFixed(1)} kunlik o'rtacha` : `${ordersAverage.toFixed(1)} среднее за день`,
+        delta: percentDelta(ordersToday, ordersAverage),
+        tone: 'cyan',
+      },
+      {
+        label: locale === 'uz' ? 'Menu lideri' : 'Лидер меню',
+        value: topDish?.name || (locale === 'uz' ? 'Hali yo`q' : 'Пока нет'),
+        detail: topDish ? `${formatMoney(topDish.revenue)} · ${topDish.quantity || 0} ${locale === 'uz' ? 'sotildi' : 'продано'}` : (locale === 'uz' ? 'Buyurtmalar kutilmoqda' : 'Ждем первые продажи'),
+        delta: percentDelta(Number(topDish?.revenue || 0), Number(stats?.revenue_30_days || 0) / 5),
+        tone: 'mint',
+      },
+    ];
+  }, [locale, stats]);
 
   if (loading || workspace.loading) {
     return (
@@ -280,6 +324,8 @@ export default function AnalyticsPage() {
           />
         </div>
 
+        <OwnerComparisonStrip items={ownerComparisonItems} />
+
         <div className="grid gap-4 xl:grid-cols-[1.55fr_1fr]">
           <Panel
             title={locale === 'uz' ? 'Tushum dinamikasi' : 'Динамика выручки'}
@@ -344,4 +390,9 @@ export default function AnalyticsPage() {
       </div>
     </AppShell>
   );
+}
+
+function percentDelta(current: number, baseline: number) {
+  if (!baseline) return current ? 100 : null;
+  return ((current - baseline) / Math.abs(baseline)) * 100;
 }

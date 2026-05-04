@@ -2,6 +2,7 @@ import { Bell, BookOpenText, Boxes, ChevronDown, CreditCard, LayoutDashboard, Li
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { BrandMark } from '@/components/app/BrandMark';
+import { OwnerWelcomeDialog } from '@/components/app/OwnerWelcomeDialog';
 import { Button } from '@/components/ui/button';
 import { ProfileDropdown } from '@/components/ui/profile-dropdown';
 import { Sidebar, SidebarBody, SidebarLink } from '@/components/ui/sidebar';
@@ -22,6 +23,7 @@ const navByRole = {
     { to: '/tables', labelKey: 'nav_tables', fallback: 'Tables', icon: UsersRound },
     { to: '/inventory', labelKey: 'nav_inventory', fallback: 'Inventory', icon: Boxes },
     { to: '/analytics', labelKey: 'nav_analytics', fallback: 'Analytics', icon: LineChart },
+    { to: '/users', labelKey: 'nav_team', fallback: 'Team', icon: UsersRound },
     { to: '/brand-studio', labelKey: 'nav_brand_studio', fallback: 'Brand Studio', icon: Palette },
     { to: '/online-menu-studio', labelKey: 'nav_online_menu', fallback: 'Online Menu', icon: BookOpenText },
     { to: '/subscription', labelKey: 'nav_subscription', fallback: 'Subscription', icon: CreditCard },
@@ -60,6 +62,12 @@ export function AppShell({ title, subtitle, eyebrow, restaurants = [], selectedR
   const navItems = navByRole[user?.role as keyof typeof navByRole] || navByRole.RESTAURANT_OWNER;
   const [open, setOpen] = useState(true);
   const selectedRestaurant = restaurants.find((restaurant) => restaurant.id === selectedRestaurantId) || restaurants[0] || null;
+  const welcomeStorageKey = user?.id ? `waitly-owner-welcome:${user.id}` : 'waitly-owner-welcome';
+  const shouldWelcomeOwner = user?.role === 'RESTAURANT_OWNER' || user?.role === 'CHAIN_OWNER';
+  const [welcomeOpen, setWelcomeOpen] = useState(() => {
+    if (!shouldWelcomeOwner) return false;
+    return localStorage.getItem(welcomeStorageKey) !== 'done';
+  });
   const activeWorkspace = selectedRestaurant?.name || 'Waitly dashboard';
   const effectiveSubscriptionGate = subscriptionGate || (user?.role !== 'SUPER_ADMIN' && selectedRestaurant ? { active: selectedRestaurant.subscription_active !== false, restaurantName: selectedRestaurant.name } : undefined);
   const roleLabels: Record<string, string> = {
@@ -75,6 +83,11 @@ export function AppShell({ title, subtitle, eyebrow, restaurants = [], selectedR
   };
   const links = navItems.map((item) => ({ label: t(item.labelKey, item.fallback), href: item.to, icon: <item.icon className="h-5 w-5 flex-shrink-0 text-white/72" /> }));
   const handleLogout = () => { logout(); navigate('/login'); };
+  const completeWelcome = () => {
+    localStorage.setItem(welcomeStorageKey, 'done');
+    localStorage.setItem('waitly-onboarding-complete', 'true');
+    setWelcomeOpen(false);
+  };
   const openNotification = () => {
     const notification = document.getElementById('waitly-notification');
     if (!notification) return;
@@ -84,6 +97,9 @@ export function AppShell({ title, subtitle, eyebrow, restaurants = [], selectedR
 
   return (
     <div className="min-h-screen text-white">
+      {welcomeOpen && shouldWelcomeOwner ? (
+        <OwnerWelcomeDialog ownerName={user?.full_name} workspaceName={activeWorkspace} onComplete={completeWelcome} />
+      ) : null}
       <div className="mx-auto flex min-h-screen w-full max-w-[1920px]">
         <Sidebar open={open} setOpen={setOpen} animate={false}>
           <SidebarBody className="z-50 justify-between gap-8 border-r border-white/6 bg-[rgba(6,12,20,0.94)] px-4 py-5 backdrop-blur-2xl md:sticky md:top-0 md:h-screen">

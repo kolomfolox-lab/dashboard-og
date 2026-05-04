@@ -70,20 +70,35 @@ export default function RestaurantsPage() {
 
   const handleDeleteChain = async (chain: any) => {
     if (!window.confirm(`${locale === 'uz' ? 'Tarmoq o‘chirilsinmi' : 'Удалить сеть'} ${chain.name}?`)) return;
-    await adminAPI.deleteChain(chain.id);
-    await load();
+    setError('');
+    try {
+      await adminAPI.deleteChain(chain.id);
+      await load();
+    } catch (err: any) {
+      setError(err?.response?.data?.error || (locale === 'uz' ? 'Tarmoqni o‘chirib bo‘lmadi.' : 'Не удалось удалить сеть.'));
+    }
   };
 
   const handleDeleteRestaurant = async (restaurant: any) => {
     if (!window.confirm(`${locale === 'uz' ? 'Restoran o‘chirilsinmi' : 'Удалить ресторан'} ${restaurant.name}?`)) return;
-    await adminAPI.deleteRestaurant(restaurant.id);
-    await load();
+    setError('');
+    try {
+      await adminAPI.deleteRestaurant(restaurant.id);
+      await load();
+    } catch (err: any) {
+      setError(err?.response?.data?.error || (locale === 'uz' ? 'Restoranni o‘chirib bo‘lmadi.' : 'Не удалось удалить ресторан.'));
+    }
   };
 
   const handleRevokeKey = async (key: any) => {
     if (!window.confirm(`${locale === 'uz' ? 'Kalit bekor qilinsinmi' : 'Отозвать ключ'} ${key.key}?`)) return;
-    await adminAPI.revokeKey(key.id);
-    await load();
+    setError('');
+    try {
+      await adminAPI.revokeKey(key.id);
+      await load();
+    } catch (err: any) {
+      setError(err?.response?.data?.error || (locale === 'uz' ? 'Kalitni bekor qilib bo‘lmadi.' : 'Не удалось отозвать ключ.'));
+    }
   };
 
   if (user?.role === 'SUPER_ADMIN') {
@@ -94,6 +109,7 @@ export default function RestaurantsPage() {
         eyebrow={locale === 'uz' ? 'Platforma boshqaruvi' : 'Управление платформой'}
       >
         <div className="space-y-4">
+          {error ? <div className="rounded-[24px] border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-100">{error}</div> : null}
           <div className="grid gap-4 md:grid-cols-3">
             <Panel title={`${chains.length}`} eyebrow={locale === 'uz' ? 'Tarmoqlar' : 'Сети'} description={locale === 'uz' ? 'Platformadagi restoran guruhlari.' : 'Группы ресторанов на платформе.'} className="h-full">
               <div className="flex items-center gap-3 text-white/52"><Store className="h-4 w-4 text-[#8fd4ff]" /> {locale === 'uz' ? 'Hammasi bir joyda.' : 'Все в одном месте.'}</div>
