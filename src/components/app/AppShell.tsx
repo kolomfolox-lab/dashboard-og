@@ -1,4 +1,4 @@
-import { Bell, BookOpenText, Boxes, ChevronDown, CreditCard, LayoutDashboard, LineChart, LockKeyhole, Palette, Settings2, Store, UsersRound, Waves } from 'lucide-react';
+import { Bell, BookOpenText, Boxes, ChevronDown, ContactRound, CreditCard, LayoutDashboard, LineChart, LockKeyhole, Palette, Settings2, Store, UsersRound, Waves } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { BrandMark } from '@/components/app/BrandMark';
@@ -23,6 +23,7 @@ const navByRole = {
     { to: '/tables', labelKey: 'nav_tables', fallback: 'Tables', icon: UsersRound },
     { to: '/inventory', labelKey: 'nav_inventory', fallback: 'Inventory', icon: Boxes },
     { to: '/analytics', labelKey: 'nav_analytics', fallback: 'Analytics', icon: LineChart },
+    { to: '/crm', labelKey: 'nav_crm', fallback: 'CRM', icon: ContactRound },
     { to: '/users', labelKey: 'nav_team', fallback: 'Team', icon: UsersRound },
     { to: '/brand-studio', labelKey: 'nav_brand_studio', fallback: 'Brand Studio', icon: Palette },
     { to: '/online-menu-studio', labelKey: 'nav_online_menu', fallback: 'Online Menu', icon: BookOpenText },
@@ -35,6 +36,7 @@ const navByRole = {
     { to: '/tables', labelKey: 'nav_tables', fallback: 'Tables', icon: UsersRound },
     { to: '/inventory', labelKey: 'nav_inventory', fallback: 'Inventory', icon: Boxes },
     { to: '/analytics', labelKey: 'nav_analytics', fallback: 'Performance', icon: LineChart },
+    { to: '/crm', labelKey: 'nav_crm', fallback: 'CRM', icon: ContactRound },
     { to: '/users', labelKey: 'nav_team', fallback: 'Team', icon: UsersRound },
     { to: '/brand-studio', labelKey: 'nav_brand_studio', fallback: 'Brand Studio', icon: Palette },
     { to: '/online-menu-studio', labelKey: 'nav_online_menu', fallback: 'Online Menu', icon: BookOpenText },

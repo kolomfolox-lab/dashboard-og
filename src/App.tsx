@@ -6,6 +6,7 @@ import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { LocaleProvider } from '@/context/LocaleContext';
 import AnalyticsPage from '@/pages/Analytics.tsx';
 import BrandStudioPage from '@/pages/BrandStudio.tsx';
+import CRMPage from '@/pages/CRM.tsx';
 import DashboardPage from '@/pages/Dashboard.tsx';
 import InventoryPage from '@/pages/Inventory.tsx';
 import KitchenDisplayPage from '@/pages/KitchenDisplay.tsx';
@@ -83,6 +84,7 @@ function AppRoutes() {
       <Route path="/dashboard" element={<PrivateRoute><DashboardPage /></PrivateRoute>} />
       <Route path="/restaurants" element={<PrivateRoute><RestaurantsPage /></PrivateRoute>} />
       <Route path="/analytics" element={<PrivateRoute><AnalyticsPage /></PrivateRoute>} />
+      <Route path="/crm" element={<PrivateRoute><CRMPage /></PrivateRoute>} />
       <Route path="/users" element={<PrivateRoute><UsersPage /></PrivateRoute>} />
       <Route path="/tables" element={<PrivateRoute><TablesPage /></PrivateRoute>} />
       <Route path="/inventory" element={<PrivateRoute><InventoryPage /></PrivateRoute>} />

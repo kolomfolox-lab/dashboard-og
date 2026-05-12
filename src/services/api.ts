@@ -387,6 +387,56 @@ export interface OwnerBooking {
   updated_at: string;
 }
 
+export interface OwnerCrmGuest {
+  id: string;
+  restaurant: string;
+  user?: string | null;
+  telegram_user_id?: number | null;
+  telegram_username?: string;
+  first_name?: string;
+  phone_number?: string;
+  display_name?: string;
+  language: 'ru' | 'en' | 'uz' | string;
+  tags: string[];
+  notes: string;
+  total_visits: number;
+  total_spend: string;
+  last_visit_at?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface OwnerCrmGuestVisit {
+  id: string;
+  restaurant: string;
+  guest?: string | null;
+  guest_name?: string | null;
+  table_session: string;
+  table?: string | null;
+  table_number?: string | null;
+  source: string;
+  seat_label?: string;
+  guest_count: number;
+  started_at: string;
+  ended_at?: string | null;
+  created_at: string;
+}
+
+export interface OwnerFeedbackInsight {
+  id: string;
+  restaurant: string;
+  period: string;
+  date_from: string;
+  date_to: string;
+  reviews_count: number;
+  average_rating: string;
+  weaknesses: string[];
+  strengths: string[];
+  recommended_actions: string[];
+  summary: string;
+  created_at: string;
+}
+
 export interface PublicBookingSlot {
   time: string;
   is_available: boolean;
@@ -582,6 +632,18 @@ export const ownerAPI = {
     api.post<OwnerInventoryStockRow>('/owner/inventory/write-off/', payload),
   getOrders: (restaurantId?: string, period = 'all') =>
     api.get('/owner/orders/today/', { params: { ...(restaurantId ? { restaurant_id: restaurantId } : {}), period, limit: 100 } }),
+  getCrmGuests: (restaurantId?: string, query?: string) =>
+    api.get<OwnerCrmGuest[] | { results: OwnerCrmGuest[] }>('/v1/core/crm/guests/', {
+      params: { ...(restaurantId ? { restaurant_id: restaurantId } : {}), ...(query ? { q: query } : {}) },
+    }),
+  updateCrmGuest: (guestId: string, payload: Partial<Pick<OwnerCrmGuest, 'display_name' | 'phone_number' | 'language' | 'tags' | 'notes'>>) =>
+    api.patch<OwnerCrmGuest>(`/v1/core/crm/guests/${guestId}/`, payload),
+  getCrmGuestVisits: (guestId: string) =>
+    api.get<OwnerCrmGuestVisit[]>(`/v1/core/crm/guests/${guestId}/visits/`),
+  getFeedbackInsights: (restaurantId?: string) =>
+    api.get<OwnerFeedbackInsight[] | { results: OwnerFeedbackInsight[] }>('/v1/core/crm/feedback-insights/', {
+      params: restaurantId ? { restaurant_id: restaurantId } : {},
+    }),
 };
 
 export const userAPI = {
