@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ChefHat, Clock3, Flame, RefreshCcw, Soup, UtensilsCrossed } from 'lucide-react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 
 import { kitchenAPI } from '@/services/api';
 
@@ -31,6 +31,8 @@ const statusTone: Record<string, string> = {
 
 export default function KitchenDisplayPage() {
   const { restaurantSlug = '', kitchenToken = '' } = useParams();
+  const [searchParams] = useSearchParams();
+  const displayMode = searchParams.get('display') === '1';
   const [restaurantName, setRestaurantName] = useState('Kitchen Display');
   const [orders, setOrders] = useState<KitchenOrder[]>([]);
   const [loading, setLoading] = useState(true);
@@ -42,6 +44,35 @@ export default function KitchenDisplayPage() {
     cooking: orders.filter((order) => order.status === 'ACCEPTED' || order.status === 'COOKING').length,
     ready: orders.filter((order) => order.status === 'READY').length,
   }), [orders]);
+
+  const sortedOrders = useMemo(() => {
+    return [...orders].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  }, [orders]);
+
+  const PAGE_SIZE = 6;
+  const totalPages = Math.max(1, Math.ceil(sortedOrders.length / PAGE_SIZE));
+  const [pageIndex, setPageIndex] = useState(0);
+  const pageTimerRef = useRef<number | undefined>();
+
+  const resetPageTimer = useCallback(() => {
+    if (pageTimerRef.current) window.clearInterval(pageTimerRef.current);
+    pageTimerRef.current = window.setInterval(() => {
+      setPageIndex((prev) => (prev + 1) % totalPages);
+    }, 12000);
+  }, [totalPages]);
+
+  useEffect(() => {
+    setPageIndex(0);
+    resetPageTimer();
+    return () => {
+      if (pageTimerRef.current) window.clearInterval(pageTimerRef.current);
+    };
+  }, [sortedOrders.length, resetPageTimer]);
+
+  const visibleOrders = useMemo(() => {
+    const start = pageIndex * PAGE_SIZE;
+    return sortedOrders.slice(start, start + PAGE_SIZE);
+  }, [sortedOrders, pageIndex]);
 
   useEffect(() => {
     let active = true;
@@ -86,17 +117,13 @@ export default function KitchenDisplayPage() {
       if (!restaurantSlug || !kitchenToken) return;
 
       try {
-        const response = await kitchenAPI.getOrders(kitchenToken);
-        if (active) {
-          setOrders(response.data || []);
-          setLoading(false);
-        }
+        await reloadOrders();
       } catch (err: any) {
         if (active) {
           setError(err?.response?.data?.error?.message || 'Failed to load kitchen orders.');
-          setLoading(false);
         }
       }
+      if (active) setLoading(false);
     };
 
     const connectSocket = () => {
@@ -129,16 +156,22 @@ export default function KitchenDisplayPage() {
     };
   }, [kitchenToken, restaurantSlug]);
 
+  const reloadOrders = async () => {
+    try {
+      const response = await kitchenAPI.getOrders(kitchenToken);
+      const raw = response.data;
+      setOrders(Array.isArray(raw) ? raw : raw?.results || []);
+    } catch {}
+  };
+
   const handleAccept = async (orderId: string) => {
     await kitchenAPI.acceptOrder(orderId, kitchenToken);
-    const response = await kitchenAPI.getOrders(kitchenToken);
-    setOrders(response.data || []);
+    await reloadOrders();
   };
 
   const handleReady = async (orderId: string) => {
     await kitchenAPI.markReady(orderId, kitchenToken);
-    const response = await kitchenAPI.getOrders(kitchenToken);
-    setOrders(response.data || []);
+    await reloadOrders();
   };
 
   if (error) {
@@ -164,22 +197,26 @@ export default function KitchenDisplayPage() {
                 Live kitchen pass
               </div>
               <h1 className="mt-4 text-4xl font-black tracking-tight">{restaurantName}</h1>
-              <p className="mt-3 max-w-3xl text-sm leading-7 text-white/58">
-                React kitchen board for active production flow. It watches new orders, cooking load, and ready handoff without the old template logic.
-              </p>
+              {!displayMode ? (
+                <p className="mt-3 max-w-3xl text-sm leading-7 text-white/58">
+                  React kitchen board for active production flow. It watches new orders, cooking load, and ready handoff without the old template logic.
+                </p>
+              ) : null}
             </div>
 
-            <button
-              type="button"
-              onClick={async () => {
-                const response = await kitchenAPI.getOrders(kitchenToken);
-                setOrders(response.data || []);
-              }}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white/82 transition hover:bg-white/10"
-            >
-              <RefreshCcw className="h-4 w-4" />
-              Refresh queue
-            </button>
+            {!displayMode ? (
+              <button
+                type="button"
+                onClick={async () => {
+                  const response = await kitchenAPI.getOrders(kitchenToken);
+                  setOrders(response.data || []);
+                }}
+                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white/82 transition hover:bg-white/10"
+              >
+                <RefreshCcw className="h-4 w-4" />
+                Refresh queue
+              </button>
+            ) : null}
           </div>
         </header>
 
@@ -205,7 +242,7 @@ export default function KitchenDisplayPage() {
             </div>
           ) : null}
 
-          {!loading && orders.map((order) => (
+          {!loading && visibleOrders.map((order) => (
             <article key={order.id} className="rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03))] p-5 shadow-[0_20px_60px_rgba(0,0,0,0.22)]">
               <div className="flex items-start justify-between gap-4">
                 <div>
@@ -246,6 +283,19 @@ export default function KitchenDisplayPage() {
               </div>
             </article>
           ))}
+
+          {!loading && totalPages > 1 ? (
+            <div className="xl:col-span-3 flex items-center justify-center gap-2">
+              {Array.from({ length: totalPages }, (_, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => { setPageIndex(i); resetPageTimer(); }}
+                  className={`h-2 rounded-full transition-all ${i === pageIndex ? 'w-8 bg-[#ff7b72]' : 'w-2 bg-white/20 hover:bg-white/40'}`}
+                />
+              ))}
+            </div>
+          ) : null}
         </section>
       </div>
     </div>

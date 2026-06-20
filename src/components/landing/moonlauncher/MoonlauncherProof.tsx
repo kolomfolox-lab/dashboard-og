@@ -3,7 +3,7 @@ import { BadgeCheck, ScanLine, ShieldCheck, Star } from 'lucide-react';
 import { proofCards } from '@/components/landing/moonlauncher/data';
 import { SectionEyebrow } from '@/components/landing/moonlauncher/SectionEyebrow';
 
-export function MoonlauncherProof() {
+export function WaitlyProof() {
   return (
     <section id="proof" className="grid gap-4 xl:grid-cols-[1.02fr_0.98fr]">
       <div className="rounded-[36px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.02))] px-5 py-6 md:px-8 md:py-8">

@@ -4,9 +4,9 @@
 
 export function formatMoney(value: number | string | undefined | null) {
   const amount = Number(value || 0);
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat('ru-RU', {
     style: 'currency',
-    currency: 'USD',
+    currency: 'UZS',
     maximumFractionDigits: 0,
   }).format(amount);
 }

@@ -1,6 +1,7 @@
 ﻿import { useMemo, useState } from 'react';
-import { ArrowRight, Copy, Link2, MessageSquareLock, ShieldCheck, UserRound } from 'lucide-react';
+import { ArrowRight, UserRound } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { GoogleLogin } from '@react-oauth/google';
 import { AppShell } from '@/components/app/AppShell';
 import { MetricCard } from '@/components/app/MetricCard';
 import { Panel } from '@/components/app/Panel';
@@ -8,43 +9,38 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 import { useLocale } from '@/context/LocaleContext';
 import { useOwnerWorkspace } from '@/hooks/useOwnerWorkspace';
-import { authAPI, type AppUser, type TelegramLinkResponse } from '@/services/api';
+import { authAPI } from '@/services/api';
+import { showToast } from '@/lib/toast';
 
 export default function SettingsPage() {
   const { user, replaceUser } = useAuth();
   const { locale, t } = useLocale();
   const navigate = useNavigate();
   const workspace = useOwnerWorkspace(user?.role === 'RESTAURANT_OWNER' || user?.role === 'CHAIN_OWNER');
-  const [telegramLoading, setTelegramLoading] = useState(false);
-  const [telegramError, setTelegramError] = useState('');
-  const [telegramInfo, setTelegramInfo] = useState('');
-  const [linkData, setLinkData] = useState<TelegramLinkResponse | null>(null);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [googleError, setGoogleError] = useState('');
+  const [googleInfo, setGoogleInfo] = useState('');
   const mergedUser = useMemo(() => ({ ...workspace.profile, ...user }), [user, workspace.profile]);
-  const syncUser = (nextUser?: AppUser) => { if (!nextUser) return; replaceUser({ ...(user || {}), ...nextUser }); workspace.reload(); };
+  const googleLinked = mergedUser?.google_linked === true;
 
-  const handleRequestLink = async () => {
-    setTelegramLoading(true); setTelegramError(''); setTelegramInfo('');
-    try { const response = await authAPI.requestTelegramLink(); setLinkData(response.data); if (response.data.bot_url) window.open(response.data.bot_url, '_blank', 'noopener,noreferrer'); setTelegramInfo(locale === 'uz' ? 'Telegram bot ochildi.' : 'Telegram bot opened.'); }
-    catch (err: any) { setTelegramError(err?.response?.data?.error || 'Could not generate Telegram link code.'); }
-    finally { setTelegramLoading(false); }
+  const handleGoogleLink = async (credential: string) => {
+    setGoogleLoading(true); setGoogleError(''); setGoogleInfo('');
+    try {
+      const res = await authAPI.linkGoogle({ credential });
+      replaceUser(res.data);
+      showToast(locale === 'uz' ? 'Google ulandi!' : 'Google подключен!', 'success');
+    } catch (err: any) {
+      setGoogleError(err?.response?.data?.error || err?.response?.data?.detail || 'Google auth failed.');
+    } finally { setGoogleLoading(false); }
   };
 
-  const handleConfirmLink = async () => {
-    if (!linkData?.link_code) return; setTelegramLoading(true); setTelegramError(''); setTelegramInfo('');
-    try { const response = await authAPI.confirmTelegramLink({ link_code: linkData.link_code }); if (response.data.user) { syncUser(response.data.user); setLinkData(null); } setTelegramInfo(response.data.message || 'Telegram connected.'); }
-    catch (err: any) { setTelegramError(err?.response?.data?.error || 'Telegram link is not confirmed yet.'); }
-    finally { setTelegramLoading(false); }
-  };
-
-  const handleUnlink = async () => {
-    setTelegramLoading(true); setTelegramError(''); setTelegramInfo('');
-    try { const response = await authAPI.unlinkTelegram(); syncUser(response.data.user); setLinkData(null); setTelegramInfo('Telegram disconnected.'); }
-    catch (err: any) { setTelegramError(err?.response?.data?.error || 'Could not disconnect Telegram.'); }
-    finally { setTelegramLoading(false); }
+  const handleGoogleUnlink = () => {
+    setGoogleLinked(false);
+    setGoogleInfo(locale === 'uz' ? 'Google uzildi.' : 'Google отключен.');
   };
 
   return (
-    <AppShell title={t('settings_title', 'Profile and Security')} subtitle={t('settings_subtitle', 'Owner account, Telegram auth, and fast entry points to the dedicated owner pages.')} eyebrow={locale === 'uz' ? 'Profil' : 'Profile'} restaurants={workspace.restaurants} selectedRestaurantId={workspace.selectedRestaurantId} onRestaurantChange={workspace.setSelectedRestaurantId}>
+    <AppShell title={t('settings_title', 'Profile and Security')} subtitle={t('settings_subtitle', 'Owner account profile and access settings.')} eyebrow={locale === 'uz' ? 'Profil' : 'Profile'} restaurants={workspace.restaurants} selectedRestaurantId={workspace.selectedRestaurantId} onRestaurantChange={workspace.setSelectedRestaurantId}>
       <div className="space-y-4">
         <div className="grid gap-4 md:grid-cols-2">
           <MetricCard title={locale === 'uz' ? 'Profil' : 'Profile'} value={mergedUser?.full_name || 'User'} note={mergedUser?.role || 'Member'} icon={UserRound} tone="coral" />
@@ -54,13 +50,40 @@ export default function SettingsPage() {
           <Panel title={locale === 'uz' ? 'Akkaunt kartasi' : 'Account card'} eyebrow={locale === 'uz' ? 'Malumotlar' : 'Details'} description={locale === 'uz' ? 'Asosiy owner malumotlari.' : 'Core owner profile details.'}>
             <div className="grid gap-4 md:grid-cols-2"><InfoCard label={locale === 'uz' ? 'Ism' : 'Name'} value={mergedUser?.full_name || '-'} /><InfoCard label="Email" value={mergedUser?.email || '-'} /><InfoCard label={locale === 'uz' ? 'Telefon' : 'Phone'} value={mergedUser?.phone_number || mergedUser?.phone || '-'} /><InfoCard label={locale === 'uz' ? 'Rol' : 'Role'} value={mergedUser?.role || '-'} /></div>
           </Panel>
-          <Panel title="Telegram auth" eyebrow={locale === 'uz' ? 'Kirish' : 'Access'} description={locale === 'uz' ? 'Telegram orqali OTP va recovery.' : 'Telegram for OTP and recovery.'}>
+          <Panel title="Google auth" eyebrow={locale === 'uz' ? 'Kirish' : 'Access'} description={locale === 'uz' ? 'Google hisob orqali kirish.' : 'Sign in with Google.'}>
             <div className="rounded-[24px] border border-white/8 bg-black/12 p-5">
-              <div className="flex items-start justify-between gap-4"><div className="flex items-start gap-3"><div className={`grid h-12 w-12 place-items-center rounded-2xl ${mergedUser?.telegram_linked ? 'bg-[linear-gradient(135deg,rgba(34,197,94,0.22),rgba(143,212,255,0.22))]' : 'bg-[linear-gradient(135deg,rgba(125,211,252,0.22),rgba(249,115,96,0.18))]'}`}>{mergedUser?.telegram_linked ? <ShieldCheck className="h-5 w-5 text-[#9ae6b4]" /> : <MessageSquareLock className="h-5 w-5 text-[#8fd4ff]" />}</div><div><div className="text-sm font-semibold text-white">Telegram</div><div className="mt-1 text-sm text-white/48">{mergedUser?.telegram_linked ? `Connected${mergedUser?.telegram_username ? ` as @${mergedUser.telegram_username}` : ''}.` : 'Connect Telegram for OTP and account recovery.'}</div></div></div><div className={`rounded-full px-3 py-1 text-xs font-semibold ${mergedUser?.telegram_linked ? 'bg-emerald-500/12 text-emerald-200' : 'bg-white/8 text-white/55'}`}>{mergedUser?.telegram_linked ? 'Connected' : 'Not connected'}</div></div>
-              <div className="mt-5 flex flex-wrap gap-3">{!mergedUser?.telegram_linked ? <><Button size="sm" onClick={handleRequestLink} disabled={telegramLoading}><Link2 className="mr-2 h-4 w-4" />{linkData ? 'Refresh code' : 'Connect Telegram'}</Button>{linkData ? <Button variant="outline" size="sm" onClick={handleConfirmLink} disabled={telegramLoading}>Confirm</Button> : null}</> : <Button variant="outline" size="sm" onClick={handleUnlink} disabled={telegramLoading}>Disconnect Telegram</Button>}</div>
-              {linkData ? <div className="mt-5 rounded-[22px] border border-dashed border-[#8fd4ff]/25 bg-[#081a28] p-4"><div className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#8fd4ff]">Link code</div><div className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto]"><div className="rounded-2xl border border-white/8 bg-black/20 px-4 py-3 text-lg font-semibold tracking-[0.2em] text-white">{linkData.link_code}</div><Button variant="secondary" size="sm" onClick={() => navigator.clipboard.writeText(linkData.link_code)}><Copy className="mr-2 h-4 w-4" />Copy</Button></div></div> : null}
-              {telegramError ? <div className="mt-4 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-100">{telegramError}</div> : null}
-              {telegramInfo ? <div className="mt-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">{telegramInfo}</div> : null}
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-start gap-3">
+                  <div className={`grid h-12 w-12 place-items-center rounded-2xl ${googleLinked ? 'bg-[linear-gradient(135deg,rgba(34,197,94,0.22),rgba(143,212,255,0.22))]' : 'bg-[linear-gradient(135deg,rgba(255,255,255,0.1),rgba(255,255,255,0.04))]'}`}>
+                    <svg className="h-5 w-5" viewBox="0 0 24 24"><path fill={googleLinked ? '#9ae6b4' : '#ffffff'} d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill={googleLinked ? '#9ae6b4' : '#ffffff'} d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill={googleLinked ? '#9ae6b4' : '#ffffff'} d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill={googleLinked ? '#9ae6b4' : '#ffffff'} d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+                  </div>
+                  <div>
+                    <div className="text-sm font-semibold text-white">Google</div>
+                    <div className="mt-1 text-sm text-white/48">{googleLinked ? 'Connected.' : 'Connect Google for quick sign-in.'}</div>
+                  </div>
+                </div>
+                <div className={`rounded-full px-3 py-1 text-xs font-semibold ${googleLinked ? 'bg-emerald-500/12 text-emerald-200' : 'bg-white/8 text-white/55'}`}>{googleLinked ? 'Connected' : 'Not connected'}</div>
+              </div>
+              <div className="mt-5 flex flex-wrap items-center gap-3">
+                {!googleLinked ? (
+                  <GoogleLogin
+                    theme="filled_black"
+                    size="large"
+                    shape="pill"
+                    text="signin_with"
+                    width={240}
+                    onSuccess={(credentialResponse) => {
+                      if (credentialResponse.credential) {
+                        handleGoogleLink(credentialResponse.credential);
+                      }
+                    }}
+                    onError={() => setGoogleError('Google auth cancelled or failed.')}
+                  />
+                ) : (
+                  <Button variant="outline" size="sm" onClick={handleGoogleUnlink}>Disconnect Google</Button>
+                )}
+              </div>
+              {googleError ? <div className="mt-4 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-100">{googleError}</div> : null}
             </div>
           </Panel>
         </div>

@@ -51,10 +51,10 @@ export function ProfileDropdown({ data, className, onSignOut, ...props }: Profil
 
   return (
     <div className={cn('relative', className)} {...props}>
-      <DropdownMenu options={options} className="flex min-w-[240px] items-center gap-3 rounded-[24px] border border-white/10 bg-white/6 px-3 py-2 text-left transition-all duration-200 hover:border-white/18 hover:bg-white/8 hover:shadow-[0_12px_40px_rgba(0,0,0,0.22)] focus:outline-none">
+      <DropdownMenu options={options} className="flex min-w-[240px] items-center gap-3 rounded-[24px] border border-theme bg-theme-panel px-3 py-2 text-left transition-all duration-200 hover:border-theme hover:bg-theme-panel hover:shadow-[0_12px_40px_rgba(0,0,0,0.22)] focus:outline-none">
         <div className="min-w-0 flex-1">
-          <div className="truncate text-sm font-semibold text-white">{data.name}</div>
-          {shortWorkspace ? <div className="truncate text-xs text-white/45">{shortWorkspace}</div> : null}
+          <div className="truncate text-sm font-semibold text-theme">{data.name}</div>
+          {shortWorkspace ? <div className="truncate text-xs text-theme-secondary">{shortWorkspace}</div> : null}
         </div>
         <InitialAvatar name={data.name} avatar={data.avatar} />
       </DropdownMenu>

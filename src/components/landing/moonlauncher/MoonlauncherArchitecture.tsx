@@ -3,7 +3,7 @@ import { Building2, Globe2 } from 'lucide-react';
 import { hostRows } from '@/components/landing/moonlauncher/data';
 import { SectionEyebrow } from '@/components/landing/moonlauncher/SectionEyebrow';
 
-export function MoonlauncherArchitecture() {
+export function WaitlyArchitecture() {
   return (
     <section id="architecture" className="grid gap-4 xl:grid-cols-[0.86fr_1.14fr]">
       <div className="rounded-[36px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02))] px-5 py-6 md:px-8 md:py-8">
@@ -12,7 +12,7 @@ export function MoonlauncherArchitecture() {
           A restaurant brand needs a clear map, not a pile of routes.
         </h2>
         <p className="mt-5 text-sm leading-8 text-white/64">
-          Moonlauncher already has the right structural instinct:
+          Waitly already has the right structural instinct:
           separate the public homepage, owner workspace, reviews layer, and docs host so every audience lands in the correct environment immediately.
         </p>
 

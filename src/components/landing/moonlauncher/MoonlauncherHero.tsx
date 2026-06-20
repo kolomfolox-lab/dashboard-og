@@ -12,7 +12,7 @@ import {
 import { ownerSignals } from '@/components/landing/moonlauncher/data';
 import { Button } from '@/components/ui/button';
 
-export function MoonlauncherHero() {
+export function WaitlyHero() {
   return (
     <section className="relative overflow-hidden rounded-[40px] border border-white/10 bg-[linear-gradient(135deg,rgba(10,21,34,0.92),rgba(7,14,24,0.98))] px-5 py-6 shadow-[0_32px_120px_rgba(0,0,0,0.28)] md:px-8 md:py-8 xl:px-10 xl:py-10">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_10%_10%,rgba(255,153,102,0.20),transparent_26%),radial-gradient(circle_at_88%_18%,rgba(127,213,255,0.16),transparent_22%),linear-gradient(180deg,rgba(255,255,255,0.03),transparent_60%)]" />
@@ -20,7 +20,7 @@ export function MoonlauncherHero() {
         <div className="max-w-4xl">
           <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/8 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.3em] text-[#d6e9f9] backdrop-blur">
             <Sparkles className="h-4 w-4 text-[#ffd29f]" />
-            Moonlauncher for restaurant teams
+            Waitly for restaurant teams
           </div>
 
           <h1 className="mt-6 max-w-5xl text-5xl font-black leading-[0.94] tracking-[-0.08em] text-white md:text-7xl xl:text-[92px]">
@@ -32,7 +32,7 @@ export function MoonlauncherHero() {
           </h1>
 
           <p className="mt-6 max-w-3xl text-[15px] leading-8 text-white/68 md:text-lg">
-            Moonlauncher turns scattered restaurant software into a clearer system:
+            Waitly turns scattered restaurant software into a clearer system:
             owner control, guest-facing trust, QR-driven experiences, and public product surfaces that all feel like one brand.
           </p>
 

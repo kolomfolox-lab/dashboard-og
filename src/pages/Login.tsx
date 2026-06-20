@@ -1,17 +1,19 @@
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowLeft, Loader2, Lock, Mail, MessageSquare } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { ArrowLeft, Loader2, Lock, Mail } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { GoogleLogin } from '@react-oauth/google';
 
 import { BrandMark } from '@/components/app/BrandMark';
 import { useAuth } from '@/context/AuthContext';
 import { useLocale } from '@/context/LocaleContext';
+import { authAPI } from '@/services/api';
 
-type AuthMode = 'password' | 'telegram' | 'code' | 'forgot';
-type FlowStep = 'input' | 'verify' | 'reset';
+type AuthMode = 'password' | 'code';
+type FlowStep = 'input' | 'verify';
 
 export default function LoginPage() {
-  const { loginWithPassword, requestTelegramOtp, verifyTelegramOtp, sendOtp, verifyOtp, requestTelegramPasswordReset, verifyResetOtp, confirmTelegramPasswordReset } = useAuth();
+  const { loginWithPassword, sendOtp, verifyOtp } = useAuth();
   const { t, locale } = useLocale();
   const navigate = useNavigate();
 
@@ -20,19 +22,27 @@ export default function LoginPage() {
   const [identifier, setIdentifier] = useState('');
   const [pwd, setPwd] = useState('');
   const [otp, setOtp] = useState('');
-  const [newPwd, setNewPwd] = useState('');
-  const [confirmPwd, setConfirmPwd] = useState('');
   const [error, setError] = useState('');
   const [info, setInfo] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const handleGoogleSuccess = async (credential: string) => {
+    try {
+      const response = await authAPI.googleLogin({ credential });
+      localStorage.setItem('token', response.data.access);
+      if (response.data.refresh) localStorage.setItem('refresh', response.data.refresh);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+      window.location.href = '/dashboard';
+    } catch (err: any) {
+      setError(err?.response?.data?.error || 'Google auth failed.');
+    }
+  };
 
   const resetFlow = (nextMode: AuthMode) => {
     setMode(nextMode);
     setStep('input');
     setOtp('');
     setPwd('');
-    setNewPwd('');
-    setConfirmPwd('');
     setError('');
     setInfo('');
   };
@@ -47,16 +57,7 @@ export default function LoginPage() {
       if (mode === 'password') {
         await loginWithPassword({ phone_number: identifier.trim(), password: pwd });
         navigate('/dashboard', { replace: true });
-      } else if (mode === 'telegram') {
-        if (step === 'input') {
-          await requestTelegramOtp(identifier.trim());
-          setStep('verify');
-          setInfo(locale === 'uz' ? 'Kod Telegramga yuborildi.' : 'Код отправлен в Telegram.');
-        } else {
-          await verifyTelegramOtp({ identifier: identifier.trim(), code: otp.trim() });
-          navigate('/dashboard', { replace: true });
-        }
-      } else if (mode === 'code') {
+      } else {
         if (step === 'input') {
           const response = await sendOtp(identifier.trim());
           setStep('verify');
@@ -64,30 +65,6 @@ export default function LoginPage() {
         } else {
           await verifyOtp({ email: identifier.trim(), code: otp.trim() });
           navigate('/dashboard', { replace: true });
-        }
-      } else {
-        if (step === 'input') {
-          await requestTelegramPasswordReset(identifier.trim());
-          setStep('verify');
-          setInfo(locale === 'uz' ? 'Kod Telegramga yuborildi.' : 'Код отправлен в Telegram.');
-        } else if (step === 'verify') {
-          await verifyResetOtp({ identifier: identifier.trim(), code: otp.trim() });
-          setStep('reset');
-          setInfo(locale === 'uz' ? 'Kod tasdiqlandi. Yangi parol kiriting.' : 'Код подтвержден. Введите новый пароль.');
-        } else {
-          if (newPwd.length < 6) {
-            setError(locale === 'uz' ? 'Parol kamida 6 belgi.' : 'Пароль минимум 6 символов.');
-            setLoading(false);
-            return;
-          }
-          if (newPwd !== confirmPwd) {
-            setError(locale === 'uz' ? 'Parollar mos emas.' : 'Пароли не совпадают.');
-            setLoading(false);
-            return;
-          }
-          await confirmTelegramPasswordReset({ identifier: identifier.trim(), code: otp.trim(), new_password: newPwd });
-          setInfo(locale === 'uz' ? 'Parol yangilandi! Kiring.' : 'Пароль обновлен! Войдите.');
-          resetFlow('password');
         }
       }
     } catch (err: any) {
@@ -109,7 +86,7 @@ export default function LoginPage() {
               <div>
                 <div className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#8fd4ff]">{t('owner_access', 'Owner access')}</div>
                 <h1 className="mt-3 text-4xl font-bold leading-tight text-white">{t('login_title', 'Панель управления Waitly')}</h1>
-                <p className="mt-4 text-sm leading-7 text-white/58">{t('login_subtitle', 'Вход по паролю, через Telegram или по коду.')}</p>
+                <p className="mt-4 text-sm leading-7 text-white/58">{t('login_subtitle', 'Вход по паролю или по коду из email.')}</p>
               </div>
             </div>
           </section>
@@ -125,17 +102,13 @@ export default function LoginPage() {
 
               <div className="mb-6">
                 <h2 className="text-2xl font-bold text-white">
-                  {mode === 'forgot' && step === 'reset'
-                    ? (locale === 'uz' ? 'Yangi parol' : 'Новый пароль')
-                    : step === 'verify'
+                  {step === 'verify'
                     ? (locale === 'uz' ? 'Kodni kiriting' : 'Введите код')
                     : (locale === 'uz' ? 'Kirish' : 'Вход')}
                 </h2>
                 <p className="mt-2 text-sm leading-7 text-white/52">
-                  {mode === 'forgot' && step === 'reset'
-                    ? (locale === 'uz' ? 'Yangi parolni kiriting.' : 'Введите новый пароль.')
-                    : step === 'verify'
-                    ? (locale === 'uz' ? 'Telegramga yuborilgan 6 xonali kodni kiriting.' : 'Введите 6-значный код из Telegram.')
+                  {step === 'verify'
+                    ? (locale === 'uz' ? 'Emailga yuborilgan 6 xonali kodni kiriting.' : 'Введите 6-значный код из email.')
                     : (locale === 'uz' ? 'Telefon/email va parolni kiriting.' : 'Введите телефон/email и пароль.')}
                 </p>
               </div>
@@ -167,7 +140,7 @@ export default function LoginPage() {
                                 className="w-full rounded-2xl border border-white/10 bg-white/5 pl-12 pr-4 py-3 text-white placeholder:text-white/22 focus:border-[#f97360] focus:outline-none"
                               />
                             </div>
-                            <button type="button" onClick={() => resetFlow('forgot')} className="text-right text-xs text-white/40 hover:text-[#f97360] transition">
+                            <button type="button" onClick={() => setInfo('')} className="text-right text-xs text-white/40 hover:text-[#f97360] transition">
                               {locale === 'uz' ? 'Parolni unutdingizmi?' : 'Забыли пароль?'}
                             </button>
                           </>
@@ -181,35 +154,34 @@ export default function LoginPage() {
                             : (locale === 'uz' ? 'Kod yuborish' : 'Отправить код')}
                         </button>
 
-                        {mode !== 'forgot' ? (
-                          <>
-                            <div className="relative my-4">
-                              <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/10"></div></div>
-                              <div className="relative flex justify-center text-xs"><span className="bg-[#0b1622] px-3 text-white/40">{locale === 'uz' ? 'yoki' : 'или'}</span></div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-3">
-                              <button
-                                type="button"
-                                onClick={() => resetFlow('telegram')}
-                                className={`flex items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-semibold transition ${mode === 'telegram' ? 'border-[#f97360] bg-[#f97360]/10 text-[#f97360]' : 'border-white/10 text-white/60 hover:border-white/20 hover:text-white'}`}
-                              >
-                                <MessageSquare className="h-4 w-4" />
-                                Telegram
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => resetFlow('code')}
-                                className={`flex items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-semibold transition ${mode === 'code' ? 'border-[#f97360] bg-[#f97360]/10 text-[#f97360]' : 'border-white/10 text-white/60 hover:border-white/20 hover:text-white'}`}
-                              >
-                                <Mail className="h-4 w-4" />
-                                {locale === 'uz' ? 'Kod orqali' : 'По коду'}
-                              </button>
-                            </div>
-                          </>
-                        ) : null}
+                        <div className="relative my-4">
+                          <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/10"></div></div>
+                          <div className="relative flex justify-center text-xs"><span className="bg-[#0b1622] px-3 text-white/40">{locale === 'uz' ? 'yoki' : 'или'}</span></div>
+                        </div>
+                        <div className="space-y-3">
+                          <GoogleLogin
+                            theme="filled_black"
+                            size="large"
+                            shape="pill"
+                            text="signin_with"
+                            onSuccess={(credentialResponse) => {
+                              if (credentialResponse.credential) {
+                                handleGoogleSuccess(credentialResponse.credential);
+                              }
+                            }}
+                            onError={() => setError('Google auth cancelled or failed.')}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => resetFlow('code')}
+                            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 px-4 py-3 text-sm font-semibold text-white/60 transition hover:border-white/20 hover:text-white"
+                          >
+                            <Mail className="h-4 w-4" />
+                            {locale === 'uz' ? 'Kod orqali kirish' : 'По коду из email'}
+                          </button>
+                        </div>
                       </>
-                    ) : step === 'verify' ? (
+                    ) : (
                       <>
                         <input
                           value={otp}
@@ -229,15 +201,11 @@ export default function LoginPage() {
                           setError('');
                           setLoading(true);
                           try {
-                            if (mode === 'telegram') await requestTelegramOtp(identifier.trim());
-                            else if (mode === 'forgot') await requestTelegramPasswordReset(identifier.trim());
-                            else {
-                              const response = await sendOtp(identifier.trim());
-                              if (response?.debug_code) {
-                                setInfo(`SMTP fallback code: ${response.debug_code}`);
-                                setOtp('');
-                                return;
-                              }
+                            const response = await sendOtp(identifier.trim());
+                            if (response?.debug_code) {
+                              setInfo(`SMTP fallback code: ${response.debug_code}`);
+                              setOtp('');
+                              return;
                             }
                             setInfo(locale === 'uz' ? 'Yangi kod yuborildi.' : 'Новый код отправлен.');
                             setOtp('');
@@ -250,30 +218,15 @@ export default function LoginPage() {
                           {locale === 'uz' ? 'Kodni qayta yuborish' : 'Отправить код повторно'}
                         </button>
                       </>
-                    ) : (
-                      <>
-                        <div className="relative">
-                          <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-white/30" />
-                          <input type="password" value={newPwd} onChange={(e) => setNewPwd(e.target.value)} placeholder={locale === 'uz' ? 'Yangi parol' : 'Новый пароль'} className="w-full rounded-2xl border border-white/10 bg-white/5 pl-12 pr-4 py-3 text-white placeholder:text-white/22 focus:border-[#f97360] focus:outline-none" />
-                        </div>
-                        <div className="relative">
-                          <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-white/30" />
-                          <input type="password" value={confirmPwd} onChange={(e) => setConfirmPwd(e.target.value)} placeholder={locale === 'uz' ? 'Parolni tasdiqlang' : 'Подтвердите пароль'} className="w-full rounded-2xl border border-white/10 bg-white/5 pl-12 pr-4 py-3 text-white placeholder:text-white/22 focus:border-[#f97360] focus:outline-none" />
-                        </div>
-                        {newPwd && confirmPwd && newPwd !== confirmPwd ? (
-                          <p className="text-xs text-red-400">{locale === 'uz' ? 'Parollar mos emas' : 'Пароли не совпадают'}</p>
-                        ) : null}
-
-                        <button type="submit" disabled={loading || newPwd.length < 6 || newPwd !== confirmPwd} className="w-full rounded-2xl bg-[#f97360] px-4 py-3 font-semibold text-white transition hover:bg-[#e56350] disabled:opacity-50">
-                          {loading ? (
-                            <span className="inline-flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> {t('working', 'Working...')}</span>
-                          ) : (locale === 'uz' ? 'Parolni saqlash' : 'Сохранить пароль')}
-                        </button>
-                      </>
                     )}
 
                     {error ? <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-100">{error}</div> : null}
                     {info ? <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">{info}</div> : null}
+
+                    <div className="text-center text-sm text-white/46">
+                      {locale === 'uz' ? "Akkauntingiz yo'qmi?" : 'Нет аккаунта?'}{' '}
+                      <Link to="/register" className="font-semibold text-[#f97360] hover:underline">{locale === 'uz' ? "Ro'yxatdan o'tish" : 'Регистрация'}</Link>
+                    </div>
                   </form>
                 </motion.div>
               </AnimatePresence>

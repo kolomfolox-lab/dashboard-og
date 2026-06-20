@@ -7,12 +7,7 @@ interface AuthContextValue {
   loginWithPassword: (payload: { phone_number: string; password: string }) => Promise<AuthResponse>;
   sendOtp: (email: string) => Promise<any>;
   verifyOtp: (payload: { email: string; code: string }) => Promise<AuthResponse>;
-  requestTelegramOtp: (identifier: string) => Promise<any>;
-  verifyTelegramOtp: (payload: { identifier: string; code: string }) => Promise<AuthResponse>;
   setPassword: (payload: { identifier: string; code: string; new_password: string }) => Promise<AuthResponse>;
-  requestTelegramPasswordReset: (identifier: string) => Promise<any>;
-  verifyResetOtp: (payload: { identifier: string; code: string }) => Promise<any>;
-  confirmTelegramPasswordReset: (payload: { identifier: string; code: string; new_password: string }) => Promise<any>;
   replaceUser: (nextUser: AppUser) => void;
   logout: () => void;
 }
@@ -101,32 +96,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(response.data.user);
         return response.data;
       },
-      requestTelegramOtp: async (identifier) => {
-        const response = await authAPI.requestTelegramOtp({ identifier });
-        return response.data;
-      },
-      verifyTelegramOtp: async (payload) => {
-        const response = await authAPI.verifyTelegramOtp(payload);
-        persistAuth(response.data);
-        setUser(response.data.user);
-        return response.data;
-      },
       setPassword: async (payload) => {
         const response = await authAPI.setPassword(payload);
         persistAuth(response.data);
         setUser(response.data.user);
-        return response.data;
-      },
-      requestTelegramPasswordReset: async (identifier) => {
-        const response = await authAPI.requestTelegramPasswordReset({ identifier });
-        return response.data;
-      },
-      verifyResetOtp: async (payload) => {
-        const response = await authAPI.verifyResetOtp(payload);
-        return response.data;
-      },
-      confirmTelegramPasswordReset: async (payload) => {
-        const response = await authAPI.confirmTelegramPasswordReset(payload);
         return response.data;
       },
       replaceUser: (nextUser) => {

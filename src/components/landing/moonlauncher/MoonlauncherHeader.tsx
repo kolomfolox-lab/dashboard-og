@@ -10,18 +10,18 @@ type Props = {
   onClose: () => void;
 };
 
-export function MoonlauncherHeader({ mobileOpen, onToggle, onClose }: Props) {
+export function WaitlyHeader({ mobileOpen, onToggle, onClose }: Props) {
   return (
     <header className="sticky top-0 z-50 px-4 pt-4 md:px-6">
       <div className="mx-auto max-w-7xl rounded-[28px] border border-white/10 bg-[#081320]/84 px-4 py-3 shadow-[0_16px_50px_rgba(0,0,0,0.24)] backdrop-blur-xl md:px-5">
         <div className="flex items-center justify-between gap-4">
           <a href="#top" className="flex min-w-0 items-center gap-3">
             <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.12),rgba(255,255,255,0.04))]">
-              <img src={waitlyLogo} alt="Moonlauncher" className="h-7 w-7 object-contain" />
+              <img src={waitlyLogo} alt="Waitly" className="h-7 w-7 object-contain" />
             </div>
             <div className="min-w-0">
-              <div className="truncate text-sm font-black uppercase tracking-[0.28em] text-white/88">Moonlauncher</div>
-              <div className="truncate text-xs text-white/46">Hospitality operating system</div>
+              <div className="truncate text-sm font-black uppercase tracking-[0.28em] text-white/88">Waitly</div>
+              <div className="truncate text-xs text-white/46">Restaurant operating system</div>
             </div>
           </a>
 

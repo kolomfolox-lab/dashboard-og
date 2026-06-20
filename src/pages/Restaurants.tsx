@@ -1,5 +1,5 @@
-﻿import { useEffect, useState } from 'react';
-import { KeyRound, Store, Trash2 } from 'lucide-react';
+﻿import { useEffect, useMemo, useState } from 'react';
+import { DollarSign, KeyRound, Store, Trash2 } from 'lucide-react';
 
 import { AppShell } from '@/components/app/AppShell';
 import { DataTable } from '@/components/app/DataTable';
@@ -21,10 +21,11 @@ export default function RestaurantsPage() {
   const [restaurants, setRestaurants] = useState<any[]>([]);
   const [keys, setKeys] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
+  const [revenueMap, setRevenueMap] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState('all');
   const [error, setError] = useState('');
-  const isSubscribed = user?.role !== 'RESTAURANT_OWNER' || workspace.selectedRestaurant?.subscription_active !== false;
+  const isSubscribed = user?.role === 'SUPER_ADMIN' || workspace.selectedRestaurant?.subscription_active !== false;
 
   const load = async () => {
     setLoading(true);
@@ -43,13 +44,24 @@ export default function RestaurantsPage() {
         return;
       }
 
-      if (workspace.selectedRestaurantId && user?.role === 'RESTAURANT_OWNER') {
-        if (workspace.selectedRestaurant?.subscription_active === false) {
-          setOrders([]);
-          return;
-        }
-        const ordersResponse = await ownerAPI.getOrders(workspace.selectedRestaurantId, period);
+      const ownerRestaurants = workspace.restaurants || [];
+      if (ownerRestaurants.length === 0) return;
+
+      if (workspace.selectedRestaurantId && workspace.selectedRestaurant?.subscription_active !== false) {
+        const [ordersResponse, ...statsResponses] = await Promise.all([
+          ownerAPI.getOrders(workspace.selectedRestaurantId, period),
+          ...ownerRestaurants.map(r => ownerAPI.getStats(r.id).catch(() => ({ data: {} }))),
+        ]);
         setOrders(ordersResponse.data || []);
+
+        const revMap: Record<string, number> = {};
+        statsResponses.forEach((res, i) => {
+          const data = res.data || {};
+          revMap[ownerRestaurants[i].id] = data.total_revenue ?? data.revenue_today ?? 0;
+        });
+        setRevenueMap(revMap);
+      } else {
+        setOrders([]);
       }
     } catch (err: any) {
       setError(err?.response?.data?.error || (locale === 'uz' ? 'Restoran operatsiyalarini yuklab bo‘lmadi.' : 'Не удалось загрузить операции ресторанов.'));
@@ -201,25 +213,45 @@ export default function RestaurantsPage() {
           <Panel title={locale === 'uz' ? 'Restoranlar ro‘yxati' : 'Список ресторанов'} eyebrow={locale === 'uz' ? 'Tuzilma' : 'Структура'} description={locale === 'uz' ? 'Hisobga bog‘langan barcha restoranlar shu yerda.' : 'Здесь показаны все рестораны, привязанные к аккаунту.'}>
             <div className="grid gap-4 md:grid-cols-2">
               {(workspace.restaurants || []).map((restaurant: any) => (
-                <div key={restaurant.id} className="rounded-[24px] border border-white/8 bg-black/12 p-5">
-                  <div className="font-semibold text-white">{restaurant.name}</div>
+                <div key={restaurant.id} className={`rounded-[24px] border p-5 ${restaurant.id === workspace.selectedRestaurantId ? 'border-[#8fd4ff]/25 bg-white/[0.04]' : 'border-white/8 bg-black/12'}`}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="font-semibold text-white">{restaurant.name}</div>
+                    <div className={`shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${restaurant.subscription_active ? 'bg-emerald-500/12 text-emerald-200' : 'bg-amber-400/12 text-amber-200'}`}>
+                      {restaurant.subscription_active ? (locale === 'uz' ? 'Faol' : 'Активна') : (locale === 'uz' ? 'Nofaol' : 'Неактивна')}
+                    </div>
+                  </div>
                   <div className="mt-1 text-sm text-white/42">{restaurant.slug}</div>
-                  <div className="mt-4 text-sm text-white/52">{locale === 'uz' ? 'Obuna' : 'Подписка'}: {restaurant.subscription_active ? (locale === 'uz' ? 'Faol' : 'Активна') : (locale === 'uz' ? 'Nofaol' : 'Неактивна')}</div>
+                  <div className="mt-4 flex items-center gap-2 text-sm text-white/70">
+                    <DollarSign className="h-4 w-4 text-emerald-400" />
+                    {revenueMap[restaurant.id] !== undefined
+                      ? formatMoney(revenueMap[restaurant.id])
+                      : '—'}
+                  </div>
                 </div>
               ))}
             </div>
           </Panel>
 
           <Panel title={locale === 'uz' ? 'Buyurtmalar tarixi' : 'История заказов'} eyebrow={locale === 'uz' ? 'Operatsiyalar' : 'Операции'} description={locale === 'uz' ? 'Bugun, 7 kun, 30 kun yoki barcha davr bo‘yicha ko‘rish mumkin.' : 'Можно смотреть за сегодня, 7 дней, 30 дней или за весь период.'}>
-            <div className="mb-4 flex flex-wrap gap-2">
-              {['today', '7d', '30d', 'all'].map((value) => (
-                <Button key={value} variant={period === value ? 'default' : 'ghost'} size="sm" onClick={() => setPeriod(value)}>
-                  {value}
-                </Button>
-              ))}
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap gap-2">
+                {['today', '7d', '30d', 'all'].map((value) => (
+                  <Button key={value} variant={period === value ? 'default' : 'ghost'} size="sm" onClick={() => setPeriod(value)}>
+                    {value}
+                  </Button>
+                ))}
+              </div>
+              {orders.length > 0 ? (
+                <div className="flex items-center gap-2 text-sm text-white/70">
+                  <DollarSign className="h-4 w-4 text-emerald-400" />
+                  <span className="font-semibold text-white">{formatMoney(orders.reduce((s, o) => s + (Number(o.total) || 0), 0))}</span>
+                  <span className="text-white/40">· {orders.length} {locale === 'uz' ? 'ta buyurtma' : 'заказов'}</span>
+                </div>
+              ) : null}
             </div>
             <DataTable
               rows={orders}
+              maxHeight={420}
               emptyMessage={loading ? (locale === 'uz' ? 'Buyurtmalar yuklanmoqda...' : 'Загрузка заказов...') : (locale === 'uz' ? 'Bu davr uchun buyurtmalar yo‘q.' : 'За выбранный период заказов нет.')}
               columns={[
                 { label: locale === 'uz' ? 'Vaqt' : 'Когда', key: 'created_at_display' },

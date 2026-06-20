@@ -14,6 +14,7 @@ export interface AppUser {
   telegram_linked?: boolean;
   telegram_username?: string;
   telegram_auth_enabled?: boolean;
+  google_linked?: boolean;
 }
 
 export interface AuthResponse {
@@ -108,13 +109,6 @@ export interface OwnerInventoryResponse {
   movements: OwnerInventoryMovement[];
 }
 
-export interface TelegramLinkResponse {
-  link_code: string;
-  expires_at: string;
-  bot_username?: string;
-  bot_url?: string;
-  command: string;
-}
 
 export interface KitchenBootstrapResponse {
   restaurant: {
@@ -437,6 +431,50 @@ export interface OwnerFeedbackInsight {
   created_at: string;
 }
 
+export interface LoyaltyTier {
+  id: string;
+  restaurant: string;
+  name: string;
+  min_spend: number;
+  multiplier: number;
+  color: string;
+  is_active: boolean;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface LoyaltyPoint {
+  id: string;
+  guest: string;
+  restaurant: string;
+  points: number;
+  source: string;
+  note: string;
+  earned_at: string;
+  expires_at: string | null;
+}
+
+export interface LoyaltyRedemption {
+  id: string;
+  guest: string;
+  restaurant: string;
+  points_spent: number;
+  discount_amount: number;
+  order: string | null;
+  redeemed_at: string;
+}
+
+export interface PromoCodeValidationResponse {
+  valid: boolean;
+  promo_code_id?: string;
+  code?: string;
+  discount_type?: string;
+  discount_value?: number;
+  discount?: number;
+  error?: string;
+}
+
 export interface PublicBookingSlot {
   time: string;
   is_available: boolean;
@@ -537,16 +575,13 @@ export const authAPI = {
   loginWithTelegramMiniApp: (payload: { initData: string }) => api.post<TelegramMiniAppAuthResponse>('/v1/auth/telegram/', payload),
   sendOtp: (payload: { email: string }) => api.post('/auth/otp/send/', payload),
   verifyOtp: (payload: { email: string; code: string }) => api.post<AuthResponse>('/auth/otp/verify/', payload),
-  requestTelegramOtp: (payload: { identifier: string }) => api.post('/auth/telegram/request/', payload),
-  verifyTelegramOtp: (payload: { identifier: string; code: string }) => api.post<AuthResponse>('/auth/telegram/verify/', payload),
   setPassword: (payload: { identifier: string; code: string; new_password: string }) => api.post<AuthResponse>('/auth/password/set/', payload),
-  requestTelegramPasswordReset: (payload: { identifier: string }) => api.post('/auth/password/forgot/telegram/request/', payload),
-  verifyResetOtp: (payload: { identifier: string; code: string }) => api.post('/auth/password/forgot/telegram/verify/', payload),
-  confirmTelegramPasswordReset: (payload: { identifier: string; code: string; new_password: string }) => api.post('/auth/password/forgot/telegram/confirm/', payload),
-  requestTelegramLink: () => api.post<TelegramLinkResponse>('/auth/profile/telegram/link/request/'),
-  confirmTelegramLink: (payload: { link_code: string }) => api.post<{ message: string; user?: AppUser }>('/auth/profile/telegram/link/confirm/', payload),
-  unlinkTelegram: () => api.post<{ message: string; user?: AppUser }>('/auth/profile/telegram/unlink/'),
   getCurrentUser: () => api.get<AppUser>('/auth/users/me/'),
+  googleLogin: (payload: { credential: string }) => api.post<AuthResponse>('/auth/google/', payload),
+  linkGoogle: (payload: { credential: string }) => api.post<AppUser>('/auth/google/link/', payload),
+  register: (payload: { full_name: string; phone_number: string; email?: string; password: string; password_confirm: string }) => api.post<AuthResponse>('/auth/register/', payload),
+  onboarding: (payload: { chain_name: string; restaurant_name: string; staff_bot_token?: string }) =>
+    api.post<{ chain: { id: string; name: string; subdomain: string }; restaurant: any }>('/auth/onboarding/', payload),
 };
 
 export const telegramMiniAppAPI = {
@@ -574,11 +609,37 @@ export const adminAPI = {
   deleteChain: (chainId: string) => api.delete(`/admin/chains/${chainId}/`),
   deleteRestaurant: (restaurantId: string) => api.delete(`/admin/restaurants/${restaurantId}/`),
   getKeys: () => api.get('/admin/keys/'),
+  generateKey: (payload: { duration_months: number; count?: number }) => api.post('/admin/keys/generate/', payload),
   revokeKey: (keyId: string) => api.delete(`/admin/keys/${keyId}/revoke/`),
 };
 
+export interface OwnerMenuCategory {
+  id: string;
+  name: string;
+  name_uz: string;
+  name_en: string;
+  order: number;
+  dish_count: number;
+}
+
+export interface OwnerMenuDish {
+  id: string;
+  name: string;
+  name_uz: string;
+  name_en: string;
+  description: string;
+  ingredients: string;
+  price: string;
+  image: string | null;
+  category_id: string | null;
+  category_name: string | null;
+  cooking_time: number;
+  is_available: boolean;
+}
+
 export const ownerAPI = {
   getMe: () => api.get('/owner/me/'),
+  subscriptionStatus: (restaurantId: string) => api.get<OwnerSubscriptionStatusResponse>('/v1/owner/subscription/status/', { params: { restaurant_id: restaurantId } }),
   activateSubscription: (payload: { key: string; restaurant_id: string }) => api.post('/owner/subscription/activate/', payload),
   getReviewsProfile: (restaurantId?: string) => api.get<OwnerReviewsProfileResponse>('/v1/owner/restaurants/reviews-profile/', { params: restaurantId ? { restaurant_id: restaurantId } : {} }),
   updateReviewsProfile: (restaurantId: string, payload: FormData) =>
@@ -644,10 +705,128 @@ export const ownerAPI = {
     api.get<OwnerFeedbackInsight[] | { results: OwnerFeedbackInsight[] }>('/v1/core/crm/feedback-insights/', {
       params: restaurantId ? { restaurant_id: restaurantId } : {},
     }),
+  getLoyaltyTiers: (restaurantId?: string) =>
+    api.get<LoyaltyTier[] | { results: LoyaltyTier[] }>('/v1/core/crm/loyalty-tiers/', {
+      params: restaurantId ? { restaurant_id: restaurantId } : {},
+    }),
+  createLoyaltyTier: (payload: { restaurant_id: string; name: string; min_spend: number; multiplier: number; color?: string; is_active?: boolean; sort_order?: number }) =>
+    api.post<LoyaltyTier>('/v1/core/crm/loyalty-tiers/', payload),
+  updateLoyaltyTier: (tierId: string, payload: Partial<{ name: string; min_spend: number; multiplier: number; color: string; is_active: boolean; sort_order: number }>) =>
+    api.patch<LoyaltyTier>(`/v1/core/crm/loyalty-tiers/${tierId}/`, payload),
+  deleteLoyaltyTier: (tierId: string) => api.delete(`/v1/core/crm/loyalty-tiers/${tierId}/`),
+  getLoyaltyPoints: (params?: { guest_id?: string; restaurant_id?: string }) =>
+    api.get<LoyaltyPoint[] | { results: LoyaltyPoint[] }>('/v1/core/crm/loyalty-points/', { params }),
+  createLoyaltyPoint: (payload: { guest_id: string; restaurant_id: string; points: number; source?: string; note?: string }) =>
+    api.post<LoyaltyPoint>('/v1/core/crm/loyalty-points/', payload),
+  getLoyaltyRedemptions: (params?: { guest_id?: string; restaurant_id?: string }) =>
+    api.get<LoyaltyRedemption[] | { results: LoyaltyRedemption[] }>('/v1/core/crm/loyalty-redemptions/', { params }),
+  getMenuCategories: (restaurantId?: string) =>
+    api.get<OwnerMenuCategory[]>('/owner/menu/categories/', { params: restaurantId ? { restaurant_id: restaurantId } : {} }),
+  createMenuCategory: (payload: { restaurant_id: string; name: string; name_uz?: string; name_en?: string; order?: number }) =>
+    api.post<OwnerMenuCategory>('/owner/menu/categories/', payload),
+  updateMenuCategory: (categoryId: string, payload: { name?: string; name_uz?: string; name_en?: string; order?: number }) =>
+    api.put<OwnerMenuCategory>(`/owner/menu/categories/${categoryId}/`, payload),
+  deleteMenuCategory: (categoryId: string) => api.delete(`/owner/menu/categories/${categoryId}/`),
+  getMenuDishes: (restaurantId?: string) =>
+    api.get<OwnerMenuDish[]>('/owner/menu/dishes/', { params: restaurantId ? { restaurant_id: restaurantId } : {} }),
+  createMenuDish: (payload: FormData) => api.post<OwnerMenuDish>('/owner/menu/dishes/', payload),
+  updateMenuDish: (dishId: string, payload: FormData) => api.put<OwnerMenuDish>(`/owner/menu/dishes/${dishId}/`, payload),
+  deleteMenuDish: (dishId: string) => api.delete(`/owner/menu/dishes/${dishId}/`),
+
+  // Shift Reports (X/Z)
+  getShiftReports: (restaurantId: string) =>
+    api.get('/orders/shift-reports/', { params: { restaurant_id: restaurantId } }),
+  generateXReport: (payload: { restaurant_id: string; shift_id?: string }) =>
+    api.post('/orders/shift-reports/generate_x/', payload),
+  generateZReport: (payload: { restaurant_id: string; shift_id?: string }) =>
+    api.post('/orders/shift-reports/generate_z/', payload),
+
+  // Tech Cards
+  getTechCards: (restaurantId?: string) =>
+    api.get('/inventory/tech-cards/', { params: restaurantId ? { restaurant_id: restaurantId } : {} }),
+  createTechCard: (payload: { restaurant: string; dish: string; yield_amount?: number; cooking_instructions?: string; cooking_time_minutes?: number }) =>
+    api.post('/inventory/tech-cards/', payload),
+  updateTechCard: (id: string, payload: any) =>
+    api.patch(`/inventory/tech-cards/${id}/`, payload),
+  deleteTechCard: (id: string) =>
+    api.delete(`/inventory/tech-cards/${id}/`),
+  addTechCardItem: (techCardId: string, payload: { ingredient: string; quantity_needed: number; ingredient_cost_price?: number }) =>
+    api.post(`/inventory/tech-cards/${techCardId}/add_item/`, payload),
+  removeTechCardItem: (techCardId: string, itemId: string) =>
+    api.post(`/inventory/tech-cards/${techCardId}/remove_item/`, { item_id: itemId }),
+  recalculateTechCard: (techCardId: string) =>
+    api.post(`/inventory/tech-cards/${techCardId}/recalculate/`),
+
+  // Staff photo upload
+  updateStaffPhoto: (staffId: string, formData: FormData) =>
+    api.patch(`/owner/staff/${staffId}/`, formData),
 };
 
 export const userAPI = {
   list: () => api.get('/auth/users/'),
+};
+
+export const paymentsAPI = {
+  getMerchantConfigs: (restaurantId?: string) =>
+    api.get('/payments/merchant-configs/', { params: restaurantId ? { restaurant_id: restaurantId } : {} }),
+  createMerchantConfig: (payload: { restaurant: string; provider: string; merchant_id?: string; merchant_key?: string; terminal_id?: string; is_active?: boolean }) =>
+    api.post('/payments/merchant-configs/', payload),
+  updateMerchantConfig: (id: string, payload: any) =>
+    api.patch(`/payments/merchant-configs/${id}/`, payload),
+  deleteMerchantConfig: (id: string) =>
+    api.delete(`/payments/merchant-configs/${id}/`),
+  getTransactions: (restaurantId?: string) =>
+    api.get('/payments/transactions/', { params: restaurantId ? { restaurant_id: restaurantId } : {} }),
+  refundTransaction: (id: string) =>
+    api.post(`/payments/transactions/${id}/refund/`),
+
+  // Fiscal
+  getFiscalConfigs: (restaurantId?: string) =>
+    api.get('/payments/fiscal-configs/', { params: restaurantId ? { restaurant_id: restaurantId } : {} }),
+  createFiscalConfig: (payload: any) =>
+    api.post('/payments/fiscal-configs/', payload),
+  updateFiscalConfig: (id: string, payload: any) =>
+    api.patch(`/payments/fiscal-configs/${id}/`, payload),
+  deleteFiscalConfig: (id: string) =>
+    api.delete(`/payments/fiscal-configs/${id}/`),
+  getFiscalReceipts: (restaurantId?: string) =>
+    api.get('/payments/fiscal-receipts/', { params: restaurantId ? { restaurant_id: restaurantId } : {} }),
+};
+
+export const marketingAPI = {
+  // Promo Codes
+  getPromoCodes: (restaurantId?: string) =>
+    api.get('/marketing/promo-codes/', { params: restaurantId ? { restaurant_id: restaurantId } : {} }),
+  createPromoCode: (payload: any) => api.post('/marketing/promo-codes/', payload),
+  updatePromoCode: (id: string, payload: any) => api.patch(`/marketing/promo-codes/${id}/`, payload),
+  deletePromoCode: (id: string) => api.delete(`/marketing/promo-codes/${id}/`),
+  validatePromoCode: (payload: { code: string; order_amount: number; guest_id?: string }) =>
+    api.post<PromoCodeValidationResponse>('/marketing/promo-codes/validate/', payload),
+
+  // Auto Notify
+  getAutoNotifySettings: (restaurantId?: string) =>
+    api.get('/marketing/auto-notify/', { params: restaurantId ? { restaurant_id: restaurantId } : {} }),
+  createAutoNotifySetting: (payload: any) => api.post('/marketing/auto-notify/', payload),
+  updateAutoNotifySetting: (id: string, payload: any) => api.patch(`/marketing/auto-notify/${id}/`, payload),
+  deleteAutoNotifySetting: (id: string) => api.delete(`/marketing/auto-notify/${id}/`),
+
+  // Surveys
+  getSurveyTemplates: (restaurantId?: string) =>
+    api.get('/marketing/survey-templates/', { params: restaurantId ? { restaurant_id: restaurantId } : {} }),
+  createSurveyTemplate: (payload: any) => api.post('/marketing/survey-templates/', payload),
+  updateSurveyTemplate: (id: string, payload: any) => api.patch(`/marketing/survey-templates/${id}/`, payload),
+  deleteSurveyTemplate: (id: string) => api.delete(`/marketing/survey-templates/${id}/`),
+  getSurveyResponses: (restaurantId?: string) =>
+    api.get('/marketing/survey-responses/', { params: restaurantId ? { restaurant_id: restaurantId } : {} }),
+};
+
+export const dataExportAPI = {
+  exportRestaurants: (restaurantId: string) =>
+    api.get(`/admin/reports/restaurant/${restaurantId}/`, { responseType: 'blob' }),
+  exportTaxReport: (restaurantId: string) =>
+    api.get(`/admin/reports/restaurant/${restaurantId}/tax/`, { responseType: 'blob' }),
+  exportChain: (chainId: string) =>
+    api.get(`/admin/reports/chain/${chainId}/`, { responseType: 'blob' }),
 };
 
 export const kitchenAPI = {

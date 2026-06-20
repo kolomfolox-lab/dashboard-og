@@ -104,7 +104,7 @@ export const hostRows: HostItem[] = [
 
 export const proofCards: ProofItem[] = [
   {
-    quote: 'Moonlauncher feels less like a dashboard farm and more like one restaurant operating system with a public face.',
+    quote: 'Waitly feels less like a dashboard farm and more like one restaurant operating system with a public face.',
     author: 'Independent operator',
     role: 'Early product feedback',
   },

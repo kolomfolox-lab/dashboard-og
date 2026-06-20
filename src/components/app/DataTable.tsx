@@ -7,14 +7,14 @@ interface Column<T> {
   className?: string;
 }
 
-export function DataTable<T extends Record<string, any>>({ columns, rows, emptyMessage = 'Nothing to show yet.' }: { columns: Array<Column<T>>; rows: T[]; emptyMessage?: string }) {
+export function DataTable<T extends Record<string, any>>({ columns, rows, emptyMessage = 'Nothing to show yet.', maxHeight }: { columns: Array<Column<T>>; rows: T[]; emptyMessage?: string; maxHeight?: number }) {
   if (!rows.length) {
     return <div className="rounded-[24px] border border-dashed border-white/10 bg-black/10 px-5 py-10 text-center text-sm text-white/48">{emptyMessage}</div>;
   }
 
   return (
     <div className="overflow-hidden rounded-[24px] border border-white/10">
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto" style={maxHeight ? { maxHeight, overflowY: 'auto' } : undefined}>
         <table className="min-w-full divide-y divide-white/8">
           <thead className="bg-white/[0.03]">
             <tr>

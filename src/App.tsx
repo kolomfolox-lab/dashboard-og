@@ -4,26 +4,40 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { VideoSplashLoader } from '@/components/app/VideoSplashLoader';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { LocaleProvider } from '@/context/LocaleContext';
+import { ThemeProvider } from '@/context/ThemeContext';
 import AnalyticsPage from '@/pages/Analytics.tsx';
+import AttendanceStatsPage from '@/pages/AttendanceStats.tsx';
+import AutoNotifyPage from '@/pages/AutoNotify.tsx';
+import BookingsPage from '@/pages/Bookings.tsx';
 import BrandStudioPage from '@/pages/BrandStudio.tsx';
 import CRMPage from '@/pages/CRM.tsx';
 import DashboardPage from '@/pages/Dashboard.tsx';
+import DataExportPage from '@/pages/DataExport.tsx';
 import InventoryPage from '@/pages/Inventory.tsx';
+import KeysPage from '@/pages/KeysPage.tsx';
 import KitchenDisplayPage from '@/pages/KitchenDisplay.tsx';
-import LandingPage from '@/pages/LandingPage.tsx';
 import LoginPage from '@/pages/Login.tsx';
+import LoyaltyPage from '@/pages/Loyalty.tsx';
+import MenuPage from '@/pages/Menu.tsx';
 import OnlineMenuStudioPage from '@/pages/OnlineMenuStudio.tsx';
+import PaymentsPage from '@/pages/Payments.tsx';
+import PermissionsPage from '@/pages/Permissions.tsx';
+import PromoPage from '@/pages/Promo.tsx';
+import RegisterPage from '@/pages/Register.tsx';
+import ReportsPage from '@/pages/Reports.tsx';
 import RestaurantsPage from '@/pages/Restaurants.tsx';
 import SettingsPage from '@/pages/Settings.tsx';
 import SubscriptionPage from '@/pages/SubscriptionPage.tsx';
+import SurveysPage from '@/pages/Surveys.tsx';
 import TablesPage from '@/pages/Tables.tsx';
+import TechCardsPage from '@/pages/TechCards.tsx';
 import UsersPage from '@/pages/Users.tsx';
 import GuestTrackingPage from '@/pages/public/GuestTrackingPage.tsx';
 import OnlineMenuPage from '@/pages/public/OnlineMenuPage.tsx';
-import ReviewsHubPage from '@/pages/public/ReviewsHubPage.tsx';
-import ReviewsRestaurantPage from '@/pages/public/ReviewsRestaurantPage.tsx';
+import OwnerOnboardingPage from '@/pages/public/OwnerOnboardingPage.tsx';
+import OwnerSetupPage from '@/pages/OwnerSetupPage.tsx';
+import ReceiptPage from '@/pages/public/ReceiptPage.tsx';
 import TelegramMiniAppPage from '@/pages/public/TelegramMiniAppPage.tsx';
-import { isLocalHost, isMarketingHost, isReviewHubHost, shouldUseReviewsRoot } from '@/lib/publicHost';
 
 let authSplashShown = false;
 
@@ -44,26 +58,18 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
   if (loading || !minSplashDone) {
     return <VideoSplashLoader title="Booting Waitly Control" subtitle="Checking the saved session and preparing the workspace." durationMs={4000} />;
   }
-  return user ? <>{children}</> : <Navigate to="/login" replace />;
+  return user ? <ThemeProvider>{children}</ThemeProvider> : <Navigate to="/login" replace />;
 }
 
 function HomeRoute() {
   const { user, loading } = useAuth();
-  if (isMarketingHost() || isLocalHost()) return <LandingPage />;
-  if (!shouldUseReviewsRoot() && loading && !authSplashShown) {
+  if (loading && !authSplashShown) {
     return <VideoSplashLoader title="Launching Waitly" subtitle="Restoring the workspace and preparing the control panel." durationMs={4000} />;
   }
-  if (shouldUseReviewsRoot()) return <ReviewsHubPage />;
   return <Navigate to={user ? '/dashboard' : '/login'} replace />;
 }
 
 function FallbackRoute() {
-  if (isMarketingHost()) {
-    return <Navigate to="/" replace />;
-  }
-  if (isReviewHubHost()) {
-    return <div className="grid min-h-screen place-items-center bg-[#eef3f7] px-4 text-slate-900"><div className="max-w-xl rounded-[32px] border border-slate-200 bg-white p-8 text-center shadow-[0_24px_80px_rgba(15,23,42,0.08)]"><div className="text-[11px] font-bold uppercase tracking-[0.3em] text-slate-400">Public route</div><h1 className="mt-4 text-4xl font-black tracking-[-0.05em]">This page was not found.</h1><p className="mt-4 text-sm leading-7 text-slate-600">The reviews hub only exposes the landing page and restaurant review routes.</p></div></div>;
-  }
   return <Navigate to="/dashboard" replace />;
 }
 
@@ -72,26 +78,40 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<HomeRoute />} />
-      <Route path="/landing" element={<LandingPage />} />
       <Route path="/tv/:restaurantSlug/:kitchenToken" element={<KitchenDisplayPage />} />
       <Route path="/qr/:restaurantSlug/table:tableNumber/*" element={<GuestTrackingPage />} />
       <Route path="/telegram-mini-app" element={<TelegramMiniAppPage />} />
       <Route path="/telegram-mini-app/:restaurantSlug/table:tableNumber" element={<TelegramMiniAppPage />} />
       <Route path="/menu/:restaurantSlug/*" element={<OnlineMenuPage />} />
-      <Route path="/restaurants/:restaurantSubdomain/*" element={<ReviewsRestaurantPage />} />
-      <Route path="/chains/:chainSubdomain/:restaurantSlug/*" element={<ReviewsRestaurantPage />} />
+      <Route path="/receipt/:transactionId" element={<ReceiptPage />} />
+      <Route path="/owner/invite/:token" element={<OwnerOnboardingPage />} />
       <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <LoginPage />} />
       <Route path="/dashboard" element={<PrivateRoute><DashboardPage /></PrivateRoute>} />
       <Route path="/restaurants" element={<PrivateRoute><RestaurantsPage /></PrivateRoute>} />
       <Route path="/analytics" element={<PrivateRoute><AnalyticsPage /></PrivateRoute>} />
+      <Route path="/attendance" element={<PrivateRoute><AttendanceStatsPage /></PrivateRoute>} />
+      <Route path="/bookings" element={<PrivateRoute><BookingsPage /></PrivateRoute>} />
       <Route path="/crm" element={<PrivateRoute><CRMPage /></PrivateRoute>} />
+      <Route path="/loyalty" element={<PrivateRoute><LoyaltyPage /></PrivateRoute>} />
+      <Route path="/menu" element={<PrivateRoute><MenuPage /></PrivateRoute>} />
       <Route path="/users" element={<PrivateRoute><UsersPage /></PrivateRoute>} />
       <Route path="/tables" element={<PrivateRoute><TablesPage /></PrivateRoute>} />
       <Route path="/inventory" element={<PrivateRoute><InventoryPage /></PrivateRoute>} />
+      <Route path="/keys" element={<PrivateRoute><KeysPage /></PrivateRoute>} />
       <Route path="/settings" element={<PrivateRoute><SettingsPage /></PrivateRoute>} />
+      <Route path="/setup" element={<PrivateRoute><OwnerSetupPage /></PrivateRoute>} />
       <Route path="/brand-studio" element={<PrivateRoute><BrandStudioPage /></PrivateRoute>} />
       <Route path="/online-menu-studio" element={<PrivateRoute><OnlineMenuStudioPage /></PrivateRoute>} />
+      <Route path="/payments" element={<PrivateRoute><PaymentsPage /></PrivateRoute>} />
       <Route path="/subscription" element={<PrivateRoute><SubscriptionPage /></PrivateRoute>} />
+      <Route path="/reports" element={<PrivateRoute><ReportsPage /></PrivateRoute>} />
+      <Route path="/tech-cards" element={<PrivateRoute><TechCardsPage /></PrivateRoute>} />
+      <Route path="/promo" element={<PrivateRoute><PromoPage /></PrivateRoute>} />
+      <Route path="/surveys" element={<PrivateRoute><SurveysPage /></PrivateRoute>} />
+      <Route path="/auto-notify" element={<PrivateRoute><AutoNotifyPage /></PrivateRoute>} />
+      <Route path="/data-export" element={<PrivateRoute><DataExportPage /></PrivateRoute>} />
+      <Route path="/permissions" element={<PrivateRoute><PermissionsPage /></PrivateRoute>} />
+      <Route path="/register" element={user ? <Navigate to="/dashboard" replace /> : <RegisterPage />} />
       <Route path="*" element={<FallbackRoute />} />
     </Routes>
   );
