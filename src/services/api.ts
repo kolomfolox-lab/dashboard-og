@@ -168,6 +168,7 @@ export interface GuestLoadSnapshot {
 export interface GuestOrderItem {
   name: string;
   quantity: number;
+  price: number;
   notes?: string;
   cooking_time?: number | null;
 }
@@ -188,6 +189,7 @@ export interface GuestOrder {
   };
   queue_position: number;
   load_level: string;
+  total_amount: number;
   items: GuestOrderItem[];
 }
 
@@ -578,9 +580,10 @@ export const authAPI = {
   setPassword: (payload: { identifier: string; code: string; new_password: string }) => api.post<AuthResponse>('/auth/password/set/', payload),
   getCurrentUser: () => api.get<AppUser>('/auth/users/me/'),
   googleLogin: (payload: { credential: string }) => api.post<AuthResponse>('/auth/google/', payload),
+  registerGoogle: (payload: { credential: string; phone_number: string; full_name?: string }) => api.post<AuthResponse>('/auth/register_google/', payload),
   linkGoogle: (payload: { credential: string }) => api.post<AppUser>('/auth/google/link/', payload),
   register: (payload: { full_name: string; phone_number: string; email?: string; password: string; password_confirm: string }) => api.post<AuthResponse>('/auth/register/', payload),
-  onboarding: (payload: { chain_name: string; restaurant_name: string; staff_bot_token?: string }) =>
+  onboarding: (payload: { chain_name: string; restaurant_name: string; staff_bot_token?: string; onboarding_answers?: Record<string, any> }) =>
     api.post<{ chain: { id: string; name: string; subdomain: string }; restaurant: any }>('/auth/onboarding/', payload),
 };
 
@@ -613,6 +616,17 @@ export const adminAPI = {
   revokeKey: (keyId: string) => api.delete(`/admin/keys/${keyId}/revoke/`),
 };
 
+export interface OwnerTable {
+  id: string;
+  number: string;
+  is_occupied: boolean;
+  waiter: string | null;
+  qr_url: string;
+  has_qr: boolean;
+  pos_x: number | null;
+  pos_y: number | null;
+}
+
 export interface OwnerMenuCategory {
   id: string;
   name: string;
@@ -630,6 +644,9 @@ export interface OwnerMenuDish {
   description: string;
   ingredients: string;
   price: string;
+  cost_price: string;
+  margin: number;
+  margin_percent: number | null;
   image: string | null;
   category_id: string | null;
   category_name: string | null;
@@ -678,9 +695,10 @@ export const ownerAPI = {
   deleteStaff: (staffId: string) => api.delete(`/owner/staff/${staffId}/`),
   resendStaffInvite: (staffId: string) => api.post(`/owner/staff/${staffId}/resend-invite/`),
   getStats: (restaurantId?: string) => api.get('/owner/stats/', { params: restaurantId ? { restaurant_id: restaurantId } : {} }),
-  getTables: (restaurantId?: string) => api.get('/owner/tables/', { params: restaurantId ? { restaurant_id: restaurantId } : {} }),
-  createTable: (payload: { restaurant_id: string; number: string }) => api.post('/owner/tables/', payload),
+  getTables: (restaurantId?: string) => api.get<OwnerTable[]>('/owner/tables/', { params: restaurantId ? { restaurant_id: restaurantId } : {} }),
+  createTable: (payload: { restaurant_id: string; number: string; pos_x?: number; pos_y?: number }) => api.post('/owner/tables/', payload),
   deleteTable: (tableId: string) => api.delete(`/owner/tables/${tableId}/`),
+  updateTablePosition: (tableId: string, payload: { pos_x: number; pos_y: number }) => api.put(`/owner/tables/${tableId}/`, payload),
   getTableQr: (tableId: string) => `${resolvedBase}/owner/tables/${tableId}/qr/`,
   getTablesQrPdf: (restaurantId?: string) => `${resolvedBase}/owner/tables/qr-pdf/${restaurantId ? `?restaurant_id=${restaurantId}` : ''}`,
   getInventory: (restaurantId?: string) =>
@@ -760,6 +778,42 @@ export const ownerAPI = {
   // Staff photo upload
   updateStaffPhoto: (staffId: string, formData: FormData) =>
     api.patch(`/owner/staff/${staffId}/`, formData),
+
+  // Hall map (floor plan objects)
+  getHallMap: (restaurantId: string) =>
+    api.get<any[]>('/v1/owner/hall-map/', { params: { restaurant_id: restaurantId } }),
+  saveHallMap: (restaurantId: string, objects: any[]) =>
+    api.put('/v1/owner/hall-map/', { restaurant_id: restaurantId, objects }),
+
+  // QR downloads (use these functions to trigger downloads with auth headers)
+  downloadTableQrPng: async (tableId: string) => {
+    const res = await api.get(`/owner/tables/${tableId}/qr/`, { responseType: 'blob' });
+    const disposition = res.headers['content-disposition'];
+    const match = disposition && disposition.match(/filename="(.+)"/);
+    const filename = match ? match[1] : `table_qr_${tableId}.png`;
+    const url = window.URL.createObjectURL(new Blob([res.data]));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  },
+  downloadTablesQrPdf: async (restaurantId: string) => {
+    const res = await api.get('/owner/tables/qr-pdf/', { params: { restaurant_id: restaurantId }, responseType: 'blob' });
+    const disposition = res.headers['content-disposition'];
+    const match = disposition && disposition.match(/filename="(.+)"/);
+    const filename = match ? match[1] : `qr_codes.pdf`;
+    const url = window.URL.createObjectURL(new Blob([res.data]));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  },
 };
 
 export const userAPI = {
@@ -888,6 +942,31 @@ export const publicAPI = {
     scope_subdomain?: string;
     scope_chain_subdomain?: string;
   }) => api.post<{ message: string; booking: OwnerBooking }>(`/v1/public/menu/${restaurantSlug}/bookings/`, payload),
+};
+
+export interface GuestPaymentMethod {
+  id: string;
+  provider: string;
+  label: string;
+}
+
+export interface GuestPaymentMethodsResponse {
+  providers: GuestPaymentMethod[];
+}
+
+export interface GuestPaymentInitResponse {
+  transaction_id: string;
+  amount: number;
+  provider: string;
+  status: string;
+  payment_url: string | null;
+}
+
+export const guestPaymentAPI = {
+  methods: (guestToken: string) =>
+    api.get<GuestPaymentMethodsResponse>('/v1/guest/payment/methods/', { params: { guest_token: guestToken } }),
+  init: (payload: { guest_token: string; order_id: string; provider: string }) =>
+    api.post<GuestPaymentInitResponse>('/v1/guest/payment/init/', payload),
 };
 
 export default api;

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { BellRing, CheckCheck, ChevronRight, Clock3, Flame, Loader2, MapPinned, Route, ShieldCheck, Sparkles, Star, UserRound } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 
-import { publicAPI, type GuestActiveOrdersResponse, type GuestBootstrapResponse, type GuestLoadSnapshot, type GuestOrder, type GuestReviewPromptResponse } from '@/services/api';
+import { publicAPI, guestPaymentAPI, type GuestActiveOrdersResponse, type GuestBootstrapResponse, type GuestLoadSnapshot, type GuestOrder, type GuestPaymentMethod, type GuestReviewPromptResponse } from '@/services/api';
 
 declare global {
   interface Window {
@@ -71,6 +71,11 @@ export default function GuestTrackingPage() {
   const [turnstileToken, setTurnstileToken] = useState('');
   const [turnstileResetKey, setTurnstileResetKey] = useState(0);
   const [form, setForm] = useState(reviewDefaults);
+  const [paymentMethods, setPaymentMethods] = useState<GuestPaymentMethod[]>([]);
+  const [showPayment, setShowPayment] = useState(false);
+  const [paying, setPaying] = useState(false);
+  const [payError, setPayError] = useState('');
+  const [payUrl, setPayUrl] = useState('');
 
   useEffect(() => {
     let active = true;
@@ -155,6 +160,40 @@ export default function GuestTrackingPage() {
       await publicAPI.guestCallWaiter(bootstrap.guest_token);
     } finally {
       setWaiterBusy(false);
+    }
+  };
+
+  const handleOpenPayment = async () => {
+    if (!bootstrap?.guest_token) return;
+    try {
+      const res = await guestPaymentAPI.methods(bootstrap.guest_token);
+      setPaymentMethods(res.data.providers);
+      setShowPayment(true);
+      setPayError('');
+      setPayUrl('');
+    } catch (err: any) {
+      setPayError(err?.response?.data?.error?.message || 'No payment methods available.');
+    }
+  };
+
+  const handleInitPayment = async (provider: string) => {
+    if (!bootstrap?.guest_token || !orders.length || paying) return;
+    setPaying(true);
+    setPayError('');
+    try {
+      const res = await guestPaymentAPI.init({
+        guest_token: bootstrap.guest_token,
+        order_id: orders[0].id,
+        provider,
+      });
+      if (res.data.payment_url) {
+        window.open(res.data.payment_url, '_blank');
+      }
+      setPayUrl(`/receipt/${res.data.transaction_id}`);
+    } catch (err: any) {
+      setPayError(err?.response?.data?.error?.message || 'Payment initiation failed.');
+    } finally {
+      setPaying(false);
     }
   };
 
@@ -298,6 +337,43 @@ export default function GuestTrackingPage() {
                 {waiterBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <BellRing className="h-4 w-4" />}
                 {waiterBusy ? 'Sending request...' : 'Call waiter'}
               </button>
+
+              {orders.length > 0 && orders[0].total_amount ? (
+                <button
+                  type="button"
+                  onClick={handleOpenPayment}
+                  disabled={!bootstrap?.guest_token}
+                  className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-[22px] bg-[#0f766e] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#0d6b63] disabled:opacity-60"
+                >
+                  {payUrl ? 'Paid' : `Pay ${orders[0].total_amount.toLocaleString()} UZS`}
+                </button>
+              ) : null}
+
+              {showPayment && paymentMethods.length > 0 && !payUrl ? (
+                <div className="mt-4 space-y-2">
+                  <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#8fd4ff]">Select payment method</div>
+                  {paymentMethods.map((m) => (
+                    <button
+                      key={m.id}
+                      type="button"
+                      onClick={() => handleInitPayment(m.provider)}
+                      disabled={paying}
+                      className="flex w-full items-center justify-center gap-2 rounded-[18px] border border-white/10 bg-white/[0.08] px-4 py-2.5 text-sm font-semibold text-white/80 transition hover:bg-white/[0.14] disabled:opacity-50"
+                    >
+                      {paying ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                      {m.label}
+                    </button>
+                  ))}
+                  {payError ? <div className="rounded-[14px] border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-200">{payError}</div> : null}
+                </div>
+              ) : null}
+
+              {payUrl ? (
+                <a href={payUrl} className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-[22px] border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm font-semibold text-emerald-200 transition hover:bg-emerald-500/20">
+                  View receipt
+                  <ChevronRight className="h-4 w-4" />
+                </a>
+              ) : null}
 
               {(bootstrap?.review_page_url || reviewUrl) ? (
                 <a href={(bootstrap?.review_page_url || reviewUrl)} className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-[22px] border border-white/12 bg-white/[0.06] px-4 py-3 text-sm font-semibold text-white/84 transition hover:bg-white/[0.1]">

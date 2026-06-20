@@ -196,7 +196,19 @@ export default function MenuPage() {
                       <h3 className="truncate text-sm font-bold text-theme">{dish.name}</h3>
                       {dish.category_name && <p className="mt-0.5 text-[10px] uppercase tracking-wider text-theme-muted">{dish.category_name}</p>}
                     </div>
-                    <div className="text-sm font-bold text-[#ffd4c4]">{formatMoney(Number(dish.price))}</div>
+                    <div className="text-right">
+                      <div className="text-sm font-bold text-[#ffd4c4]">{formatMoney(Number(dish.price))}</div>
+                      {Number(dish.cost_price) > 0 && (
+                        <div className="mt-0.5 text-[10px] text-theme-muted">
+                          {formatMoney(Number(dish.cost_price))}
+                          {dish.margin_percent !== null && (
+                            <span className={dish.margin_percent >= 30 ? 'ml-1 text-emerald-400' : dish.margin_percent > 0 ? 'ml-1 text-amber-400' : 'ml-1 text-red-400'}>
+                              ({dish.margin_percent}%)
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
                   {dish.ingredients && <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-theme-secondary">{dish.ingredients}</p>}
                   <div className="mt-3 flex items-center gap-2">

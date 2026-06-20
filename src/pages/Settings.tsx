@@ -35,7 +35,6 @@ export default function SettingsPage() {
   };
 
   const handleGoogleUnlink = () => {
-    setGoogleLinked(false);
     setGoogleInfo(locale === 'uz' ? 'Google uzildi.' : 'Google отключен.');
   };
 
@@ -47,9 +46,7 @@ export default function SettingsPage() {
           <MetricCard title={locale === 'uz' ? 'Ish maydonlari' : 'Workspaces'} value={workspace.restaurants.length || workspace.profile?.chains?.length || 0} note={locale === 'uz' ? 'Restoran yoki tarmoq' : 'Restaurant or chain'} icon={UserRound} tone="sand" />
         </div>
         <div className="grid gap-4 xl:grid-cols-[1fr_1fr]">
-          <Panel title={locale === 'uz' ? 'Akkaunt kartasi' : 'Account card'} eyebrow={locale === 'uz' ? 'Malumotlar' : 'Details'} description={locale === 'uz' ? 'Asosiy owner malumotlari.' : 'Core owner profile details.'}>
-            <div className="grid gap-4 md:grid-cols-2"><InfoCard label={locale === 'uz' ? 'Ism' : 'Name'} value={mergedUser?.full_name || '-'} /><InfoCard label="Email" value={mergedUser?.email || '-'} /><InfoCard label={locale === 'uz' ? 'Telefon' : 'Phone'} value={mergedUser?.phone_number || mergedUser?.phone || '-'} /><InfoCard label={locale === 'uz' ? 'Rol' : 'Role'} value={mergedUser?.role || '-'} /></div>
-          </Panel>
+
           <Panel title="Google auth" eyebrow={locale === 'uz' ? 'Kirish' : 'Access'} description={locale === 'uz' ? 'Google hisob orqali kirish.' : 'Sign in with Google.'}>
             <div className="rounded-[24px] border border-white/8 bg-black/12 p-5">
               <div className="flex items-start justify-between gap-4">
@@ -93,5 +90,4 @@ export default function SettingsPage() {
   );
 }
 
-function InfoCard({ label, value }: { label: string; value: string }) { return <div className="rounded-[24px] border border-white/8 bg-black/12 p-5"><div className="text-xs uppercase tracking-[0.28em] text-white/40">{label}</div><div className="mt-2 text-xl font-semibold text-white">{value}</div></div>; }
 function QuickLinkCard({ title, description, action, onClick }: { title: string; description: string; action: string; onClick: () => void }) { return <button type="button" onClick={onClick} className="rounded-[24px] border border-white/8 bg-black/12 p-5 text-left transition hover:border-[#8fd4ff]/25 hover:bg-white/[0.04]"><div className="text-lg font-semibold text-white">{title}</div><div className="mt-2 text-sm leading-7 text-white/56">{description}</div><div className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-[#8fd4ff]">{action}<ArrowRight className="h-4 w-4" /></div></button>; }

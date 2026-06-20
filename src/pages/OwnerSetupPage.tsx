@@ -1,32 +1,106 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, Bot, CheckCircle, Loader2, SkipForward, Store } from 'lucide-react';
-
+import { ArrowLeft, ArrowRight, Bot, Building2, CheckSquare, HelpCircle, Loader2, SkipForward, Store, Users } from 'lucide-react';
 import { BrandMark } from '@/components/app/BrandMark';
 import { Button } from '@/components/ui/button';
 import { useLocale } from '@/context/LocaleContext';
 import { authAPI } from '@/services/api';
+
+const RESTAURANT_TYPES = [
+  { value: 'cafe', label_ru: 'Кафе', label_uz: 'Kafe' },
+  { value: 'restaurant', label_ru: 'Ресторан', label_uz: 'Restoran' },
+  { value: 'fast_food', label_ru: 'Фаст-фуд', label_uz: 'Fast food' },
+  { value: 'bar', label_ru: 'Бар', label_uz: 'Bar' },
+  { value: 'other', label_ru: 'Другое', label_uz: 'Boshqa' },
+];
+
+const TABLE_RANGES = [
+  { value: '<5', label_ru: 'Меньше 5', label_uz: "5'dan kam" },
+  { value: '5-10', label_ru: '5-10', label_uz: '5-10' },
+  { value: '10-20', label_ru: '10-20', label_uz: '10-20' },
+  { value: '20+', label_ru: 'Больше 20', label_uz: "20'dan ko'p" },
+];
+
+const STAFF_RANGES = [
+  { value: '<5', label_ru: 'Меньше 5', label_uz: "5'dan kam" },
+  { value: '5-15', label_ru: '5-15', label_uz: '5-15' },
+  { value: '15-30', label_ru: '15-30', label_uz: '15-30' },
+  { value: '30+', label_ru: 'Больше 30', label_uz: "30'dan ko'p" },
+];
+
+const FEATURES = [
+  { value: 'kds', label_ru: 'Экран кухни (KDS)', label_uz: 'Oshxona ekrani (KDS)' },
+  { value: 'online_menu', label_ru: 'Меню онлайн', label_uz: 'Online menyu' },
+  { value: 'booking', label_ru: 'Бронь столиков', label_uz: "Stol bronlash" },
+  { value: 'loyalty', label_ru: 'Программа лояльности', label_uz: "Loyallik dasturi" },
+  { value: 'delivery', label_ru: 'Интеграция с доставкой', label_uz: "Yetkazib berish integratsiyasi" },
+  { value: 'analytics', label_ru: 'Аналитика и отчёты', label_uz: 'Analitika va hisobotlar' },
+];
+
+type OnboardingAnswers = {
+  restaurant_type: string;
+  tables_count: string;
+  staff_count: string;
+  features: string[];
+};
+
+const defaultAnswers: OnboardingAnswers = {
+  restaurant_type: '',
+  tables_count: '',
+  staff_count: '',
+  features: [],
+};
+
+type StepConfig = {
+  title_ru: string;
+  title_uz: string;
+  desc_ru: string;
+  desc_uz: string;
+};
+
+const STEP_META: Record<number, StepConfig> = {
+  1: { title_ru: 'Тип заведения', title_uz: 'Muassasa turi', desc_ru: 'Какой у вас бизнес?', desc_uz: "Qanday biznesingiz bor?" },
+  2: { title_ru: 'Количество столов', title_uz: 'Stollar soni', desc_ru: 'Сколько столов в зале?', desc_uz: "Zalda nechta stol bor?" },
+  3: { title_ru: 'Количество сотрудников', title_uz: 'Xodimlar soni', desc_ru: 'Сколько человек работает?', desc_uz: "Necha kishi ishlaydi?" },
+  4: { title_ru: 'Интересующие функции', title_uz: 'Kerakli funksiyalar', desc_ru: 'Что вам пригодится?', desc_uz: "Sizga nima kerak?" },
+  5: { title_ru: 'Название сети', title_uz: 'Tarmoq nomi', desc_ru: 'Как назовём сеть?', desc_uz: "Tarmoq nomi nima?" },
+  6: { title_ru: 'Название ресторана', title_uz: 'Restoran nomi', desc_ru: 'Как назовём первый ресторан?', desc_uz: "Birinchi restoran nomi?" },
+  7: { title_ru: 'Bot token', title_uz: 'Bot token', desc_ru: 'Telegram бот для уведомлений (необязательно)', desc_uz: 'Telegram bot xabarlar uchun (ixtiyoriy)' },
+};
+
+const TOTAL_STEPS = 7;
 
 export default function OwnerSetupPage() {
   const { locale } = useLocale();
   const navigate = useNavigate();
 
   const [step, setStep] = useState(1);
+  const [answers, setAnswers] = useState<OnboardingAnswers>(defaultAnswers);
   const [chainName, setChainName] = useState('');
   const [restaurantName, setRestaurantName] = useState('');
   const [botToken, setBotToken] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const t = (ru: string, uz: string) => locale === 'uz' ? uz : ru;
+  const meta = STEP_META[step];
+
   const handleNext = () => {
     setError('');
-    if (step === 1 && !chainName.trim()) {
-      setError(locale === 'uz' ? 'Tarmoq nomini kiriting.' : 'Введите название сети.');
-      return;
+    if (step === 1 && !answers.restaurant_type) {
+      setError(t('Выберите тип заведения.', 'Muassasa turini tanlang.')); return;
     }
-    if (step === 2 && !restaurantName.trim()) {
-      setError(locale === 'uz' ? 'Restoran nomini kiriting.' : 'Введите название ресторана.');
-      return;
+    if (step === 2 && !answers.tables_count) {
+      setError(t('Выберите количество столов.', 'Stollar sonini tanlang.')); return;
+    }
+    if (step === 3 && !answers.staff_count) {
+      setError(t('Выберите количество сотрудников.', 'Xodimlar sonini tanlang.')); return;
+    }
+    if (step === 5 && !chainName.trim()) {
+      setError(t('Введите название сети.', 'Tarmoq nomini kiriting.')); return;
+    }
+    if (step === 6 && !restaurantName.trim()) {
+      setError(t('Введите название ресторана.', 'Restoran nomini kiriting.')); return;
     }
     setStep(s => s + 1);
   };
@@ -39,14 +113,152 @@ export default function OwnerSetupPage() {
         chain_name: chainName.trim(),
         restaurant_name: restaurantName.trim(),
         staff_bot_token: skipBot ? '' : botToken.trim(),
+        onboarding_answers: answers,
       });
       navigate('/dashboard', { replace: true });
     } catch (err: any) {
-      const msg = err?.response?.data?.error || (locale === 'uz' ? 'Saqlab bo‘lmadi.' : 'Ошибка сохранения.');
+      const msg = err?.response?.data?.error || t('Ошибка сохранения.', 'Saqlab bo‘lmadi.');
       setError(msg);
     } finally {
       setLoading(false);
     }
+  };
+
+  const toggleFeature = (value: string) => {
+    setAnswers(a => ({
+      ...a,
+      features: a.features.includes(value)
+        ? a.features.filter(f => f !== value)
+        : [...a.features, value],
+    }));
+  };
+
+  const selectOption = (field: keyof OnboardingAnswers, value: string) => {
+    setAnswers(a => ({ ...a, [field]: value }));
+  };
+
+  const renderStep = () => {
+    if (step === 1) {
+      return (
+        <div className="space-y-4">
+          {RESTAURANT_TYPES.map(rt => (
+            <button key={rt.value} type="button" onClick={() => { selectOption('restaurant_type', rt.value); setTimeout(() => setStep(2), 200); }}
+              className={`flex w-full items-center gap-4 rounded-2xl border px-5 py-4 text-left transition ${
+                answers.restaurant_type === rt.value
+                  ? 'border-[#f97360] bg-[#f97360]/15 text-white'
+                  : 'border-white/10 bg-white/5 text-white/60 hover:border-white/20 hover:text-white/90'
+              }`}>
+              <span className="font-semibold">{locale === 'uz' ? rt.label_uz : rt.label_ru}</span>
+            </button>
+          ))}
+        </div>
+      );
+    }
+
+    if (step === 2) {
+      return (
+        <div className="grid grid-cols-2 gap-3">
+          {TABLE_RANGES.map(tr => (
+            <button key={tr.value} type="button" onClick={() => { selectOption('tables_count', tr.value); setStep(3); }}
+              className={`rounded-2xl border px-5 py-6 text-center text-lg font-bold transition ${
+                answers.tables_count === tr.value
+                  ? 'border-[#f97360] bg-[#f97360]/15 text-white'
+                  : 'border-white/10 bg-white/5 text-white/50 hover:border-white/20 hover:text-white/80'
+              }`}>
+              {tr.value}
+            </button>
+          ))}
+        </div>
+      );
+    }
+
+    if (step === 3) {
+      return (
+        <div className="grid grid-cols-2 gap-3">
+          {STAFF_RANGES.map(sr => (
+            <button key={sr.value} type="button" onClick={() => { selectOption('staff_count', sr.value); setStep(4); }}
+              className={`rounded-2xl border px-5 py-6 text-center text-lg font-bold transition ${
+                answers.staff_count === sr.value
+                  ? 'border-[#f97360] bg-[#f97360]/15 text-white'
+                  : 'border-white/10 bg-white/5 text-white/50 hover:border-white/20 hover:text-white/80'
+              }`}>
+              {sr.value}
+            </button>
+          ))}
+        </div>
+      );
+    }
+
+    if (step === 4) {
+      return (
+        <div className="space-y-3">
+          {FEATURES.map(f => (
+            <button key={f.value} type="button" onClick={() => toggleFeature(f.value)}
+              className={`flex w-full items-center gap-4 rounded-2xl border px-5 py-4 text-left transition ${
+                answers.features.includes(f.value)
+                  ? 'border-[#8fd4ff]/30 bg-[#8fd4ff]/10 text-white'
+                  : 'border-white/10 bg-white/5 text-white/50 hover:border-white/20 hover:text-white/80'
+              }`}>
+              <CheckSquare className={`h-5 w-5 shrink-0 ${answers.features.includes(f.value) ? 'text-[#8fd4ff]' : 'text-white/20'}`} />
+              <span className="font-semibold">{locale === 'uz' ? f.label_uz : f.label_ru}</span>
+            </button>
+          ))}
+          <Button onClick={handleNext} className="mt-2 w-full">
+            {t('Далее', 'Keyingi')} <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
+        </div>
+      );
+    }
+
+    if (step === 5) {
+      return (
+        <div className="space-y-4">
+          <input value={chainName} onChange={e => setChainName(e.target.value)}
+            placeholder={t('Например: Oshxona №1', 'Masalan: Oshxona №1')}
+            className="w-full rounded-2xl border border-white/10 bg-white/5 px-5 py-4 text-white placeholder:text-white/22 focus:border-[#f97360] focus:outline-none"
+            autoFocus />
+          <Button onClick={handleNext} className="w-full">
+            {t('Далее', 'Keyingi')} <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
+        </div>
+      );
+    }
+
+    if (step === 6) {
+      return (
+        <div className="space-y-4">
+          <input value={restaurantName} onChange={e => setRestaurantName(e.target.value)}
+            placeholder={t('Название ресторана', 'Restoran nomi')}
+            className="w-full rounded-2xl border border-white/10 bg-white/5 px-5 py-4 text-white placeholder:text-white/22 focus:border-[#f97360] focus:outline-none"
+            autoFocus />
+          <Button onClick={handleNext} className="w-full">
+            {t('Далее', 'Keyingi')} <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
+        </div>
+      );
+    }
+
+    if (step === 7) {
+      return (
+        <div className="space-y-4">
+          <input value={botToken} onChange={e => setBotToken(e.target.value)}
+            placeholder="123456:ABCdef..."
+            className="w-full rounded-2xl border border-white/10 bg-white/5 px-5 py-4 font-mono text-white placeholder:text-white/22 focus:border-[#f97360] focus:outline-none"
+            autoFocus />
+          <div className="flex gap-3">
+            <Button onClick={() => handleSubmit(true)} variant="secondary" className="flex-1" disabled={loading}>
+              <SkipForward className="mr-2 h-4 w-4" />{t('Пропустить', "O'tkazib yuborish")}
+            </Button>
+            <Button onClick={() => handleSubmit(false)} className="flex-1" disabled={loading || !botToken.trim()}>
+              {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              {t('Готово', 'Tayyor')}
+            </Button>
+          </div>
+        </div>
+      );
+    }
+
+    return null;
   };
 
   return (
@@ -59,84 +271,30 @@ export default function OwnerSetupPage() {
             </div>
 
             <div className="mb-6 flex gap-1.5">
-              {[1, 2, 3].map(i => (
+              {Array.from({ length: TOTAL_STEPS }, (_, i) => i + 1).map(i => (
                 <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${i <= step ? 'bg-[#f97360]' : 'bg-white/10'}`} />
               ))}
             </div>
 
             {error ? <div className="mb-4 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-100">{error}</div> : null}
 
-            {step === 1 && (
-              <div className="space-y-5">
-                <div className="grid h-14 w-14 place-items-center rounded-2xl bg-[#f97360]/15">
-                  <Store className="h-6 w-6 text-[#f97360]" />
-                </div>
-                <div>
-                  <h2 className="text-2xl font-bold text-white">{locale === 'uz' ? 'Tarmoq nomi' : 'Название сети'}</h2>
-                  <p className="mt-2 text-sm leading-7 text-white/52">{locale === 'uz' ? 'Masalan: "Oshxona №1" yoki "Grand Restaurants"' : 'Например: «Oshxona №1» или «Grand Restaurants»'}</p>
-                </div>
-                <input
-                  value={chainName}
-                  onChange={e => setChainName(e.target.value)}
-                  placeholder={locale === 'uz' ? 'Tarmoq nomi' : 'Название сети'}
-                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/22 focus:border-[#f97360] focus:outline-none"
-                  autoFocus
-                />
-                <Button onClick={handleNext} className="w-full">{locale === 'uz' ? 'Davom etish' : 'Продолжить'} <ArrowRight className="ml-2 h-4 w-4" /></Button>
+            <div className="space-y-5">
+              <div className="grid h-14 w-14 place-items-center rounded-2xl bg-[#8fd4ff]/15">
+                <HelpCircle className="h-6 w-6 text-[#8fd4ff]" />
               </div>
-            )}
+              <div>
+                <h2 className="text-2xl font-bold text-white">{locale === 'uz' ? meta.title_uz : meta.title_ru}</h2>
+                <p className="mt-2 text-sm leading-7 text-white/52">{locale === 'uz' ? meta.desc_uz : meta.desc_ru}</p>
+              </div>
 
-            {step === 2 && (
-              <div className="space-y-5">
-                <div className="grid h-14 w-14 place-items-center rounded-2xl bg-[#f97360]/15">
-                  <Store className="h-6 w-6 text-[#f97360]" />
-                </div>
-                <div>
-                  <h2 className="text-2xl font-bold text-white">{locale === 'uz' ? 'Birinchi restoran' : 'Первый ресторан'}</h2>
-                  <p className="mt-2 text-sm leading-7 text-white/52">{locale === 'uz' ? 'Tarmoqdagi birinchi restoran nomi.' : 'Название первого ресторана в сети.'}</p>
-                </div>
-                <input
-                  value={restaurantName}
-                  onChange={e => setRestaurantName(e.target.value)}
-                  placeholder={locale === 'uz' ? 'Restoran nomi' : 'Название ресторана'}
-                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-white/22 focus:border-[#f97360] focus:outline-none"
-                  autoFocus
-                />
-                <div className="flex gap-3">
-                  <Button variant="ghost" onClick={() => setStep(1)}><ArrowLeft className="mr-2 h-4 w-4" />{locale === 'uz' ? 'Orqaga' : 'Назад'}</Button>
-                  <Button onClick={handleNext} className="flex-1">{locale === 'uz' ? 'Davom etish' : 'Продолжить'} <ArrowRight className="ml-2 h-4 w-4" /></Button>
-                </div>
-              </div>
-            )}
+              {renderStep()}
 
-            {step === 3 && (
-              <div className="space-y-5">
-                <div className="grid h-14 w-14 place-items-center rounded-2xl bg-emerald-400/15">
-                  <Bot className="h-6 w-6 text-emerald-400" />
-                </div>
-                <div>
-                  <h2 className="text-2xl font-bold text-white">{locale === 'uz' ? 'Bot token (ixtiyoriy)' : 'Bot token (необязательно)'}</h2>
-                  <p className="mt-2 text-sm leading-7 text-white/52">{locale === 'uz' ? 'Telegram bot tokeni orqali ofitsiantlar va oshxona xabarlarni olishi mumkin.' : 'Через Telegram бот официанты и кухня смогут получать уведомления.'}</p>
-                </div>
-                <input
-                  value={botToken}
-                  onChange={e => setBotToken(e.target.value)}
-                  placeholder="123456:ABCdef..."
-                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 font-mono text-white placeholder:text-white/22 focus:border-[#f97360] focus:outline-none"
-                  autoFocus
-                />
-                <div className="flex gap-3">
-                  <Button variant="ghost" onClick={() => setStep(2)}><ArrowLeft className="mr-2 h-4 w-4" />{locale === 'uz' ? 'Orqaga' : 'Назад'}</Button>
-                  <Button onClick={() => handleSubmit(true)} variant="secondary" className="flex-1" disabled={loading}>
-                    <SkipForward className="mr-2 h-4 w-4" />{locale === 'uz' ? 'O‘tkazib yuborish' : 'Пропустить'}
-                  </Button>
-                  <Button onClick={() => handleSubmit(false)} className="flex-1" disabled={loading || !botToken.trim()}>
-                    {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle className="mr-2 h-4 w-4" />}
-                    {locale === 'uz' ? 'Tayyor' : 'Готово'}
-                  </Button>
-                </div>
-              </div>
-            )}
+              {step > 1 && step < 5 && (
+                <Button variant="ghost" onClick={() => setStep(s => s - 1)} className="w-full">
+                  <ArrowLeft className="mr-2 h-4 w-4" />{t('Назад', 'Orqaga')}
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </div>

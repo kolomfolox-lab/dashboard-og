@@ -52,7 +52,7 @@ export default function KitchenDisplayPage() {
   const PAGE_SIZE = 6;
   const totalPages = Math.max(1, Math.ceil(sortedOrders.length / PAGE_SIZE));
   const [pageIndex, setPageIndex] = useState(0);
-  const pageTimerRef = useRef<number | undefined>();
+  const pageTimerRef = useRef<number | undefined>(undefined);
 
   const resetPageTimer = useCallback(() => {
     if (pageTimerRef.current) window.clearInterval(pageTimerRef.current);
