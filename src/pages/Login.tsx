@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowLeft, Loader2, Lock, Mail } from 'lucide-react';
+import { ArrowLeft, ChevronDown, Loader2, Lock, Mail } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
 
@@ -14,7 +14,7 @@ type FlowStep = 'input' | 'verify';
 
 export default function LoginPage() {
   const { loginWithPassword, sendOtp, verifyOtp } = useAuth();
-  const { t, locale } = useLocale();
+  const { t, locale, setLocale } = useLocale();
   const navigate = useNavigate();
 
   const [mode, setMode] = useState<AuthMode>('password');
@@ -91,7 +91,17 @@ export default function LoginPage() {
             </div>
           </section>
 
-          <section className="p-6 sm:p-8 lg:p-10">
+          <section className="relative p-6 sm:p-8 lg:p-10">
+            <div className="absolute top-4 right-4">
+              <div className="relative inline-flex">
+                <select value={locale} onChange={(e) => setLocale(e.target.value as 'ru' | 'en' | 'uz')} className="appearance-none rounded-lg border border-white/8 bg-white/5 px-3 py-1.5 pr-7 text-xs text-white/60 outline-none">
+                  <option value="ru">RU</option>
+                  <option value="en">EN</option>
+                  <option value="uz">UZ</option>
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3 w-3 -translate-y-1/2 text-white/30" />
+              </div>
+            </div>
             <div className="rounded-[28px] border border-white/8 bg-black/12 p-6">
               {step !== 'input' ? (
                 <button type="button" onClick={() => { setStep('input'); setOtp(''); setError(''); setInfo(''); }} className="mb-5 inline-flex items-center gap-1.5 text-xs font-medium text-white/44 transition hover:text-white">
