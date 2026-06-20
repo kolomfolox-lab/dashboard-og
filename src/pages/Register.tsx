@@ -77,7 +77,17 @@ export default function RegisterPage() {
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.16),transparent_26%),radial-gradient(circle_at_top_right,rgba(249,115,22,0.12),transparent_22%),linear-gradient(180deg,#07111a,#08131f_55%,#06101b)] px-4 py-10" style={{ fontFamily: "'Manrope', sans-serif" }}>
       <div className="mx-auto flex min-h-[calc(100vh-5rem)] w-full max-w-6xl items-center justify-center">
         <div className="grid w-full overflow-hidden rounded-[36px] border border-white/10 bg-[#0b1622]/95 shadow-[0_30px_80px_rgba(0,0,0,0.55)] lg:grid-cols-[0.92fr_1.08fr]">
-          <section className="border-b border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01))] p-8 lg:border-b-0 lg:border-r lg:border-r-white/8 lg:p-10">
+          <section className="relative border-b border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01))] p-8 lg:border-b-0 lg:border-r lg:border-r-white/8 lg:p-10">
+            <div className="absolute top-4 right-4">
+              <div className="relative inline-flex">
+                <select value={locale} onChange={(e) => setLocale(e.target.value as 'ru' | 'en' | 'uz')} className="appearance-none rounded-lg border border-white/8 bg-white/5 px-3 py-1.5 pr-7 text-xs text-white/60 outline-none">
+                  <option value="ru">RU</option>
+                  <option value="en">EN</option>
+                  <option value="uz">UZ</option>
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3 w-3 -translate-y-1/2 text-white/30" />
+              </div>
+            </div>
             <div className="mb-10 flex justify-start">
               <BrandMark />
             </div>
@@ -91,17 +101,6 @@ export default function RegisterPage() {
           </section>
 
           <section className="p-6 sm:p-8 lg:p-10">
-            <div className="absolute top-4 right-4">
-              <div className="relative inline-flex">
-                <select value={locale} onChange={(e) => setLocale(e.target.value as 'ru' | 'en' | 'uz')} className="appearance-none rounded-lg border border-white/8 bg-white/5 px-3 py-1.5 pr-7 text-xs text-white/60 outline-none">
-                  <option value="ru">RU</option>
-                  <option value="en">EN</option>
-                  <option value="uz">UZ</option>
-                </select>
-                <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3 w-3 -translate-y-1/2 text-white/30" />
-              </div>
-            </div>
-
             <div className="rounded-[28px] border border-white/8 bg-black/12 p-6">
               {mode === 'email' ? (
                 <button type="button" onClick={() => { setMode(null); setError(''); }} className="mb-5 inline-flex items-center gap-1.5 text-xs font-medium text-white/44 transition hover:text-white">
