@@ -7,13 +7,10 @@ import { BrandMark } from '@/components/app/BrandMark';
 import { useLocale } from '@/context/LocaleContext';
 import { authAPI } from '@/services/api';
 
-type RegMode = 'email' | 'google';
-
 export default function RegisterPage() {
   const { t, locale } = useLocale();
   const navigate = useNavigate();
 
-  const [mode, setMode] = useState<RegMode | null>(null);
   const [fullName, setFullName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [email, setEmail] = useState('');
@@ -74,88 +71,86 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#07111a] flex items-center justify-center px-4">
-      <div className="w-full max-w-sm">
-        <div className="mb-8 flex justify-center">
-          <BrandMark compact />
-        </div>
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.16),transparent_26%),radial-gradient(circle_at_top_right,rgba(249,115,22,0.12),transparent_22%),linear-gradient(180deg,#07111a,#08131f_55%,#06101b)] px-4 py-10" style={{ fontFamily: "'Manrope', sans-serif" }}>
+      <div className="mx-auto flex min-h-[calc(100vh-5rem)] w-full max-w-6xl items-center justify-center">
+        <div className="grid w-full overflow-hidden rounded-[36px] border border-white/10 bg-[#0b1622]/95 shadow-[0_30px_80px_rgba(0,0,0,0.55)] lg:grid-cols-[0.92fr_1.08fr]">
+          <section className="border-b border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01))] p-8 lg:border-b-0 lg:border-r lg:border-r-white/8 lg:p-10">
+            <div className="mb-10 flex justify-start">
+              <BrandMark />
+            </div>
+            <div className="max-w-md space-y-6">
+              <div>
+                <div className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#8fd4ff]">{locale === 'uz' ? "Ro'yxatdan o'tish" : 'Регистрация'}</div>
+                <h1 className="mt-3 text-4xl font-bold leading-tight text-white">{locale === 'uz' ? 'Waitly boshqaruv paneliga xush kelibsiz' : 'Добро пожаловать в панель управления Waitly'}</h1>
+                <p className="mt-4 text-sm leading-7 text-white/58">{locale === 'uz' ? 'Akkaunt yarating va restoranlaringizni boshqaring.' : 'Создайте аккаунт и управляйте своими ресторанами.'}</p>
+              </div>
+            </div>
+          </section>
 
-        <div className="rounded-xl border border-white/8 bg-[#0b1622]/90 p-5">
-          {mode === 'email' ? (
-            <>
-              <div className="mb-4 flex items-center justify-between">
-                <div>
-                  <h2 className="text-base font-semibold text-white">{locale === 'uz' ? "Ro'yxatdan o'tish" : 'Регистрация'}</h2>
-                  <p className="text-xs text-white/38">{locale === 'uz' ? "Ma'lumotlaringizni kiriting." : 'Введите свои данные.'}</p>
-                </div>
-                <button type="button" onClick={() => { setMode(null); setError(''); }} className="text-xs text-white/40 hover:text-white transition">{locale === 'uz' ? 'Orqaga' : 'Назад'}</button>
+          <section className="p-6 sm:p-8 lg:p-10">
+            <div className="rounded-[28px] border border-white/8 bg-black/12 p-6">
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold text-white">{locale === 'uz' ? "Ro'yxatdan o'tish" : 'Регистрация'}</h2>
+                <p className="mt-2 text-sm leading-7 text-white/52">{locale === 'uz' ? "Ma'lumotlaringizni kiriting." : 'Введите свои данные.'}</p>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-2.5">
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/25" />
-                  <input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder={locale === 'uz' ? 'To‘liq ism' : 'Полное имя'} className="w-full rounded-lg border border-white/8 bg-white/4 pl-9 pr-3 py-2 text-sm text-white placeholder:text-white/20 focus:border-[#f97360] focus:outline-none" required />
+                  <User className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-white/30" />
+                  <input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder={locale === 'uz' ? 'To‘liq ism' : 'Полное имя'} className="w-full rounded-2xl border border-white/10 bg-white/5 pl-12 pr-4 py-3 text-white placeholder:text-white/22 focus:border-[#f97360] focus:outline-none" required />
                 </div>
                 <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/25" />
-                  <input value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder="+998901234567" className="w-full rounded-lg border border-white/8 bg-white/4 pl-9 pr-3 py-2 text-sm text-white placeholder:text-white/20 focus:border-[#f97360] focus:outline-none" required />
+                  <Phone className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-white/30" />
+                  <input value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder="+998901234567" className="w-full rounded-2xl border border-white/10 bg-white/5 pl-12 pr-4 py-3 text-white placeholder:text-white/22 focus:border-[#f97360] focus:outline-none" required />
                 </div>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/25" />
-                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={locale === 'uz' ? 'Email (ixtiyoriy)' : 'Email (необязательно)'} className="w-full rounded-lg border border-white/8 bg-white/4 pl-9 pr-3 py-2 text-sm text-white placeholder:text-white/20 focus:border-[#f97360] focus:outline-none" />
+                  <Mail className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-white/30" />
+                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={locale === 'uz' ? 'Email (ixtiyoriy)' : 'Email (необязательно)'} className="w-full rounded-2xl border border-white/10 bg-white/5 pl-12 pr-4 py-3 text-white placeholder:text-white/22 focus:border-[#f97360] focus:outline-none" />
                 </div>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/25" />
-                  <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={locale === 'uz' ? 'Parol' : 'Пароль'} minLength={6} className="w-full rounded-lg border border-white/8 bg-white/4 pl-9 pr-3 py-2 text-sm text-white placeholder:text-white/20 focus:border-[#f97360] focus:outline-none" required />
+                  <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-white/30" />
+                  <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={locale === 'uz' ? 'Parol' : 'Пароль'} minLength={6} className="w-full rounded-2xl border border-white/10 bg-white/5 pl-12 pr-4 py-3 text-white placeholder:text-white/22 focus:border-[#f97360] focus:outline-none" required />
                 </div>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/25" />
-                  <input type="password" value={passwordConfirm} onChange={(e) => setPasswordConfirm(e.target.value)} placeholder={locale === 'uz' ? 'Parolni tasdiqlang' : 'Подтвердите пароль'} minLength={6} className="w-full rounded-lg border border-white/8 bg-white/4 pl-9 pr-3 py-2 text-sm text-white placeholder:text-white/20 focus:border-[#f97360] focus:outline-none" required />
+                  <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-white/30" />
+                  <input type="password" value={passwordConfirm} onChange={(e) => setPasswordConfirm(e.target.value)} placeholder={locale === 'uz' ? 'Parolni tasdiqlang' : 'Подтвердите пароль'} minLength={6} className="w-full rounded-2xl border border-white/10 bg-white/5 pl-12 pr-4 py-3 text-white placeholder:text-white/22 focus:border-[#f97360] focus:outline-none" required />
                 </div>
 
-                <button type="submit" disabled={loading || !fullName || !phoneNumber || !password || password !== passwordConfirm} className="w-full rounded-lg bg-[#f97360] py-2 text-sm font-medium text-white transition hover:bg-[#e56350] disabled:opacity-50">
-                  {loading ? <span className="inline-flex items-center gap-1.5"><Loader2 className="h-3.5 w-3.5 animate-spin" /> {t('working', 'Working...')}</span> : (locale === 'uz' ? "Ro'yxatdan o'tish" : 'Зарегистрироваться')}
+                <button type="submit" disabled={loading || !fullName || !phoneNumber || !password || password !== passwordConfirm} className="w-full rounded-2xl bg-[#f97360] px-4 py-3 font-semibold text-white transition hover:bg-[#e56350] disabled:opacity-50">
+                  {loading ? (
+                    <span className="inline-flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> {t('working', 'Working...')}</span>
+                  ) : (locale === 'uz' ? 'Ro‘yxatdan o‘tish' : 'Зарегистрироваться')}
                 </button>
 
-                {error ? <div className="rounded-lg border border-red-500/15 bg-red-500/8 px-3 py-2 text-xs text-red-200">{error}</div> : null}
-
-                <div className="text-center text-xs text-white/38">
-                  {locale === 'uz' ? 'Akkauntingiz bormi?' : 'Уже есть аккаунт?'}{' '}
-                  <Link to="/login" className="font-medium text-[#f97360] hover:underline">{locale === 'uz' ? 'Kirish' : 'Войти'}</Link>
+                <div className="relative my-4">
+                  <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/10"></div></div>
+                  <div className="relative flex justify-center text-xs"><span className="bg-[#0b1622] px-3 text-white/40">{locale === 'uz' ? 'yoki' : 'или'}</span></div>
                 </div>
-              </form>
-            </>
-          ) : (
-            <>
-              <h2 className="text-base font-semibold text-white">{locale === 'uz' ? "Ro'yxatdan o'tish" : 'Регистрация'}</h2>
-              <p className="mt-1 text-xs text-white/38">{locale === 'uz' ? "Akkaunt yaratish usulini tanlang." : 'Выберите способ регистрации.'}</p>
 
-              <div className="mt-5 space-y-2.5">
-                <button type="button" onClick={() => setMode('email')} className="flex w-full items-center gap-3 rounded-lg border border-white/8 bg-white/4 px-3.5 py-2.5 text-sm text-white/70 hover:border-white/16 hover:text-white transition">
-                  <Mail className="h-4 w-4 text-[#f97360]" />
-                  <span>{locale === 'uz' ? 'Email orqali' : 'По Email'}</span>
-                </button>
-
-                <div className="flex justify-center">
+                <div className="space-y-3">
                   <GoogleLogin
-                    theme="outline"
-                    size="medium"
+                    theme="filled_black"
+                    size="large"
                     shape="pill"
                     text="signup_with"
-                    onSuccess={(r) => r.credential && handleGoogleSuccess(r.credential)}
-                    onError={() => setError('Google auth cancelled.')}
+                    onSuccess={(credentialResponse) => {
+                      if (credentialResponse.credential) {
+                        handleGoogleSuccess(credentialResponse.credential);
+                      }
+                    }}
+                    onError={() => setError('Google auth cancelled or failed.')}
                   />
                 </div>
-              </div>
 
-              {error ? <div className="mt-3 rounded-lg border border-red-500/15 bg-red-500/8 px-3 py-2 text-xs text-red-200">{error}</div> : null}
+                {error ? <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-100">{error}</div> : null}
 
-              <div className="mt-4 text-center text-xs text-white/38">
-                {locale === 'uz' ? 'Akkauntingiz bormi?' : 'Уже есть аккаунт?'}{' '}
-                <Link to="/login" className="font-medium text-[#f97360] hover:underline">{locale === 'uz' ? 'Kirish' : 'Войти'}</Link>
-              </div>
-            </>
-          )}
+                <div className="text-center text-sm text-white/46">
+                  {locale === 'uz' ? 'Akkauntingiz bormi?' : 'Уже есть аккаунт?'}{' '}
+                  <Link to="/login" className="font-semibold text-[#f97360] hover:underline">{locale === 'uz' ? 'Kirish' : 'Войти'}</Link>
+                </div>
+              </form>
+            </div>
+          </section>
         </div>
       </div>
     </div>
