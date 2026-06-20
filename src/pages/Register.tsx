@@ -1,19 +1,16 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Loader2, Mail, Lock, User, Phone, ArrowLeft } from 'lucide-react';
+import { Loader2, Mail, Lock, User, Phone } from 'lucide-react';
 import { GoogleLogin } from '@react-oauth/google';
 
 import { BrandMark } from '@/components/app/BrandMark';
 import { useLocale } from '@/context/LocaleContext';
 import { authAPI } from '@/services/api';
 
-type RegMode = 'email' | null;
-
 export default function RegisterPage() {
   const { t, locale } = useLocale();
   const navigate = useNavigate();
 
-  const [mode, setMode] = useState<RegMode>(null);
   const [fullName, setFullName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [email, setEmail] = useState('');
@@ -92,69 +89,48 @@ export default function RegisterPage() {
 
           <section className="p-6 sm:p-8 lg:p-10">
             <div className="rounded-[28px] border border-white/8 bg-black/12 p-6">
-              {mode === 'email' ? (
-                <button type="button" onClick={() => { setMode(null); setError(''); }} className="mb-5 inline-flex items-center gap-1.5 text-xs font-medium text-white/44 transition hover:text-white">
-                  <ArrowLeft className="h-3.5 w-3.5" />
-                  {locale === 'uz' ? 'Orqaga' : 'Назад'}
-                </button>
-              ) : null}
-
               <div className="mb-6">
                 <h2 className="text-2xl font-bold text-white">{locale === 'uz' ? "Ro'yxatdan o'tish" : 'Регистрация'}</h2>
-                <p className="mt-2 text-sm leading-7 text-white/52">
-                  {mode === 'email'
-                    ? (locale === 'uz' ? "Ma'lumotlaringizni kiriting." : 'Введите свои данные.')
-                    : (locale === 'uz' ? "Usulni tanlang." : 'Выберите способ.')}
-                </p>
+                <p className="mt-2 text-sm leading-7 text-white/52">{locale === 'uz' ? "Ma'lumotlaringizni kiriting." : 'Введите свои данные.'}</p>
               </div>
 
-              {mode === 'email' ? (
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="relative">
-                    <User className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-white/30" />
-                    <input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder={locale === 'uz' ? 'To‘liq ism' : 'Полное имя'} className="w-full rounded-2xl border border-white/10 bg-white/5 pl-12 pr-4 py-3 text-white placeholder:text-white/22 focus:border-[#f97360] focus:outline-none" required />
-                  </div>
-                  <div className="relative">
-                    <Phone className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-white/30" />
-                    <input value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder="+998901234567" className="w-full rounded-2xl border border-white/10 bg-white/5 pl-12 pr-4 py-3 text-white placeholder:text-white/22 focus:border-[#f97360] focus:outline-none" required />
-                  </div>
-                  <div className="relative">
-                    <Mail className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-white/30" />
-                    <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={locale === 'uz' ? 'Email (ixtiyoriy)' : 'Email (необязательно)'} className="w-full rounded-2xl border border-white/10 bg-white/5 pl-12 pr-4 py-3 text-white placeholder:text-white/22 focus:border-[#f97360] focus:outline-none" />
-                  </div>
-                  <div className="relative">
-                    <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-white/30" />
-                    <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={locale === 'uz' ? 'Parol' : 'Пароль'} minLength={6} className="w-full rounded-2xl border border-white/10 bg-white/5 pl-12 pr-4 py-3 text-white placeholder:text-white/22 focus:border-[#f97360] focus:outline-none" required />
-                  </div>
-                  <div className="relative">
-                    <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-white/30" />
-                    <input type="password" value={passwordConfirm} onChange={(e) => setPasswordConfirm(e.target.value)} placeholder={locale === 'uz' ? 'Parolni tasdiqlang' : 'Подтвердите пароль'} minLength={6} className="w-full rounded-2xl border border-white/10 bg-white/5 pl-12 pr-4 py-3 text-white placeholder:text-white/22 focus:border-[#f97360] focus:outline-none" required />
-                  </div>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="relative">
+                  <User className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-white/30" />
+                  <input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder={locale === 'uz' ? 'To‘liq ism' : 'Полное имя'} className="w-full rounded-2xl border border-white/10 bg-white/5 pl-12 pr-4 py-3 text-white placeholder:text-white/22 focus:border-[#f97360] focus:outline-none" required />
+                </div>
+                <div className="relative">
+                  <Phone className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-white/30" />
+                  <input value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder="+998901234567" className="w-full rounded-2xl border border-white/10 bg-white/5 pl-12 pr-4 py-3 text-white placeholder:text-white/22 focus:border-[#f97360] focus:outline-none" required />
+                </div>
+                <div className="relative">
+                  <Mail className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-white/30" />
+                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={locale === 'uz' ? 'Email (ixtiyoriy)' : 'Email (необязательно)'} className="w-full rounded-2xl border border-white/10 bg-white/5 pl-12 pr-4 py-3 text-white placeholder:text-white/22 focus:border-[#f97360] focus:outline-none" />
+                </div>
+                <div className="relative">
+                  <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-white/30" />
+                  <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={locale === 'uz' ? 'Parol' : 'Пароль'} minLength={6} className="w-full rounded-2xl border border-white/10 bg-white/5 pl-12 pr-4 py-3 text-white placeholder:text-white/22 focus:border-[#f97360] focus:outline-none" required />
+                </div>
+                <div className="relative">
+                  <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-white/30" />
+                  <input type="password" value={passwordConfirm} onChange={(e) => setPasswordConfirm(e.target.value)} placeholder={locale === 'uz' ? 'Parolni tasdiqlang' : 'Подтвердите пароль'} minLength={6} className="w-full rounded-2xl border border-white/10 bg-white/5 pl-12 pr-4 py-3 text-white placeholder:text-white/22 focus:border-[#f97360] focus:outline-none" required />
+                </div>
 
-                  <button type="submit" disabled={loading || !fullName || !phoneNumber || !password || password !== passwordConfirm} className="w-full rounded-2xl bg-[#f97360] px-4 py-3 font-semibold text-white transition hover:bg-[#e56350] disabled:opacity-50">
-                    {loading ? <span className="inline-flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> {t('working', 'Working...')}</span> : (locale === 'uz' ? "Ro'yxatdan o'tish" : 'Зарегистрироваться')}
-                  </button>
+                <button type="submit" disabled={loading || !fullName || !phoneNumber || !password || password !== passwordConfirm} className="w-full rounded-2xl bg-[#f97360] px-4 py-3 font-semibold text-white transition hover:bg-[#e56350] disabled:opacity-50">
+                  {loading ? <span className="inline-flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> {t('working', 'Working...')}</span> : (locale === 'uz' ? 'Ro‘yxatdan o‘tish' : 'Зарегистрироваться')}
+                </button>
 
-                  {error ? <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-100">{error}</div> : null}
+                <div className="relative my-4">
+                  <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/10"></div></div>
+                  <div className="relative flex justify-center text-xs"><span className="bg-[#0b1622] px-3 text-white/40">{locale === 'uz' ? 'yoki' : 'или'}</span></div>
+                </div>
 
-                  <div className="text-center text-sm text-white/46">
-                    {locale === 'uz' ? 'Akkauntingiz bormi?' : 'Уже есть аккаунт?'}{' '}
-                    <Link to="/login" className="font-semibold text-[#f97360] hover:underline">{locale === 'uz' ? 'Kirish' : 'Войти'}</Link>
-                  </div>
-                </form>
-              ) : (
                 <div className="space-y-3">
-                  <button type="button" onClick={() => setMode('email')} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 px-4 py-3 text-sm font-semibold text-white/60 transition hover:border-white/20 hover:text-white">
-                    <Mail className="h-4 w-4" />
-                    {locale === 'uz' ? 'Email orqali' : 'По Email'}
-                  </button>
-
                   <GoogleLogin
                     theme="filled_black"
                     size="large"
                     shape="pill"
                     text="signup_with"
-                    width={420}
                     onSuccess={(credentialResponse) => {
                       if (credentialResponse.credential) {
                         handleGoogleSuccess(credentialResponse.credential);
@@ -162,15 +138,15 @@ export default function RegisterPage() {
                     }}
                     onError={() => setError('Google auth cancelled or failed.')}
                   />
-
-                  {error ? <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-100">{error}</div> : null}
-
-                  <div className="text-center text-sm text-white/46">
-                    {locale === 'uz' ? 'Akkauntingiz bormi?' : 'Уже есть аккаунт?'}{' '}
-                    <Link to="/login" className="font-semibold text-[#f97360] hover:underline">{locale === 'uz' ? 'Kirish' : 'Войти'}</Link>
-                  </div>
                 </div>
-              )}
+
+                {error ? <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-100">{error}</div> : null}
+
+                <div className="text-center text-sm text-white/46">
+                  {locale === 'uz' ? 'Akkauntingiz bormi?' : 'Уже есть аккаунт?'}{' '}
+                  <Link to="/login" className="font-semibold text-[#f97360] hover:underline">{locale === 'uz' ? 'Kirish' : 'Войти'}</Link>
+                </div>
+              </form>
             </div>
           </section>
         </div>
