@@ -41,15 +41,13 @@ export default function AttendanceStatsPage() {
   const dailyData = useMemo(() => {
     if (!stats?.daily_guests_total) return [];
     const days = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
-    const values = stats.daily_guests_total || [0, 0, 0, 0, 0, 0, 0];
-    return { labels: days, datasets: [{ label: 'Гости', data: values, backgroundColor: 'rgba(249,115,96,0.5)', borderColor: '#f97360', borderWidth: 1, borderRadius: 6 }] };
+    return { labels: days, datasets: [{ label: 'Гости', data: stats.daily_guests_total, backgroundColor: 'rgba(249,115,96,0.5)', borderColor: '#f97360', borderWidth: 1, borderRadius: 6 }] };
   }, [stats]);
 
   const peakHours = useMemo(() => {
     if (!stats?.hourly_load) return [];
     const labels = Array.from({ length: 12 }, (_, i) => `${i + 10}:00`);
-    const data = stats.hourly_load || labels.map(() => Math.round(Math.random() * 60 + 10));
-    return { labels, datasets: [{ label: 'Загрузка %', data, backgroundColor: 'rgba(141,212,255,0.4)', borderColor: '#8fd4ff', borderWidth: 1, borderRadius: 6 }] };
+    return { labels, datasets: [{ label: 'Загрузка %', data: stats.hourly_load, backgroundColor: 'rgba(141,212,255,0.4)', borderColor: '#8fd4ff', borderWidth: 1, borderRadius: 6 }] };
   }, [stats]);
 
   const totalGuests = stats?.total_guests_today || 0;
@@ -141,26 +139,31 @@ export default function AttendanceStatsPage() {
           </Panel>
 
           <Panel title="Прогноз загрузки" eyebrow="Forecast" description="Ожидаемая загрузка на ближайшие дни">
-            <div className="grid gap-3 sm:grid-cols-2">
-              {Array.from({ length: 6 }, (_, i) => {
-                const d = new Date();
-                d.setDate(d.getDate() + i + 1);
-                const load = Math.round(40 + Math.random() * 50);
-                return (
-                  <div key={i} className="rounded-[20px] border border-white/8 bg-black/12 p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs text-white/50">{d.toLocaleDateString('ru', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
-                      <span className={`text-xs font-semibold ${load > 70 ? 'text-[#ff6b6b]' : load > 50 ? 'text-[#ff8f8f]' : 'text-emerald-400'}`}>{load}%</span>
+            {loading ? (
+              <div className="rounded-[24px] border border-dashed border-white/10 bg-black/10 px-5 py-10 text-center text-sm text-white/48">Загрузка...</div>
+            ) : stats?.forecast?.length ? (
+              <div className="grid gap-3 sm:grid-cols-2">
+                {stats.forecast.map((day: any) => {
+                  const d = new Date(day.date);
+                  const load = day.percentage;
+                  return (
+                    <div key={day.date} className="rounded-[20px] border border-white/8 bg-black/12 p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs text-white/50">{d.toLocaleDateString('ru', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
+                        <span className={`text-xs font-semibold ${load > 70 ? 'text-[#ff6b6b]' : load > 50 ? 'text-[#ff8f8f]' : 'text-emerald-400'}`}>{load}%</span>
+                      </div>
+                      <div className="h-2 rounded-full bg-white/8 overflow-hidden">
+                        <div className={`h-full rounded-full transition-all ${
+                          load > 70 ? 'bg-[#ff6b6b]' : load > 50 ? 'bg-[#ff8f8f]' : 'bg-emerald-400'
+                        }`} style={{ width: `${load}%` }} />
+                      </div>
                     </div>
-                    <div className="h-2 rounded-full bg-white/8 overflow-hidden">
-                      <div className={`h-full rounded-full transition-all ${
-                        load > 70 ? 'bg-[#ff6b6b]' : load > 50 ? 'bg-[#ff8f8f]' : 'bg-emerald-400'
-                      }`} style={{ width: `${load}%` }} />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="rounded-[24px] border border-dashed border-white/10 bg-black/10 px-5 py-10 text-center text-sm text-white/48">Недостаточно данных для прогноза.</div>
+            )}
           </Panel>
         </div>
       </div>

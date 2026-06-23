@@ -40,7 +40,7 @@ const OBJECT_COLORS: Record<string, string> = {
 };
 
 function generateId() {
-  return Math.random().toString(36).substring(2, 10);
+  return crypto.randomUUID().slice(0, 8);
 }
 
 export default function TablesPage() {
@@ -269,8 +269,9 @@ export default function TablesPage() {
   };
 
   const placeTable = async (table: OwnerTable) => {
-    const posX = 80 + Math.floor(Math.random() * 300);
-    const posY = 80 + Math.floor(Math.random() * 300);
+    const placedCount = rows.filter((r) => r.pos_x != null && r.pos_y != null && r.id !== table.id).length;
+    const posX = 80 + (placedCount % 3) * 120;
+    const posY = 80 + Math.floor(placedCount / 3) * 120;
     try {
       await ownerAPI.updateTablePosition(table.id, { pos_x: posX, pos_y: posY });
       setRows((prev) =>

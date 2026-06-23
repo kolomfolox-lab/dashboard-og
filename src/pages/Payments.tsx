@@ -16,7 +16,6 @@ const PROVIDERS = [
 ];
 
 const FISCAL_PROVIDERS = [
-  { value: 'MOCK', label: 'Mock (test mode)' },
   { value: 'UZKASSA', label: 'UzKassa' },
   { value: 'ATLAS', label: 'Atlas' },
   { value: 'SOLARLAB', label: 'Solarlab' },
@@ -41,7 +40,7 @@ export default function PaymentsPage() {
   // Fiscal state
   const [fiscalConfig, setFiscalConfig] = useState<any>(null);
   const [fiscalReceipts, setFiscalReceipts] = useState<any[]>([]);
-  const [fiscalForm, setFiscalForm] = useState({ provider: 'MOCK', api_key: '', terminal_id: '', tin: '', is_active: false });
+  const [fiscalForm, setFiscalForm] = useState({ provider: '', api_key: '', terminal_id: '', tin: '', is_active: false });
   const [savingFiscal, setSavingFiscal] = useState(false);
 
   const load = async () => {
@@ -74,7 +73,7 @@ export default function PaymentsPage() {
       if (list.length > 0) {
         setFiscalConfig(list[0]);
         setFiscalForm({
-          provider: list[0].provider || 'MOCK',
+          provider: list[0].provider || '',
           api_key: list[0].api_key || '',
           terminal_id: list[0].terminal_id || '',
           tin: list[0].tin || '',
@@ -126,7 +125,7 @@ export default function PaymentsPage() {
     try {
       await paymentsAPI.deleteFiscalConfig(fiscalConfig.id);
       setFiscalConfig(null);
-      setFiscalForm({ provider: 'MOCK', api_key: '', terminal_id: '', tin: '', is_active: false });
+      setFiscalForm({ provider: '', api_key: '', terminal_id: '', tin: '', is_active: false });
       await loadFiscal();
     } catch (err: any) {
       setError(err?.response?.data?.detail || err?.message || 'Failed to delete fiscal config.');
@@ -135,6 +134,7 @@ export default function PaymentsPage() {
 
   const saveFiscal = async () => {
     if (!workspace.selectedRestaurantId) return;
+    if (!fiscalForm.provider) { setError('Выберите фискального провайдера.'); return; }
     setSavingFiscal(true);
     setError('');
     try {
