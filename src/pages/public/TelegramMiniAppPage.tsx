@@ -22,11 +22,16 @@ function getTelegramWebApp() {
 export default function TelegramMiniAppPage() {
   const routeParams = useParams();
   const params = useMemo(() => new URLSearchParams(window.location.search), []);
+  const tg = getTelegramWebApp();
+
+  const startParam = tg?.initDataUnsafe?.start_param || '';
+  const [startSlug, ...startTableParts] = startParam.split('_');
+  const startTableNumber = startTableParts.join('_');
+
   const restaurantId = params.get('restaurant_id') || '';
   const queryTableId = params.get('table_id') || '';
-  const restaurantSlug = routeParams.restaurantSlug || '';
-  const tableNumber = routeParams.tableNumber || '';
-  const tg = getTelegramWebApp();
+  const restaurantSlug = routeParams.restaurantSlug || startSlug || '';
+  const tableNumber = routeParams.tableNumber || startTableNumber || '';
   const [menu, setMenu] = useState<TelegramMiniAppMenuResponse | null>(null);
   const [resolvedTableId, setResolvedTableId] = useState(queryTableId);
   const [loading, setLoading] = useState(true);
@@ -83,7 +88,7 @@ export default function TelegramMiniAppPage() {
   useEffect(() => {
     const load = async () => {
       if (!restaurantId && (!restaurantSlug || !tableNumber)) {
-        setError('Открой меню через QR столика.');
+        setError('Открой меню через QR столика или Telegram бота.');
         setLoading(false);
         return;
       }
