@@ -5,8 +5,11 @@ import { VideoSplashLoader } from '@/components/app/VideoSplashLoader';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { LocaleProvider } from '@/context/LocaleContext';
 import { ThemeProvider } from '@/context/ThemeContext';
+import AccountantDashboardPage from '@/pages/AccountantDashboard.tsx';
+import AnalystDashboardPage from '@/pages/AnalystDashboard.tsx';
 import AnalyticsPage from '@/pages/Analytics.tsx';
 import AttendanceStatsPage from '@/pages/AttendanceStats.tsx';
+import MarketerDashboardPage from '@/pages/MarketerDashboard.tsx';
 import AutoNotifyPage from '@/pages/AutoNotify.tsx';
 import BookingsPage from '@/pages/Bookings.tsx';
 import BrandStudioPage from '@/pages/BrandStudio.tsx';
@@ -79,14 +82,17 @@ function AppRoutes() {
     <Routes>
       <Route path="/" element={<HomeRoute />} />
       <Route path="/tv/:restaurantSlug/:kitchenToken" element={<KitchenDisplayPage />} />
-      <Route path="/qr/:restaurantSlug/table:tableNumber/*" element={<GuestTrackingPage />} />
+      <Route path="/qr/:restaurantSlug/:tableNumber/*" element={<GuestTrackingPage />} />
       <Route path="/telegram-mini-app" element={<TelegramMiniAppPage />} />
-      <Route path="/telegram-mini-app/:restaurantSlug/table:tableNumber" element={<TelegramMiniAppPage />} />
+      <Route path="/telegram-mini-app/:restaurantSlug/:tableNumber" element={<TelegramMiniAppPage />} />
       <Route path="/menu/:restaurantSlug/*" element={<OnlineMenuPage />} />
       <Route path="/receipt/:transactionId" element={<ReceiptPage />} />
       <Route path="/owner/invite/:token" element={<OwnerOnboardingPage />} />
       <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <LoginPage />} />
       <Route path="/dashboard" element={<PrivateRoute><DashboardPage /></PrivateRoute>} />
+      <Route path="/accountant" element={<PrivateRoute><AccountantDashboardPage /></PrivateRoute>} />
+      <Route path="/marketer" element={<PrivateRoute><MarketerDashboardPage /></PrivateRoute>} />
+      <Route path="/analyst" element={<PrivateRoute><AnalystDashboardPage /></PrivateRoute>} />
       <Route path="/restaurants" element={<PrivateRoute><RestaurantsPage /></PrivateRoute>} />
       <Route path="/analytics" element={<PrivateRoute><AnalyticsPage /></PrivateRoute>} />
       <Route path="/attendance" element={<PrivateRoute><AttendanceStatsPage /></PrivateRoute>} />
