@@ -589,7 +589,7 @@ export const authAPI = {
 
 export const telegramMiniAppAPI = {
   bootstrap: (restaurantSlug: string, tableNumber: string | number) =>
-    api.get<TelegramMiniAppMenuResponse>(`/v1/telegram-mini-app/${restaurantSlug}/table${tableNumber}/`),
+    api.get<TelegramMiniAppMenuResponse>(`/v1/telegram-mini-app/${restaurantSlug}/${tableNumber}/`),
   getMenu: (restaurantId: string, tableId?: string) =>
     api.get<TelegramMiniAppMenuResponse>(`/v1/restaurants/${restaurantId}/menu/`, {
       params: tableId ? { table_id: tableId } : {},
@@ -903,7 +903,7 @@ export const kitchenAPI = {
 
 export const publicAPI = {
   guestBootstrap: (restaurantSlug: string, tableNumber: string | number) =>
-    api.get<GuestBootstrapResponse>(`/v1/guest/bootstrap/${restaurantSlug}/table${tableNumber}/`),
+    api.get<GuestBootstrapResponse>(`/v1/guest/bootstrap/${restaurantSlug}/${tableNumber}/`),
   guestActiveOrders: (guestToken: string) =>
     api.get<GuestActiveOrdersResponse>('/v1/guest/orders/active/', { params: { guest_token: guestToken } }),
   guestReviewPrompt: (guestToken: string) =>
