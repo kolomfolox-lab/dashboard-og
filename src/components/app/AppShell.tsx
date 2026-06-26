@@ -65,6 +65,30 @@ const navByRole: Record<string, NavGroup[]> = {
       { to: '/settings', labelKey: 'nav_settings', fallback: 'Settings', icon: Settings2 },
     ]},
   ],
+  ACCOUNTANT: [
+    { label: '', items: [
+      { to: '/accountant', labelKey: 'nav_accountant', fallback: 'Accountant', icon: LayoutDashboard },
+      { to: '/payments', labelKey: 'nav_payments', fallback: 'Payments', icon: Receipt },
+      { to: '/reports', labelKey: 'nav_reports', fallback: 'Reports', icon: BarChart3 },
+      { to: '/data-export', labelKey: 'nav_data_export', fallback: 'Data Export', icon: BarChart3 },
+    ]},
+  ],
+  MARKETER: [
+    { label: '', items: [
+      { to: '/marketer', labelKey: 'nav_marketer', fallback: 'Marketer', icon: LayoutDashboard },
+      { to: '/promo', labelKey: 'nav_promo', fallback: 'Promo', icon: Gift },
+      { to: '/auto-notify', labelKey: 'nav_auto_notify', fallback: 'Auto Notify', icon: Bell },
+      { to: '/surveys', labelKey: 'nav_surveys', fallback: 'Surveys', icon: ContactRound },
+    ]},
+  ],
+  ANALYST: [
+    { label: '', items: [
+      { to: '/analyst', labelKey: 'nav_analyst', fallback: 'Analyst', icon: LayoutDashboard },
+      { to: '/analytics', labelKey: 'nav_analytics', fallback: 'Analytics', icon: LineChart },
+      { to: '/reports', labelKey: 'nav_reports', fallback: 'Reports', icon: BarChart3 },
+      { to: '/data-export', labelKey: 'nav_data_export', fallback: 'Data Export', icon: BarChart3 },
+    ]},
+  ],
   RESTAURANT_OWNER: [
     { label: 'Operations', items: [
       { to: '/dashboard', labelKey: 'nav_dashboard', fallback: 'Dashboard', icon: LayoutDashboard },
