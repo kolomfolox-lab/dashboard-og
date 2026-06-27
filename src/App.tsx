@@ -41,10 +41,16 @@ import OwnerOnboardingPage from '@/pages/public/OwnerOnboardingPage.tsx';
 import OwnerSetupPage from '@/pages/OwnerSetupPage.tsx';
 import ReceiptPage from '@/pages/public/ReceiptPage.tsx';
 import TelegramMiniAppPage from '@/pages/public/TelegramMiniAppPage.tsx';
+import ShiftLeaderPage from '@/pages/ShiftLeaderPage.tsx';
+import DispatcherPage from '@/pages/DispatcherPage.tsx';
+import CourierPage from '@/pages/CourierPage.tsx';
+import SupportPage from '@/pages/SupportPage.tsx';
+import AuditorPage from '@/pages/AuditorPage.tsx';
+import SupplierPage from '@/pages/SupplierPage.tsx';
 
 let authSplashShown = false;
 
-function PrivateRoute({ children }: { children: React.ReactNode }) {
+function PrivateRoute({ children, roles }: { children: React.ReactNode; roles?: string[] }) {
   const { user, loading } = useAuth();
   const [minSplashDone, setMinSplashDone] = useState(authSplashShown);
 
@@ -61,7 +67,9 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
   if (loading || !minSplashDone) {
     return <VideoSplashLoader title="Booting Waitly Control" subtitle="Checking the saved session and preparing the workspace." durationMs={4000} />;
   }
-  return user ? <ThemeProvider>{children}</ThemeProvider> : <Navigate to="/login" replace />;
+  if (!user) return <Navigate to="/login" replace />;
+  if (roles && !roles.includes(user.role)) return <Navigate to="/dashboard" replace />;
+  return <ThemeProvider>{children}</ThemeProvider>;
 }
 
 function HomeRoute() {
@@ -89,34 +97,40 @@ function AppRoutes() {
       <Route path="/receipt/:transactionId" element={<ReceiptPage />} />
       <Route path="/owner/invite/:token" element={<OwnerOnboardingPage />} />
       <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <LoginPage />} />
-      <Route path="/dashboard" element={<PrivateRoute><DashboardPage /></PrivateRoute>} />
-      <Route path="/accountant" element={<PrivateRoute><AccountantDashboardPage /></PrivateRoute>} />
-      <Route path="/marketer" element={<PrivateRoute><MarketerDashboardPage /></PrivateRoute>} />
-      <Route path="/analyst" element={<PrivateRoute><AnalystDashboardPage /></PrivateRoute>} />
-      <Route path="/restaurants" element={<PrivateRoute><RestaurantsPage /></PrivateRoute>} />
-      <Route path="/analytics" element={<PrivateRoute><AnalyticsPage /></PrivateRoute>} />
-      <Route path="/attendance" element={<PrivateRoute><AttendanceStatsPage /></PrivateRoute>} />
-      <Route path="/bookings" element={<PrivateRoute><BookingsPage /></PrivateRoute>} />
-      <Route path="/crm" element={<PrivateRoute><CRMPage /></PrivateRoute>} />
-      <Route path="/loyalty" element={<PrivateRoute><LoyaltyPage /></PrivateRoute>} />
-      <Route path="/menu" element={<PrivateRoute><MenuPage /></PrivateRoute>} />
-      <Route path="/users" element={<PrivateRoute><UsersPage /></PrivateRoute>} />
-      <Route path="/tables" element={<PrivateRoute><TablesPage /></PrivateRoute>} />
-      <Route path="/inventory" element={<PrivateRoute><InventoryPage /></PrivateRoute>} />
-      <Route path="/keys" element={<PrivateRoute><KeysPage /></PrivateRoute>} />
-      <Route path="/settings" element={<PrivateRoute><SettingsPage /></PrivateRoute>} />
-      <Route path="/setup" element={<PrivateRoute><OwnerSetupPage /></PrivateRoute>} />
-      <Route path="/brand-studio" element={<PrivateRoute><BrandStudioPage /></PrivateRoute>} />
-      <Route path="/online-menu-studio" element={<PrivateRoute><OnlineMenuStudioPage /></PrivateRoute>} />
-      <Route path="/payments" element={<PrivateRoute><PaymentsPage /></PrivateRoute>} />
-      <Route path="/subscription" element={<PrivateRoute><SubscriptionPage /></PrivateRoute>} />
-      <Route path="/reports" element={<PrivateRoute><ReportsPage /></PrivateRoute>} />
-      <Route path="/tech-cards" element={<PrivateRoute><TechCardsPage /></PrivateRoute>} />
-      <Route path="/promo" element={<PrivateRoute><PromoPage /></PrivateRoute>} />
-      <Route path="/surveys" element={<PrivateRoute><SurveysPage /></PrivateRoute>} />
-      <Route path="/auto-notify" element={<PrivateRoute><AutoNotifyPage /></PrivateRoute>} />
-      <Route path="/data-export" element={<PrivateRoute><DataExportPage /></PrivateRoute>} />
-      <Route path="/permissions" element={<PrivateRoute><PermissionsPage /></PrivateRoute>} />
+      <Route path="/dashboard" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MANAGER']}><DashboardPage /></PrivateRoute>} />
+      <Route path="/accountant" element={<PrivateRoute roles={['ACCOUNTANT','SUPER_ADMIN']}><AccountantDashboardPage /></PrivateRoute>} />
+      <Route path="/marketer" element={<PrivateRoute roles={['MARKETER','SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER']}><MarketerDashboardPage /></PrivateRoute>} />
+      <Route path="/analyst" element={<PrivateRoute roles={['ANALYST','SUPER_ADMIN']}><AnalystDashboardPage /></PrivateRoute>} />
+      <Route path="/restaurants" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER']}><RestaurantsPage /></PrivateRoute>} />
+      <Route path="/analytics" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','ANALYST']}><AnalyticsPage /></PrivateRoute>} />
+      <Route path="/attendance" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER']}><AttendanceStatsPage /></PrivateRoute>} />
+      <Route path="/bookings" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MANAGER']}><BookingsPage /></PrivateRoute>} />
+      <Route path="/crm" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MANAGER']}><CRMPage /></PrivateRoute>} />
+      <Route path="/loyalty" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER']}><LoyaltyPage /></PrivateRoute>} />
+      <Route path="/menu" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MANAGER']}><MenuPage /></PrivateRoute>} />
+      <Route path="/users" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER']}><UsersPage /></PrivateRoute>} />
+      <Route path="/tables" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MANAGER','HOSTESS']}><TablesPage /></PrivateRoute>} />
+      <Route path="/inventory" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MANAGER','CHEF','KITCHEN_MANAGER']}><InventoryPage /></PrivateRoute>} />
+      <Route path="/keys" element={<PrivateRoute roles={['SUPER_ADMIN']}><KeysPage /></PrivateRoute>} />
+      <Route path="/settings" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MANAGER']}><SettingsPage /></PrivateRoute>} />
+      <Route path="/setup" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER']}><OwnerSetupPage /></PrivateRoute>} />
+      <Route path="/brand-studio" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MANAGER']}><BrandStudioPage /></PrivateRoute>} />
+      <Route path="/online-menu-studio" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MANAGER']}><OnlineMenuStudioPage /></PrivateRoute>} />
+      <Route path="/payments" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','ACCOUNTANT']}><PaymentsPage /></PrivateRoute>} />
+      <Route path="/subscription" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER']}><SubscriptionPage /></PrivateRoute>} />
+      <Route path="/reports" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','ACCOUNTANT','ANALYST']}><ReportsPage /></PrivateRoute>} />
+      <Route path="/tech-cards" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MANAGER','CHEF','KITCHEN_MANAGER']}><TechCardsPage /></PrivateRoute>} />
+      <Route path="/promo" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MARKETER']}><PromoPage /></PrivateRoute>} />
+      <Route path="/surveys" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MARKETER']}><SurveysPage /></PrivateRoute>} />
+      <Route path="/auto-notify" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MARKETER']}><AutoNotifyPage /></PrivateRoute>} />
+      <Route path="/data-export" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','ACCOUNTANT','ANALYST']}><DataExportPage /></PrivateRoute>} />
+      <Route path="/permissions" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER']}><PermissionsPage /></PrivateRoute>} />
+      <Route path="/shift-leader" element={<PrivateRoute roles={['SHIFT_LEADER']}><ShiftLeaderPage /></PrivateRoute>} />
+      <Route path="/dispatcher" element={<PrivateRoute roles={['DISPATCHER']}><DispatcherPage /></PrivateRoute>} />
+      <Route path="/courier" element={<PrivateRoute roles={['COURIER']}><CourierPage /></PrivateRoute>} />
+      <Route path="/support" element={<PrivateRoute roles={['SUPPORT']}><SupportPage /></PrivateRoute>} />
+      <Route path="/auditor" element={<PrivateRoute roles={['AUDITOR']}><AuditorPage /></PrivateRoute>} />
+      <Route path="/supplier" element={<PrivateRoute roles={['SUPPLIER']}><SupplierPage /></PrivateRoute>} />
       <Route path="/register" element={user ? <Navigate to="/dashboard" replace /> : <RegisterPage />} />
       <Route path="*" element={<FallbackRoute />} />
     </Routes>

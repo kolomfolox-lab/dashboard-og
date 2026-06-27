@@ -89,6 +89,36 @@ const navByRole: Record<string, NavGroup[]> = {
       { to: '/data-export', labelKey: 'nav_data_export', fallback: 'Data Export', icon: BarChart3 },
     ]},
   ],
+  SHIFT_LEADER: [
+    { label: '', items: [
+      { to: '/shift-leader', labelKey: 'nav_dashboard', fallback: 'Shift', icon: LayoutDashboard },
+    ]},
+  ],
+  DISPATCHER: [
+    { label: '', items: [
+      { to: '/dispatcher', labelKey: 'nav_dashboard', fallback: 'Dispatch', icon: LayoutDashboard },
+    ]},
+  ],
+  COURIER: [
+    { label: '', items: [
+      { to: '/courier', labelKey: 'nav_dashboard', fallback: 'Courier', icon: LayoutDashboard },
+    ]},
+  ],
+  SUPPORT: [
+    { label: '', items: [
+      { to: '/support', labelKey: 'nav_dashboard', fallback: 'Support', icon: LayoutDashboard },
+    ]},
+  ],
+  AUDITOR: [
+    { label: '', items: [
+      { to: '/auditor', labelKey: 'nav_dashboard', fallback: 'Auditor', icon: LayoutDashboard },
+    ]},
+  ],
+  SUPPLIER: [
+    { label: '', items: [
+      { to: '/supplier', labelKey: 'nav_dashboard', fallback: 'Supplier', icon: LayoutDashboard },
+    ]},
+  ],
   RESTAURANT_OWNER: [
     { label: 'Operations', items: [
       { to: '/dashboard', labelKey: 'nav_dashboard', fallback: 'Dashboard', icon: LayoutDashboard },
@@ -142,7 +172,7 @@ export function AppShell({ title, subtitle, eyebrow, restaurants = [], selectedR
   const { theme, toggle: toggleTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
-  const navItems = navByRole[user?.role as keyof typeof navByRole] || navByRole.RESTAURANT_OWNER;
+  const navItems = navByRole[user?.role as keyof typeof navByRole] || [];
   const [open, setOpen] = useState(true);
   const selectedRestaurant = restaurants.find((restaurant) => restaurant.id === selectedRestaurantId) || restaurants[0] || null;
   const welcomeStorageKey = user?.id ? `waitly-owner-welcome:${user.id}` : 'waitly-owner-welcome';
