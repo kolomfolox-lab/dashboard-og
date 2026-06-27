@@ -521,7 +521,7 @@ function OrderCard({ order }: { order: GuestOrder }) {
           </div>
           <h2 className="mt-3 text-xl font-black tracking-[-0.05em] text-slate-950 md:mt-4 md:text-3xl">{order.stage_label}</h2>
           <p className="mt-1 text-xs leading-6 text-slate-600 md:mt-2 md:text-sm md:leading-7">
-            {t('guest_eta_range').replace('{from}', order.eta_window.from).replace('{to}', order.eta_window.to).replace('{queue}', String(order.queue_position))}
+            {t('guest_eta_range').replace('{from}', String(order.eta_window.from)).replace('{to}', String(order.eta_window.to)).replace('{queue}', String(order.queue_position))}
           </p>
         </div>
 
