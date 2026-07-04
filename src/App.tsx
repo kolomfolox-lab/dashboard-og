@@ -31,6 +31,7 @@ import ReportsPage from '@/pages/Reports.tsx';
 import RestaurantsPage from '@/pages/Restaurants.tsx';
 import SettingsPage from '@/pages/Settings.tsx';
 import SubscriptionPage from '@/pages/SubscriptionPage.tsx';
+import PricingPage from '@/pages/PricingPage.tsx';
 import SurveysPage from '@/pages/Surveys.tsx';
 import TablesPage from '@/pages/Tables.tsx';
 import TechCardsPage from '@/pages/TechCards.tsx';
@@ -117,7 +118,8 @@ function AppRoutes() {
       <Route path="/brand-studio" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MANAGER']}><BrandStudioPage /></PrivateRoute>} />
       <Route path="/online-menu-studio" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MANAGER']}><OnlineMenuStudioPage /></PrivateRoute>} />
       <Route path="/payments" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','ACCOUNTANT']}><PaymentsPage /></PrivateRoute>} />
-      <Route path="/subscription" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER']}><SubscriptionPage /></PrivateRoute>} />
+       <Route path="/pricing" element={<PrivateRoute roles={['CHAIN_OWNER','RESTAURANT_OWNER']}><PricingPage /></PrivateRoute>} />
+       <Route path="/subscription" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER']}><SubscriptionPage /></PrivateRoute>} />
       <Route path="/reports" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','ACCOUNTANT','ANALYST']}><ReportsPage /></PrivateRoute>} />
       <Route path="/tech-cards" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MANAGER','CHEF','KITCHEN_MANAGER']}><TechCardsPage /></PrivateRoute>} />
       <Route path="/promo" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MARKETER']}><PromoPage /></PrivateRoute>} />

@@ -149,11 +149,13 @@ const navByRole: Record<string, NavGroup[]> = {
       { to: '/data-export', labelKey: 'nav_data_export', fallback: 'Data Export', icon: BarChart3 },
       { to: '/payments', labelKey: 'nav_payments', fallback: 'Payments', icon: Receipt },
       { to: '/permissions', labelKey: 'nav_permissions', fallback: 'Permissions', icon: LockKeyhole },
-      { to: '/subscription', labelKey: 'nav_subscription', fallback: 'Subscription', icon: CreditCard },
-      { to: '/settings', labelKey: 'nav_settings', fallback: 'Profile', icon: Settings2 },
+      { to: '/pricing', labelKey: 'nav_pricing', fallback: 'Pricing', icon: CreditCard },
+      { to: '/subscription', labelKey: 'nav_subscription', fallback: 'Subscription', icon: LockKeyhole },
+      { to: '/settings', labelKey: 'nav_settings', fallback: 'Settings', icon: Settings2 },
     ]},
   ],
 };
+
 
 interface AppShellProps {
   title: string;

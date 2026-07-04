@@ -654,6 +654,36 @@ export interface OwnerMenuDish {
   is_available: boolean;
 }
 
+export interface SubscriptionPlanResponse {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  price_uzs: number;
+  duration_months: number;
+  features: Record<string, boolean>;
+  sort_order: number;
+}
+
+export interface PurchaseSubscriptionPayload {
+  plan_slug: string;
+  duration_months: number;
+  payment_method: 'payme' | 'click';
+}
+
+export interface PurchaseSubscriptionResponse {
+  key_id: string;
+  payment_id: string;
+  amount: number;
+  payment_url: string | null;
+}
+
+export const subscriptionAPI = {
+  getPlans: () => api.get<SubscriptionPlanResponse[]>('/subscriptions/plans/'),
+  getPlan: (slug: string) => api.get<SubscriptionPlanResponse>(`/subscriptions/plans/${slug}/`),
+  purchase: (payload: PurchaseSubscriptionPayload) => api.post<PurchaseSubscriptionResponse>('/subscriptions/purchase/', payload),
+};
+
 export const ownerAPI = {
   getMe: () => api.get('/owner/me/'),
   subscriptionStatus: (restaurantId: string) => api.get<OwnerSubscriptionStatusResponse>('/v1/owner/subscription/status/', { params: { restaurant_id: restaurantId } }),
