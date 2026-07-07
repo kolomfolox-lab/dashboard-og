@@ -136,6 +136,21 @@ export default function LoginPage() {
                 <h1 className="mt-3 text-4xl font-bold leading-tight text-white">{t('login_title', 'Панель управления Waitly')}</h1>
                 <p className="mt-4 text-sm leading-7 text-white/58">{t('login_subtitle', 'Вход по паролю или по коду из email.')}</p>
               </div>
+              <div className="flex flex-wrap gap-3 pt-2">
+                <div className="rounded-full border border-white/8 bg-white/4 px-3 py-1.5 text-[11px] text-white/40">🔒 256-bit</div>
+                <div className="rounded-full border border-white/8 bg-white/4 px-3 py-1.5 text-[11px] text-white/40">✓ Argon2 hashing</div>
+                <div className="rounded-full border border-white/8 bg-white/4 px-3 py-1.5 text-[11px] text-white/40">🛡️ 2FA ready</div>
+              </div>
+            </div>
+            <div className="mt-8 rounded-2xl border border-white/6 bg-white/3 p-4">
+              <div className="flex items-center gap-3 text-white/40">
+                <div className="flex -space-x-1">
+                  {[...Array(3)].map((_, i) => (
+                    <div key={i} className="h-6 w-6 rounded-full border border-white/10 bg-gradient-to-br from-white/10 to-white/4" />
+                  ))}
+                </div>
+                <p className="text-xs leading-relaxed">Присоединяйтесь к <strong className="text-white/60">500+</strong> ресторанов, уже управляющих бизнесом через Waitly</p>
+              </div>
             </div>
           </section>
 
@@ -188,7 +203,7 @@ export default function LoginPage() {
                           </>
                         ) : null}
 
-                        <button type="submit" disabled={loading || !identifier || (mode === 'password' && !pwd)} className="w-full rounded-2xl bg-[#f97360] px-4 py-3 font-semibold text-white transition hover:bg-[#e56350] disabled:opacity-50">
+                        <button type="submit" disabled={loading || !identifier || (mode === 'password' && !pwd)} className="group w-full rounded-2xl bg-gradient-to-r from-[#f97360] to-[#e56350] px-4 py-3 font-semibold text-white shadow-lg shadow-[#f97360]/20 transition hover:shadow-xl hover:shadow-[#f97360]/30 disabled:opacity-50 disabled:shadow-none">
                           {loading ? <span className="inline-flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> {t('working', 'Working...')}</span> : mode === 'password' ? (locale === 'uz' ? 'Kirish' : 'Войти') : (locale === 'uz' ? 'Kod yuborish' : 'Отправить код')}
                         </button>
 
