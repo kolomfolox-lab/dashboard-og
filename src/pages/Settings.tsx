@@ -90,4 +90,16 @@ export default function SettingsPage() {
   );
 }
 
-function QuickLinkCard({ title, description, action, onClick }: { title: string; description: string; action: string; onClick: () => void }) { return <button type="button" onClick={onClick} className="rounded-[24px] border border-white/8 bg-black/12 p-5 text-left transition hover:border-[#8fd4ff]/25 hover:bg-white/[0.04]"><div className="text-lg font-semibold text-white">{title}</div><div className="mt-2 text-sm leading-7 text-white/56">{description}</div><div className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-[#8fd4ff]">{action}<ArrowRight className="h-4 w-4" /></div></button>; }
+function QuickLinkCard({ title, description, action, onClick }: { title: string; description: string; action: string; onClick: () => void }) {
+  const [completed, setCompleted] = useState(() => localStorage.getItem(`setup_${title}`) === 'done');
+  return (
+    <button type="button" onClick={() => { onClick(); localStorage.setItem(`setup_${title}`, 'done'); setCompleted(true); }} className="group rounded-[24px] border border-white/8 bg-black/12 p-5 text-left transition hover:border-[#8fd4ff]/25 hover:bg-white/[0.04]">
+      <div className="flex items-center justify-between">
+        <div className="text-lg font-semibold text-white">{title}</div>
+        {completed ? <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">✓ Done</span> : <span className="text-[10px] font-bold uppercase tracking-wider text-white/24">— Pending</span>}
+      </div>
+      <div className="mt-2 text-sm leading-7 text-white/56">{description}</div>
+      <div className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-[#8fd4ff] transition group-hover:gap-3">{action}<ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" /></div>
+    </button>
+  );
+}
