@@ -288,10 +288,10 @@ export default function DashboardPage() {
       >
         <div className="space-y-6">
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <MetricCard title={locale === 'uz' ? 'Jami tarmoqlar' : 'Всего сетей'} value={stats?.total_chains || 0} note={locale === 'uz' ? 'Faol tarmoqlar' : 'Активные сети'} icon={Store} tone="coral" />
-            <MetricCard title={locale === 'uz' ? 'Berilgan kalitlar' : 'Выданные ключи'} value={stats?.active_keys || 0} note={`${stats?.unused_keys || 0} ${locale === 'uz' ? 'kutilmoqda' : 'ожидают'}`} icon={KeyRound} tone="mint" />
-            <MetricCard title={locale === 'uz' ? 'Umumiy tushum' : 'Общая выручка'} value={formatMoney(stats?.platform_revenue)} note={locale === 'uz' ? 'Oxirgi 30 kun' : 'За 30 дней'} icon={DollarSign} tone="sand" />
-            <MetricCard title={locale === 'uz' ? 'Tizim yuki' : 'Нагрузка системы'} value={formatCompactNumber(stats?.total_orders)} note={locale === 'uz' ? 'Tranzaksiyalar' : 'Транзакции'} icon={ShoppingBag} tone="cyan" />
+            <MetricCard title={locale === 'uz' ? 'Jami tarmoqlar' : 'Всего сетей'} value={stats?.total_chains || 0} icon={Store} tone="coral" trend={{ direction: 'up', label: 'Рост экосистемы' }} />
+            <MetricCard title={locale === 'uz' ? 'Berilgan kalitlar' : 'Выданные ключи'} value={stats?.active_keys || 0} icon={KeyRound} tone="mint" note={`${stats?.unused_keys || 0} ${locale === 'uz' ? 'kutilmoqda' : 'ожидают'}`} />
+            <MetricCard title={locale === 'uz' ? 'Umumiy tushum' : 'Общая выручка'} value={formatMoney(stats?.platform_revenue)} icon={DollarSign} tone="sand" note={locale === 'uz' ? 'Oxirgi 30 kun' : 'За 30 дней'} />
+            <MetricCard title={locale === 'uz' ? 'Tizim yuki' : 'Нагрузка системы'} value={formatCompactNumber(stats?.total_orders)} icon={ShoppingBag} tone="cyan" trend={{ direction: 'up', label: 'Транзакции' }} />
           </div>
 
           <div className="grid gap-4 xl:grid-cols-[1.5fr_1fr]">
@@ -331,10 +331,10 @@ export default function DashboardPage() {
       >
         <div className="space-y-6">
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <MetricCard title={locale === 'uz' ? 'Filiallar' : 'Филиалы'} value={workspace.restaurants.length || 0} note={locale === 'uz' ? 'Tarmoq ichidagi nuqtalar' : 'Точки внутри сети'} icon={Store} tone="coral" />
-            <MetricCard title={locale === 'uz' ? 'Tanlangan tushum' : 'Выручка выбранного'} value={formatMoney(stats?.revenue_today)} note={locale === 'uz' ? 'Bugungi restoran' : 'Сегодня по ресторану'} icon={DollarSign} tone="sand" />
-            <MetricCard title={locale === 'uz' ? 'Buyurtmalar' : 'Заказы'} value={stats?.orders_today || 0} note={locale === 'uz' ? 'Bugungi oqim' : 'Сегодняшний поток'} icon={ShoppingBag} tone="cyan" />
-            <MetricCard title={locale === 'uz' ? 'Smenada' : 'На смене'} value={stats?.active_staff_now || 0} note={workspace.selectedRestaurant?.name || (locale === 'uz' ? 'Tanlangan restoran' : 'Выбранный ресторан')} icon={UsersRound} tone="mint" />
+            <MetricCard title={locale === 'uz' ? 'Filiallar' : 'Филиалы'} value={workspace.restaurants.length || 0} icon={Store} tone="coral" trend={{ direction: 'up', label: 'Точек в сети' }} />
+            <MetricCard title={locale === 'uz' ? 'Tanlangan tushum' : 'Выручка'} value={formatMoney(stats?.revenue_today)} icon={DollarSign} tone="sand" note={workspace.selectedRestaurant?.name || (locale === 'uz' ? 'Tanlangan restoran' : 'Выбранный ресторан')} />
+            <MetricCard title={locale === 'uz' ? 'Buyurtmalar' : 'Заказы'} value={stats?.orders_today || 0} icon={ShoppingBag} tone="cyan" trend={stats?.orders_today > 0 ? { direction: 'up', label: 'Сегодняшний поток' } : undefined} />
+            <MetricCard title={locale === 'uz' ? 'Smenada' : 'На смене'} value={stats?.active_staff_now || 0} icon={UsersRound} tone="mint" note={locale === 'uz' ? 'Hozir smenada' : 'Сейчас на смене'} />
           </div>
 
           <OwnerComparisonStrip items={ownerComparisonItems} />
@@ -378,10 +378,10 @@ export default function DashboardPage() {
     >
       <div className="space-y-6">
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <MetricCard title={locale === 'uz' ? 'Bugungi tushum' : 'Выручка сегодня'} value={formatMoney(stats?.revenue_today)} note={locale === 'uz' ? 'Barcha smenalar bo\'yicha' : 'По всем сменам'} icon={DollarSign} tone="coral" />
-          <MetricCard title={locale === 'uz' ? '30 kunlik tushum' : 'Выручка за 30 дней'} value={formatMoney(stats?.revenue_30_days)} note={locale === 'uz' ? 'So\'nggi oy' : 'Последний месяц'} icon={Activity} tone="sand" />
-          <MetricCard title={locale === 'uz' ? 'O\'rtacha чек' : 'Средний чек'} value={formatMoney(stats?.avg_check_30_days)} note={locale === 'uz' ? 'Buyurtma o\'rtachasi' : 'Средняя сумма заказа'} icon={ShoppingBag} tone="cyan" />
-          <MetricCard title={locale === 'uz' ? 'Faol staff' : 'Активный staff'} value={stats?.active_staff_now || 0} note={locale === 'uz' ? 'Hozir smenada' : 'Сейчас на смене'} icon={UsersRound} tone="mint" />
+          <MetricCard title={locale === 'uz' ? 'Bugungi tushum' : 'Выручка сегодня'} value={formatMoney(stats?.revenue_today)} icon={DollarSign} tone="coral" trend={stats?.revenue_today_trend ? { direction: stats.revenue_today_trend >= 0 ? 'up' : 'down', label: `${Math.abs(stats.revenue_today_trend)}% vs вчера` } : undefined} />
+          <MetricCard title={locale === 'uz' ? '30 kunlik tushum' : 'Выручка за 30 дней'} value={formatMoney(stats?.revenue_30_days)} icon={Activity} tone="sand" trend={{ direction: 'up', label: `${Math.round(stats?.revenue_30_days / 30 || 0).toLocaleString()} ₽/день среднее` }} />
+          <MetricCard title={locale === 'uz' ? 'O\'rtacha чек' : 'Средний чек'} value={formatMoney(stats?.avg_check_30_days)} icon={ShoppingBag} tone="cyan" note={locale === 'uz' ? 'Buyurtma o\'rtachasi' : 'Средняя сумма заказа'} />
+          <MetricCard title={locale === 'uz' ? 'Faol staff' : 'Активный staff'} value={stats?.active_staff_now || 0} icon={UsersRound} tone="mint" note={locale === 'uz' ? 'Hozir smenada' : 'Сейчас на смене'} />
           <MetricCard
             title={locale === 'uz' ? 'Ofitsiantlar reytingi' : 'Рейтинг официантов'}
             value={stats?.waiter_rating_summary?.average_waiter_rating ? `${stats.waiter_rating_summary.average_waiter_rating}★` : '—'}
