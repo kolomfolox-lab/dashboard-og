@@ -297,6 +297,7 @@ export function AppShell({ title, subtitle, eyebrow, restaurants = [], selectedR
                     <span className="inline-flex rounded-full border border-theme bg-theme-panel px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-theme-secondary">{roleLabels[user?.role || ''] || 'Operator'}</span>
                   </div>
                   <p className="mt-3 max-w-4xl text-sm leading-7 text-theme-secondary">{subtitle}</p>
+                  {user?.full_name ? <div className="mt-2 flex items-center gap-2 text-xs text-theme-secondary"><span>С возвращением, <strong className="text-theme">{user.full_name.split(' ')[0]}</strong></span></div> : null}
                 </div>
                 <div className="flex flex-col gap-3 lg:min-w-[520px] sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
                   <label className="flex items-center gap-2 rounded-2xl border border-theme bg-[var(--input-bg)] px-4 py-3 text-sm text-theme-secondary"><span className="text-theme-muted">{t('shell_language', 'Language')}</span><div className="relative"><select value={locale} onChange={(event) => setLocale(event.target.value as 'ru' | 'en' | 'uz')} className="appearance-none bg-transparent pr-7 text-sm font-semibold text-theme outline-none"><option value="ru">RU</option><option value="en">EN</option><option value="uz">UZ</option></select><ChevronDown className="pointer-events-none absolute right-0 top-1/2 h-4 w-4 -translate-y-1/2 text-theme-secondary" /></div></label>
