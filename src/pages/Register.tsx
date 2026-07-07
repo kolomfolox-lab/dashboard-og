@@ -204,6 +204,12 @@ export default function RegisterPage() {
 
                   {error ? <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-100">{error}</div> : null}
 
+                  <div className="mt-4 flex flex-wrap justify-center gap-2">
+                    <span className="rounded-full border border-white/6 bg-white/4 px-3 py-1 text-[10px] text-white/40">🔒 256-bit</span>
+                    <span className="rounded-full border border-white/6 bg-white/4 px-3 py-1 text-[10px] text-white/40">✓ GDPR ready</span>
+                    <span className="rounded-full border border-white/6 bg-white/4 px-3 py-1 text-[10px] text-white/40">🛡️ 2FA</span>
+                  </div>
+
                   <div className="text-center text-sm text-white/46">
                     {locale === 'uz' ? 'Akkauntingiz bormi?' : 'Уже есть аккаунт?'}{' '}
                     <Link to="/login" className="font-semibold text-[#f97360] hover:underline">{locale === 'uz' ? 'Kirish' : 'Войти'}</Link>
