@@ -42,15 +42,20 @@ export function OwnerComparisonStrip({ items }: { items: OwnerComparisonItem[] }
         const width = delta === null ? 18 : Math.max(10, Math.min(100, Math.abs(delta)));
 
         return (
-          <div key={item.label} className={cn('relative overflow-hidden rounded-[28px] border border-white/10 bg-white/[0.045] p-5 shadow-[0_18px_60px_rgba(0,0,0,0.16)]', `bg-gradient-to-br ${tone.glow}`)}>
-            <div className="text-[11px] font-semibold uppercase tracking-[0.28em] text-white/38">{item.label}</div>
+          <div key={item.label} className={cn('relative overflow-hidden rounded-[28px] border border-white/10 bg-white/[0.045] p-5 shadow-[0_18px_60px_rgba(0,0,0,0.16)] group', `bg-gradient-to-br ${tone.glow}`)}>
+            <div className="flex items-center justify-between">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.28em] text-white/38">{item.label}</div>
+              <span className={cn('text-[10px] font-bold uppercase tracking-[0.2em]', delta !== null && delta > 0 ? 'text-emerald-400/60' : 'text-white/20')}>
+                {delta !== null ? (delta > 0 ? 'Trend ↑' : 'Trend ↓') : '—'}
+              </span>
+            </div>
             <div className={cn('mt-3 font-display text-2xl font-bold', tone.text)}>{item.value}</div>
             <div className="mt-2 text-sm leading-6 text-white/52">{item.detail}</div>
             <div className="mt-5 h-2 overflow-hidden rounded-full bg-white/8">
-              <div className={cn('h-full rounded-full bg-gradient-to-r transition-all duration-500', tone.bar)} style={{ width: `${width}%` }} />
+              <div className={cn('h-full rounded-full bg-gradient-to-r transition-all duration-1000 group-hover:animate-pulse', tone.bar)} style={{ width: `${width}%` }} />
             </div>
             <div className={cn('mt-3 text-xs font-bold uppercase tracking-[0.18em]', delta === null ? 'text-white/34' : delta >= 0 ? 'text-emerald-300' : 'text-red-300')}>
-              {delta === null ? 'No baseline' : `${delta >= 0 ? '+' : ''}${delta.toFixed(1)}%`}
+              {delta === null ? 'Нет данных' : `${delta >= 0 ? '↑' : '↓'} ${Math.abs(delta).toFixed(1)}%`}
             </div>
           </div>
         );
