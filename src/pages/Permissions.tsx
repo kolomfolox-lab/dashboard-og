@@ -71,7 +71,13 @@ export default function PermissionsPage() {
       selectedRestaurantId={workspace.selectedRestaurantId}
       onRestaurantChange={workspace.setSelectedRestaurantId}
     >
-      <Panel title="Permission matrix" description="Toggle which roles have access to which features.">
+      <Panel title="Permission matrix" eyebrow="Безопасность" description="Toggle which roles have access to which features.">
+        <div className="mb-4 flex flex-wrap gap-3 text-xs">
+          {Object.entries(ROLE_LABELS).map(([roleKey, roleLabel]) => {
+            const count = ALL_PERMISSIONS.filter(p => rolePerms[roleKey]?.[p.key]).length;
+            return <span key={roleKey} className="inline-flex items-center gap-1.5 rounded-full border border-white/8 bg-white/5 px-3 py-1.5"><ShieldCheck className="h-3 w-3 text-[#8fd4ff]" /><span className="font-medium text-white/80">{roleLabel}</span><span className="text-white/40">{count}/{ALL_PERMISSIONS.length}</span></span>;
+          })}
+        </div>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-white/8">
             <thead>
@@ -109,13 +115,14 @@ export default function PermissionsPage() {
           </table>
         </div>
         {canEdit ? (
-          <div className="mt-5">
+          <div className="mt-5 flex items-center gap-4">
             <Button onClick={() => setSaving(true)} disabled={saving}>
               <Save className="mr-2 h-4 w-4" />Save permissions
             </Button>
+            <p className="text-xs text-amber-300/60">Давайте права только на нужные действия — это снижает риски.</p>
           </div>
         ) : (
-          <p className="mt-4 text-sm text-amber-300">Only Chain Owners can edit permissions.</p>
+          <p className="mt-4 flex items-center gap-2 text-sm text-amber-300"><ShieldCheck className="h-4 w-4" />Only Chain Owners can edit permissions.</p>
         )}
       </Panel>
     </AppShell>
