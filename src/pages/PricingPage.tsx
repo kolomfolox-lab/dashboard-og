@@ -70,7 +70,12 @@ export default function PricingPage() {
       restaurants={workspace.restaurants}
       selectedRestaurantId={workspace.selectedRestaurantId}
       onRestaurantChange={workspace.setSelectedRestaurantId}>
-      <div className="space-y-6">
+        <div className="space-y-6">
+        <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
+          Не знаете, какой тариф выбрать? Большинство ресторанов с 1 залом выбирают <strong className="text-white">Start</strong>,
+          а сети с 3+ точками — <strong className="text-white">Enterprise</strong>. <strong className="text-indigo-400">Business</strong> — универсальный выбор
+          для растущего бизнеса {workspace.selectedRestaurantId && <span className="text-indigo-400">✓</span>}.
+        </p>
         <div className="grid gap-5 md:grid-cols-3">
           {plans.map(plan => {
             const enabledFeatures = Object.entries(plan.features).filter(([, v]) => v);
@@ -136,6 +141,11 @@ export default function PricingPage() {
               </div>
             );
           })}
+        </div>
+        <div className="flex flex-wrap items-center justify-center gap-6 rounded-2xl border border-white/8 bg-black/10 px-6 py-4 text-xs text-[var(--text-secondary)]">
+          <span className="inline-flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-emerald-400" /> Без скрытых платежей</span>
+          <span className="inline-flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-emerald-400" /> Отмена в 1 клик</span>
+          <span className="inline-flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-emerald-400" /> Перенос данных при переходе</span>
         </div>
       </div>
     </AppShell>
