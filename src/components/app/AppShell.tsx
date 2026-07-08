@@ -11,7 +11,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useLocale } from '@/context/LocaleContext';
 import { useTheme } from '@/context/ThemeContext';
 
-type NavItem = { to: string; labelKey: string; fallback: string; icon: any };
+type NavItem = { to: string; labelKey: string; fallback: string; icon: any; featureKey?: string };
 type NavGroup = { label: string; items: NavItem[] };
 
 const navByRole: Record<string, NavGroup[]> = {
@@ -45,15 +45,15 @@ const navByRole: Record<string, NavGroup[]> = {
     ]},
     { label: 'Guests', items: [
       { to: '/crm', labelKey: 'nav_crm', fallback: 'CRM', icon: ContactRound },
-      { to: '/loyalty', labelKey: 'nav_loyalty', fallback: 'Loyalty', icon: Gift },
+      { to: '/loyalty', labelKey: 'nav_loyalty', fallback: 'Loyalty', icon: Gift, featureKey: 'loyalty_program' },
       { to: '/surveys', labelKey: 'nav_surveys', fallback: 'Surveys', icon: ContactRound },
       { to: '/auto-notify', labelKey: 'nav_auto_notify', fallback: 'Auto Notify', icon: ContactRound },
     ]},
     { label: 'Management', items: [
-      { to: '/restaurants', labelKey: 'nav_restaurants', fallback: 'Restaurants', icon: Store },
-      { to: '/users', labelKey: 'nav_team', fallback: 'Team', icon: UsersRound },
+      { to: '/restaurants', labelKey: 'nav_restaurants', fallback: 'Operations', icon: Store },
+      { to: '/users', labelKey: 'nav_team', fallback: 'Team', icon: UsersRound, featureKey: 'hr_module' },
       { to: '/tech-cards', labelKey: 'nav_tech_cards', fallback: 'Tech Cards', icon: UtensilsCrossed },
-      { to: '/online-menu-studio', labelKey: 'nav_online_menu', fallback: 'Online Menu', icon: BookOpenText },
+      { to: '/online-menu-studio', labelKey: 'nav_online_menu', fallback: 'Online Menu', icon: BookOpenText, featureKey: 'online_menu' },
       { to: '/promo', labelKey: 'nav_promo', fallback: 'Promo', icon: Gift },
     ]},
     { label: 'System', items: [
@@ -134,15 +134,15 @@ const navByRole: Record<string, NavGroup[]> = {
     ]},
     { label: 'Guests', items: [
       { to: '/crm', labelKey: 'nav_crm', fallback: 'CRM', icon: ContactRound },
-      { to: '/loyalty', labelKey: 'nav_loyalty', fallback: 'Loyalty', icon: Gift },
+      { to: '/loyalty', labelKey: 'nav_loyalty', fallback: 'Loyalty', icon: Gift, featureKey: 'loyalty_program' },
       { to: '/surveys', labelKey: 'nav_surveys', fallback: 'Surveys', icon: ContactRound },
       { to: '/auto-notify', labelKey: 'nav_auto_notify', fallback: 'Auto Notify', icon: ContactRound },
     ]},
     { label: 'Management', items: [
-      { to: '/restaurants', labelKey: 'nav_restaurants', fallback: 'Operations', icon: Store },
-      { to: '/users', labelKey: 'nav_team', fallback: 'Team', icon: UsersRound },
+      { to: '/restaurants', labelKey: 'nav_restaurants', fallback: 'Restaurants', icon: Store },
+      { to: '/users', labelKey: 'nav_team', fallback: 'Team', icon: UsersRound, featureKey: 'hr_module' },
       { to: '/tech-cards', labelKey: 'nav_tech_cards', fallback: 'Tech Cards', icon: UtensilsCrossed },
-      { to: '/online-menu-studio', labelKey: 'nav_online_menu', fallback: 'Online Menu', icon: BookOpenText },
+      { to: '/online-menu-studio', labelKey: 'nav_online_menu', fallback: 'Online Menu', icon: BookOpenText, featureKey: 'online_menu' },
       { to: '/promo', labelKey: 'nav_promo', fallback: 'Promo', icon: Gift },
     ]},
     { label: 'System', items: [
@@ -174,9 +174,16 @@ export function AppShell({ title, subtitle, eyebrow, restaurants = [], selectedR
   const { theme, toggle: toggleTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
-  const navItems = navByRole[user?.role as keyof typeof navByRole] || [];
   const [open, setOpen] = useState(true);
   const selectedRestaurant = restaurants.find((restaurant) => restaurant.id === selectedRestaurantId) || restaurants[0] || null;
+  const navItems = (navByRole[user?.role as keyof typeof navByRole] || []).map(group => ({
+    ...group,
+    items: group.items.filter(item => {
+      if (!item.featureKey) return true;
+      if (!selectedRestaurant?.features) return true;
+      return selectedRestaurant.features[item.featureKey] === true;
+    }),
+  })).filter(group => group.items.length > 0);
   const welcomeStorageKey = user?.id ? `waitly-owner-welcome:${user.id}` : 'waitly-owner-welcome';
   const shouldWelcomeOwner = user?.role === 'RESTAURANT_OWNER' || user?.role === 'CHAIN_OWNER';
   const [welcomeOpen, setWelcomeOpen] = useState(() => {
