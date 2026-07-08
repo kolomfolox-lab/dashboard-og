@@ -58,6 +58,20 @@ export default function AutoNotifyPage() {
       selectedRestaurantId={workspace.selectedRestaurantId}
       onRestaurantChange={workspace.setSelectedRestaurantId}
     >
+      <div className="mb-4 flex flex-wrap gap-3">
+        <div className="rounded-2xl border border-white/8 bg-white/5 px-4 py-2">
+          <div className="text-xs text-white/40">Всего правил</div>
+          <div className="text-lg font-bold text-white">{settings.length}</div>
+        </div>
+        <div className="rounded-2xl border border-white/8 bg-white/5 px-4 py-2">
+          <div className="text-xs text-white/40">Активных</div>
+          <div className="text-lg font-bold text-emerald-400">{settings.filter(s => s.is_active).length}</div>
+        </div>
+        <div className="rounded-2xl border border-white/8 bg-white/5 px-4 py-2">
+          <div className="text-xs text-white/40">Уведомлений отправлено</div>
+          <div className="text-lg font-bold text-[#8fd4ff]">{settings.reduce((sum, s) => sum + (s.sent_count || 0), 0).toLocaleString()}</div>
+        </div>
+      </div>
       <Panel title="Notification rules" eyebrow="Auto-notify" action={
         <Button variant="secondary" size="sm" onClick={() => setShowForm(!showForm)}>
           <Plus className="mr-1 h-4 w-4" />{showForm ? 'Cancel' : 'New rule'}
@@ -105,7 +119,8 @@ export default function AutoNotifyPage() {
             { label: 'Channel', key: 'channel' },
             { label: 'Template', key: 'template', render: (row) => <span className="text-xs">{row.template?.substring(0, 60)}...</span> },
             { label: 'Before', key: 'send_before_minutes', render: (row) => row.send_before_minutes ? `${row.send_before_minutes} min` : '—' },
-            { label: 'Active', key: 'is_active', render: (row) => row.is_active ? <span className="text-emerald-400">Yes</span> : <span className="text-red-400">No</span> },
+            { label: 'Sent', key: 'sent_count', render: (row) => row.sent_count ?? 0 },
+            { label: 'Last triggered', key: 'last_triggered', render: (row) => row.last_triggered ? new Date(row.last_triggered).toLocaleDateString('ru-RU') : '—' },
             { label: '', key: 'id', render: (row) => (
               <Button variant="ghost" size="sm" onClick={() => remove(row.id)}><Trash2 className="h-3 w-3 text-red-400" /></Button>
             )},
