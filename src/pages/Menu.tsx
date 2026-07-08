@@ -200,12 +200,17 @@ export default function MenuPage() {
                       <div className="text-sm font-bold text-[#ffd4c4]">{formatMoney(Number(dish.price))}</div>
                       {Number(dish.cost_price) > 0 && (
                         <div className="mt-0.5 text-[10px] text-theme-muted">
-                          {formatMoney(Number(dish.cost_price))}
+                          себест. {formatMoney(Number(dish.cost_price))}
                           {dish.margin_percent !== null && (
                             <span className={dish.margin_percent >= 30 ? 'ml-1 text-emerald-400' : dish.margin_percent > 0 ? 'ml-1 text-amber-400' : 'ml-1 text-red-400'}>
-                              ({dish.margin_percent}%)
+                              {dish.margin_percent >= 30 ? '✓' : ''} {dish.margin_percent}%
                             </span>
                           )}
+                        </div>
+                      )}
+                      {dish.average_rating >= 4 && (
+                        <div className="mt-1 text-[10px] text-amber-400">
+                          ★ {dish.average_rating}
                         </div>
                       )}
                     </div>
