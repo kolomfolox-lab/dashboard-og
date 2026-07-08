@@ -288,13 +288,13 @@ export default function UsersPage() {
             rows={rows}
             emptyMessage={loading ? (locale === 'uz' ? 'Yuklanmoqda...' : 'Загрузка...') : (locale === 'uz' ? 'Malumot topilmadi.' : 'Данные не найдены.')}
             columns={isSuperAdmin ? [
-              { label: locale === 'uz' ? 'Ism' : 'Имя', key: 'full_name', render: (row) => <div className="font-semibold text-white">{row.full_name || (locale === 'uz' ? 'Nomsiz owner' : 'Без имени')}</div> },
+              { label: locale === 'uz' ? 'Ism' : 'Имя', key: 'full_name', render: (row) => <div className="font-semibold text-white"><div className="flex items-center gap-2">{row.full_name || (locale === 'uz' ? 'Nomsiz owner' : 'Без имени')}{row.is_active !== false && row.email ? <BadgeCheck className="h-4 w-4 text-[#34d399]" /> : null}</div>{row.created_at ? <div className="text-xs text-white/40 mt-0.5">Участник с {new Date(row.created_at).toLocaleDateString('ru-RU', { month: 'short', year: 'numeric' })}</div> : null}</div> },
               { label: 'Email', key: 'email', render: (row) => row.email || '—' },
               { label: locale === 'uz' ? 'Telefon' : 'Телефон', key: 'phone', render: (row) => row.phone || row.phone_number || '—' },
-              { label: locale === 'uz' ? 'Rol' : 'Роль', key: 'role' },
+              { label: locale === 'uz' ? 'Rol' : 'Роль', key: 'role', render: (row) => <div className="inline-flex items-center gap-1.5"><ShieldPlus className="h-3.5 w-3.5 text-[#8fd4ff]" /><span className="font-medium">{row.role}</span></div> },
               { label: locale === 'uz' ? 'Tarmoqlar' : 'Сетей', key: 'chains', render: (row) => <div className="inline-flex items-center gap-2"><Building2 className="h-4 w-4 text-[#8fd4ff]" /> {row.chains ?? 0}</div> },
               { label: locale === 'uz' ? 'Restoranlar' : 'Ресторанов', key: 'restaurants', render: (row) => <div className="inline-flex items-center gap-2"><Store className="h-4 w-4 text-[#ffb78f]" /> {row.restaurants ?? 0}</div> },
-              { label: locale === 'uz' ? 'Holat' : 'Статус', key: 'is_active', render: (row) => row.is_active !== false ? (locale === 'uz' ? 'Faol' : 'Активен') : (locale === 'uz' ? 'Nofaol' : 'Неактивен') },
+              { label: locale === 'uz' ? 'Holat' : 'Статус', key: 'is_active', render: (row) => row.is_active !== false ? <span className="inline-flex items-center gap-1.5 text-[#34d399]"><BadgeCheck className="h-3.5 w-3.5" />{locale === 'uz' ? 'Faol' : 'Активен'}</span> : <span className="text-white/40">{locale === 'uz' ? 'Nofaol' : 'Неактивен'}</span> },
               {
                 label: locale === 'uz' ? 'Amallar' : 'Действия',
                 key: 'id',
@@ -315,11 +315,11 @@ export default function UsersPage() {
                 ),
               },
             ] : [
-              { label: locale === 'uz' ? 'Ism' : 'Имя', key: 'full_name', render: (row) => <div className="font-semibold text-white">{row.full_name || (locale === 'uz' ? 'Nomsiz foydalanuvchi' : 'Без имени')}</div> },
+              { label: locale === 'uz' ? 'Ism' : 'Имя', key: 'full_name', render: (row) => <div className="font-semibold text-white"><div className="flex items-center gap-2">{row.full_name || (locale === 'uz' ? 'Nomsiz foydalanuvchi' : 'Без имени')}{row.is_active ? <BadgeCheck className="h-4 w-4 text-[#34d399]" /> : null}</div></div> },
               { label: locale === 'uz' ? 'Telefon' : 'Телефон', key: 'phone_number', render: (row) => row.phone_number || row.phone || '—' },
               { label: 'Email', key: 'email', render: (row) => row.email || '—' },
-              { label: locale === 'uz' ? 'Rol' : 'Роль', key: 'role' },
-              { label: locale === 'uz' ? 'Holat' : 'Статус', key: 'is_active', render: (row) => row.is_active ? (locale === 'uz' ? 'Faol' : 'Активен') : (locale === 'uz' ? 'Nofaol' : 'Неактивен') },
+              { label: locale === 'uz' ? 'Rol' : 'Роль', key: 'role', render: (row) => <div className="inline-flex items-center gap-1.5"><ShieldPlus className="h-3.5 w-3.5 text-[#8fd4ff]" /><span className="font-medium">{row.role}</span></div> },
+              { label: locale === 'uz' ? 'Holat' : 'Статус', key: 'is_active', render: (row) => row.is_active ? <span className="inline-flex items-center gap-1.5 text-[#34d399]"><BadgeCheck className="h-3.5 w-3.5" />{locale === 'uz' ? 'Faol' : 'Активен'}</span> : <span className="text-white/40">{locale === 'uz' ? 'Nofaol' : 'Неактивен'}</span> },
               {
                 label: locale === 'uz' ? 'Amallar' : 'Действия',
                 key: 'id',
