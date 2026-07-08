@@ -136,6 +136,7 @@ export default function CRMPage() {
         <div className="grid gap-4 md:grid-cols-4">
           <MetricCard title={t('crm_metric_guests', 'Guests')} value={guests.length} note={workspace.selectedRestaurant?.name || t('shell_workspace', 'Workspace')} icon={UsersRound} tone="cyan" />
           <MetricCard title={t('crm_metric_repeat', 'Repeat guests')} value={repeatGuests} note={t('crm_metric_repeat_note', 'More than one visit')} icon={Repeat2} tone="mint" />
+          <MetricCard title={t('crm_metric_regulars', 'Regulars (10+)')} value={guests.filter(g => g.total_visits >= 10).length} note={t('crm_metric_regulars_note', 'Loyal regular guests')} icon={Star} tone="coral" />
           <MetricCard title={t('crm_metric_spend', 'Tracked spend')} value={formatMoney(totalSpend)} note={t('crm_metric_spend_note', 'From linked orders')} icon={WalletCards} tone="sand" />
           <MetricCard title={t('crm_metric_rating', 'Feedback rating')} value={latestInsight ? Number(latestInsight.average_rating).toFixed(1) : '0.0'} note={latestInsight ? `${latestInsight.reviews_count} reviews` : t('crm_metric_rating_note', 'No insight yet')} icon={Star} tone="coral" />
         </div>
@@ -181,6 +182,7 @@ export default function CRMPage() {
                       <div className="mt-1 text-sm text-white/48">{guest.phone_number || guest.telegram_username || t('crm_guest_no_contact', 'No contact yet')}</div>
                     </div>
                     <div className="flex flex-wrap gap-2 text-xs text-white/58">
+                      {guest.total_visits >= 10 && <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1 text-amber-300">★ Постоянный</span>}
                       <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1">{guest.total_visits} visits</span>
                       <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1">{formatMoney(guest.total_spend)}</span>
                       <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1">{formatDate(guest.last_visit_at)}</span>
