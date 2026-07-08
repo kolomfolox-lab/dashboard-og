@@ -73,7 +73,7 @@ export default function TechCardsPage() {
   const selectedCard = techCards.find(tc => tc.id === expandedCard);
 
   return (
-    <AppShell title="Tech Cards" subtitle="Technological cards, cost calculation, and margin analysis." eyebrow="Waitly Kitchen"
+    <AppShell title="Tech Cards" subtitle="Technological cards, cost calculation, and margin analysis." eyebrow="Waitly Kitchen · Author: Chef/Manager"
       restaurants={workspace.restaurants}
       selectedRestaurantId={workspace.selectedRestaurantId}
       onRestaurantChange={workspace.setSelectedRestaurantId}
@@ -88,6 +88,7 @@ export default function TechCardsPage() {
               ? Math.round(techCards.reduce((s, c) => s + (parseFloat(c.margin_percent) || 0), 0) / techCards.length) + '%'
               : '—'}
           </div>
+          <div className="mt-1 text-xs text-theme-secondary">Цель: ≥30% · {techCards.filter(c => parseFloat(c.margin_percent) >= 30).length} из {techCards.length} блюд достигли</div>
         </Panel>
         <Panel title="Action" eyebrow="Quick">
           <Button variant="secondary" onClick={() => setShowCreate(!showCreate)} className="w-full">
@@ -139,9 +140,12 @@ export default function TechCardsPage() {
               return d ? `${Number(d.price).toLocaleString()} UZS` : '—';
             }},
             { label: 'Margin', key: 'margin_percent', render: (row) => (
-              <span className={parseFloat(row.margin_percent) > 30 ? 'text-emerald-400' : parseFloat(row.margin_percent) > 0 ? 'text-amber-300' : 'text-red-400'}>
-                {row.margin_percent}%
-              </span>
+              <div className="inline-flex items-center gap-2">
+                <span className={parseFloat(row.margin_percent) > 30 ? 'text-emerald-400' : parseFloat(row.margin_percent) > 0 ? 'text-amber-300' : 'text-red-400'}>
+                  {row.margin_percent}%
+                </span>
+                {parseFloat(row.margin_percent) >= 30 && <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-300">Top</span>}
+              </div>
             )},
             { label: 'Items', key: 'id', render: (row) => (
               <div className="flex gap-2">
