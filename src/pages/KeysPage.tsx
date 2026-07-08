@@ -67,6 +67,11 @@ export default function KeysPage() {
       <div className="space-y-4">
         {error ? <div className="rounded-[24px] border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-100">{error}</div> : null}
 
+        <div className="rounded-[24px] border border-amber-500/15 bg-amber-500/8 px-5 py-4 text-sm text-amber-200/80">
+          <strong className="text-amber-200">Важно:</strong> каждый ресторан должен активировать ключ в течение 7 дней после генерации,
+          иначе подписка автоматически отключается. Без активного ключа гости не смогут оставлять отзывы и заказывать по QR.
+        </div>
+
         <Panel title={locale === 'uz' ? 'Yangi kalit yaratish' : 'Создать ключ'} eyebrow={locale === 'uz' ? 'Generatsiya' : 'Генерация'} description={locale === 'uz' ? 'Yangi obuna kalitlarini yarating.' : 'Сгенерируйте новые ключи подписки.'}>
           <div className="flex flex-wrap items-end gap-4">
             <div>
