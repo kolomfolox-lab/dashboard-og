@@ -471,8 +471,6 @@ export default function DashboardPage() {
             </Panel>
 
             <ModuleUpsellStrip modules={workspace.selectedRestaurant?.modules} restaurantId={workspace.selectedRestaurantId} locale={locale} />
-          </div>
-        </div>
       </div>
     </AppShell>
   );

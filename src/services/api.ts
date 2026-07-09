@@ -851,6 +851,12 @@ export const ownerAPI = {
     api.get('/owner/modules/status/', { params: { restaurant_id: restaurantId } }),
   toggleModule: (payload: { module_slug: string; restaurant_id: string; enable: boolean }) =>
     api.post('/owner/modules/toggle/', payload),
+
+  // Subscriptions (standalone plans)
+  getActiveSubscriptions: (restaurantId: string) =>
+    api.get('/owner/subscriptions/', { params: { restaurant_id: restaurantId } }),
+  subscribeToPlan: (payload: { plan_slug: string; restaurant_id: string }) =>
+    api.post('/owner/subscriptions/subscribe/', payload),
 };
 
 export const userAPI = {
