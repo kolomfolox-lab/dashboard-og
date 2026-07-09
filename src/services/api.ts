@@ -844,6 +844,13 @@ export const ownerAPI = {
     document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
   },
+
+  // Modules (3-tier system)
+  getModules: () => api.get('/owner/modules/'),
+  getModuleStatus: (restaurantId: string) =>
+    api.get('/owner/modules/status/', { params: { restaurant_id: restaurantId } }),
+  toggleModule: (payload: { module_slug: string; restaurant_id: string; enable: boolean }) =>
+    api.post('/owner/modules/toggle/', payload),
 };
 
 export const userAPI = {

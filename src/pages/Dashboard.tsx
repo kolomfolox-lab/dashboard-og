@@ -1,5 +1,5 @@
 ﻿import { useEffect, useMemo, useState } from 'react';
-import { Activity, DollarSign, KeyRound, ShoppingBag, Star, Store, UsersRound } from 'lucide-react';
+import { Activity, DollarSign, KeyRound, ShoppingBag, Star, Store, UsersRound, Sparkles, CreditCard, ArrowUpRight } from 'lucide-react';
 
 import { AppShell } from '@/components/app/AppShell';
 import { BarChartBlock, DoughnutChartBlock, LineChartBlock } from '@/components/app/Charts';
@@ -451,32 +451,82 @@ export default function DashboardPage() {
           </Panel>
         </div>
 
-        <Panel title={locale === 'uz' ? 'Jamoa samaradorligi' : 'Эффективность команды'} eyebrow={locale === 'uz' ? 'Xodimlar' : 'Сотрудники'} description={locale === 'uz' ? 'Kim qancha ishlayotgani va qancha tushum olib kelayotganini ko\'rsatadi.' : 'Показывает, кто сколько работает и сколько приносит выручки.'}>
-          <DataTable
-            rows={ownerRows}
-            columns={[
-              { label: locale === 'uz' ? 'Xodim' : 'Сотрудник', key: 'full_name', render: (row) => <div className="font-semibold text-white">{row.full_name}</div> },
-              { label: locale === 'uz' ? 'Rol' : 'Роль', key: 'role' },
-              { label: locale === 'uz' ? 'Smenalar' : 'Смены', key: 'shifts_count' },
-              { label: locale === 'uz' ? 'Soatlar' : 'Часы', key: 'hours_worked' },
-              { label: locale === 'uz' ? 'Buyurtmalar' : 'Заказы', key: 'delivered_orders' },
-              { label: locale === 'uz' ? 'Reyting' : 'Рейтинг', key: 'waiter_rating_display' },
-              { label: locale === 'uz' ? 'Sharhlar' : 'Отзывы', key: 'reviews_count' },
-              { label: locale === 'uz' ? 'Tushum' : 'Выручка', key: 'revenue_display' },
-              { label: locale === 'uz' ? 'Rating tier' : 'Уровень рейтинга', key: 'waiter_rating_label' },
-              { label: locale === 'uz' ? 'Holat' : 'Статус', key: 'active_label', render: (row: any) => <span className={cn('px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest', row.active_shift ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-white/5 text-white/30 border border-white/10')}>{row.active_label}</span> },
-            ]}
-            emptyMessage={locale === 'uz' ? 'Jamoa ma\'lumotlari hali yo\'q.' : 'Пока нет данных по команде.'}
-          />
-        </Panel>
+            <Panel title={locale === 'uz' ? 'Jamoa samaradorligi' : 'Эффективность команды'} eyebrow={locale === 'uz' ? 'Xodimlar' : 'Сотрудники'} description={locale === 'uz' ? 'Kim qancha ishlayotgani va qancha tushum olib kelayotganini ko\'rsatadi.' : 'Показывает, кто сколько работает и сколько приносит выручки.'}>
+              <DataTable
+                rows={ownerRows}
+                columns={[
+                  { label: locale === 'uz' ? 'Xodim' : 'Сотрудник', key: 'full_name', render: (row) => <div className="font-semibold text-white">{row.full_name}</div> },
+                  { label: locale === 'uz' ? 'Rol' : 'Роль', key: 'role' },
+                  { label: locale === 'uz' ? 'Smenalar' : 'Смены', key: 'shifts_count' },
+                  { label: locale === 'uz' ? 'Soatlar' : 'Часы', key: 'hours_worked' },
+                  { label: locale === 'uz' ? 'Buyurtmalar' : 'Заказы', key: 'delivered_orders' },
+                  { label: locale === 'uz' ? 'Reyting' : 'Рейтинг', key: 'waiter_rating_display' },
+                  { label: locale === 'uz' ? 'Sharhlar' : 'Отзывы', key: 'reviews_count' },
+                  { label: locale === 'uz' ? 'Tushum' : 'Выручка', key: 'revenue_display' },
+                  { label: locale === 'uz' ? 'Rating tier' : 'Уровень рейтинга', key: 'waiter_rating_label' },
+                  { label: locale === 'uz' ? 'Holat' : 'Статус', key: 'active_label', render: (row: any) => <span className={cn('px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest', row.active_shift ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-white/5 text-white/30 border border-white/10')}>{row.active_label}</span> },
+                ]}
+                emptyMessage={locale === 'uz' ? 'Jamoa ma\'lumotlari hali yo\'q.' : 'Пока нет данных по команде.'}
+              />
+            </Panel>
+
+            <ModuleUpsellStrip modules={workspace.selectedRestaurant?.modules} restaurantId={workspace.selectedRestaurantId} locale={locale} />
+          </div>
+        </div>
       </div>
     </AppShell>
   );
 }
 
+
 function percentDelta(current: number, baseline: number) {
   if (!baseline) return current ? 100 : null;
   return ((current - baseline) / Math.abs(baseline)) * 100;
+}
+
+
+const MODULES_INFO = [
+  { slug: 'crm_retention', name: 'CRM & Удержание', desc: 'Верните до 30% ушедших гостей', icon: Star, color: 'indigo' as const, price: '300 000 сум/мес' },
+  { slug: 'fintech', name: 'QR-Оплаты & Финтех', desc: '0 сум фикс + комиссия с чека', icon: CreditCard, color: 'amber' as const, price: '1 500 сум/чека' },
+];
+
+const MODULE_BG: Record<string, string> = { indigo: 'bg-indigo-500/10', amber: 'bg-amber-500/10' };
+const MODULE_TEXT: Record<string, string> = { indigo: 'text-indigo-400', amber: 'text-amber-400' };
+
+function ModuleUpsellStrip({ modules, restaurantId, locale }: { modules?: Record<string, boolean>; restaurantId?: string; locale: string }) {
+  if (!modules || !restaurantId) return null;
+
+  const inactiveModules = MODULES_INFO.filter(m => !modules[m.slug]);
+  if (inactiveModules.length === 0) return null;
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.28em] text-theme-secondary">
+        <Sparkles className="h-3.5 w-3.5 text-amber-400" />
+        {locale === 'uz' ? 'Modullarni ulang' : 'Подключите модули'}
+      </div>
+      <div className="grid gap-3 md:grid-cols-2">
+        {inactiveModules.map(mod => {
+          const Icon = mod.icon;
+          return (
+            <a key={mod.slug} href="/modules" className="group flex items-center gap-4 rounded-[28px] border border-dashed border-white/10 bg-white/[0.02] p-4 transition-all hover:border-white/20 hover:bg-white/[0.05]">
+              <div className={`grid h-12 w-12 shrink-0 place-items-center rounded-2xl ${MODULE_BG[mod.color]}`}>
+                <Icon className={`h-5 w-5 ${MODULE_TEXT[mod.color]}`} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-bold text-theme">{mod.name}</span>
+                  <ArrowUpRight className="h-3.5 w-3.5 text-theme-muted opacity-0 transition-opacity group-hover:opacity-100" />
+                </div>
+                <p className="mt-0.5 text-xs text-theme-secondary">{mod.desc}</p>
+                <span className={`mt-1 inline-block text-[10px] font-semibold uppercase tracking-wider ${MODULE_TEXT[mod.color]}`}>{mod.price}</span>
+              </div>
+            </a>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 
