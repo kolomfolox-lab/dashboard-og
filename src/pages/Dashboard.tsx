@@ -1,5 +1,5 @@
 ﻿import { useEffect, useMemo, useState } from 'react';
-import { Activity, DollarSign, KeyRound, ShoppingBag, Star, Store, UsersRound, Sparkles, CreditCard, ArrowUpRight } from 'lucide-react';
+import { Activity, DollarSign, KeyRound, ShoppingBag, Star, Store, UsersRound, Sparkles, CreditCard, ArrowUpRight, Coffee, UtensilsCrossed, PartyPopper, Pizza } from 'lucide-react';
 
 import { AppShell } from '@/components/app/AppShell';
 import { BarChartBlock, DoughnutChartBlock, LineChartBlock } from '@/components/app/Charts';
@@ -470,7 +470,7 @@ export default function DashboardPage() {
               />
             </Panel>
 
-            <ModuleUpsellStrip modules={workspace.selectedRestaurant?.modules} restaurantId={workspace.selectedRestaurantId} locale={locale} />
+            <ModuleUpsellStrip activeSubscriptions={workspace.selectedRestaurant?.active_plan_slugs} restaurantId={workspace.selectedRestaurantId} locale={locale} />
       </div>
     </AppShell>
   );
@@ -483,41 +483,43 @@ function percentDelta(current: number, baseline: number) {
 }
 
 
-const MODULES_INFO = [
-  { slug: 'crm_retention', name: 'CRM & Удержание', desc: 'Верните до 30% ушедших гостей', icon: Star, color: 'indigo' as const, price: '300 000 сум/мес' },
-  { slug: 'fintech', name: 'QR-Оплаты & Финтех', desc: '0 сум фикс + комиссия с чека', icon: CreditCard, color: 'amber' as const, price: '1 500 сум/чека' },
+const PLAN_INFO = [
+  { slug: 'coffee', name: 'Для кофейни', desc: 'Бронирование, меню, CRM, лояльность', icon: Coffee, price: '300 000 сум/мес' },
+  { slug: 'street_food', name: 'Для стритфуда', desc: 'Меню, очередь, CRM, лояльность', icon: Pizza, price: '200 000 сум/мес' },
+  { slug: 'banquet', name: 'Для банкетного зала', desc: 'Бронирование, схема залов, CRM', icon: PartyPopper, price: '450 000 сум/мес' },
+  { slug: 'restaurant', name: 'Для ресторана', desc: 'Всё включено: залы, CRM, аналитика', icon: UtensilsCrossed, price: '550 000 сум/мес' },
 ];
 
-const MODULE_BG: Record<string, string> = { indigo: 'bg-indigo-500/10', amber: 'bg-amber-500/10' };
-const MODULE_TEXT: Record<string, string> = { indigo: 'text-indigo-400', amber: 'text-amber-400' };
+const PLAN_BG: Record<string, string> = { coffee: 'bg-emerald-500/10', street_food: 'bg-rose-500/10', banquet: 'bg-amber-500/10', restaurant: 'bg-indigo-500/10' };
+const PLAN_TEXT: Record<string, string> = { coffee: 'text-emerald-400', street_food: 'text-rose-400', banquet: 'text-amber-400', restaurant: 'text-indigo-400' };
 
-function ModuleUpsellStrip({ modules, restaurantId, locale }: { modules?: Record<string, boolean>; restaurantId?: string; locale: string }) {
-  if (!modules || !restaurantId) return null;
+function ModuleUpsellStrip({ activeSubscriptions, restaurantId, locale }: { activeSubscriptions?: string[]; restaurantId?: string; locale: string }) {
+  if (!restaurantId) return null;
 
-  const inactiveModules = MODULES_INFO.filter(m => !modules[m.slug]);
-  if (inactiveModules.length === 0) return null;
+  const inactivePlans = PLAN_INFO.filter(p => !activeSubscriptions?.includes(p.slug));
+  if (inactivePlans.length === 0) return null;
 
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.28em] text-theme-secondary">
         <Sparkles className="h-3.5 w-3.5 text-amber-400" />
-        {locale === 'uz' ? 'Modullarni ulang' : 'Подключите модули'}
+        {locale === 'uz' ? 'Obunalarni ulang' : 'Подключите подписку'}
       </div>
       <div className="grid gap-3 md:grid-cols-2">
-        {inactiveModules.map(mod => {
-          const Icon = mod.icon;
+        {inactivePlans.map(plan => {
+          const Icon = plan.icon;
           return (
-            <a key={mod.slug} href="/modules" className="group flex items-center gap-4 rounded-[28px] border border-dashed border-white/10 bg-white/[0.02] p-4 transition-all hover:border-white/20 hover:bg-white/[0.05]">
-              <div className={`grid h-12 w-12 shrink-0 place-items-center rounded-2xl ${MODULE_BG[mod.color]}`}>
-                <Icon className={`h-5 w-5 ${MODULE_TEXT[mod.color]}`} />
+            <a key={plan.slug} href="/modules" className="group flex items-center gap-4 rounded-[28px] border border-dashed border-white/10 bg-white/[0.02] p-4 transition-all hover:border-white/20 hover:bg-white/[0.05]">
+              <div className={`grid h-12 w-12 shrink-0 place-items-center rounded-2xl ${PLAN_BG[plan.slug]}`}>
+                <Icon className={`h-5 w-5 ${PLAN_TEXT[plan.slug]}`} />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-bold text-theme">{mod.name}</span>
+                  <span className="text-sm font-bold text-theme">{plan.name}</span>
                   <ArrowUpRight className="h-3.5 w-3.5 text-theme-muted opacity-0 transition-opacity group-hover:opacity-100" />
                 </div>
-                <p className="mt-0.5 text-xs text-theme-secondary">{mod.desc}</p>
-                <span className={`mt-1 inline-block text-[10px] font-semibold uppercase tracking-wider ${MODULE_TEXT[mod.color]}`}>{mod.price}</span>
+                <p className="mt-0.5 text-xs text-theme-secondary">{plan.desc}</p>
+                <span className={`mt-1 inline-block text-[10px] font-semibold uppercase tracking-wider ${PLAN_TEXT[plan.slug]}`}>{plan.price}</span>
               </div>
             </a>
           );
