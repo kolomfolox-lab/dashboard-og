@@ -75,6 +75,7 @@ export default function GuestTrackingPage() {
   const [turnstileResetKey, setTurnstileResetKey] = useState(0);
   const [form, setForm] = useState(reviewDefaults);
   const [paymentMethods, setPaymentMethods] = useState<GuestPaymentMethod[]>([]);
+  const [feeInfo, setFeeInfo] = useState<FeeInfoState | null>(null);
   const [showPayment, setShowPayment] = useState(false);
   const [paying, setPaying] = useState(false);
   const [payError, setPayError] = useState('');
@@ -178,8 +179,9 @@ export default function GuestTrackingPage() {
   const handleOpenPayment = async () => {
     if (!bootstrap?.guest_token) return;
     try {
-      const res = await guestPaymentAPI.methods(bootstrap.guest_token);
+      const res = await guestPaymentAPI.methods(bootstrap.guest_token, orders[0]?.id);
       setPaymentMethods(res.data.providers);
+      setFeeInfo(res.data);
       setShowPayment(true);
       setPayError('');
       setPayUrl('');
@@ -413,6 +415,7 @@ export default function GuestTrackingPage() {
               {showPayment && paymentMethods.length > 0 && !payUrl ? (
                 <div className="mt-3 space-y-2 md:mt-4">
                   <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#8fd4ff] md:text-[11px]">{t('guest_select_payment')}</div>
+                  <PaymentFeeNote feeInfo={feeInfo} locale={locale} />
                   {paymentMethods.map((m) => (
                     <button
                       key={m.id}
@@ -451,6 +454,7 @@ export default function GuestTrackingPage() {
           {showPayment && paymentMethods.length > 0 && !payUrl ? (
             <div className="mb-3 space-y-2">
               <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#8fd4ff]">{t('guest_select_payment')}</div>
+              <PaymentFeeNote feeInfo={feeInfo} locale={locale} />
               {paymentMethods.map((m) => (
                 <button
                   key={m.id}
@@ -501,11 +505,56 @@ export default function GuestTrackingPage() {
   );
 }
 
+type FeeInfoState = {
+  waitly_fee?: number;
+  order_amount?: number;
+  waitly_fee_policy?: {
+    label_ru: string;
+    label_uz: string;
+  };
+};
+
+function fmtSum(value: number) {
+  return `${value.toLocaleString('ru-RU')} UZS`;
+}
+
+function PaymentFeeNote({ feeInfo, locale }: { feeInfo: FeeInfoState | null; locale: string }) {
+  if (!feeInfo) return null;
+  const policy = feeInfo.waitly_fee_policy;
+  if (feeInfo.waitly_fee != null && feeInfo.waitly_fee > 0 && feeInfo.order_amount != null) {
+    const total = feeInfo.order_amount + feeInfo.waitly_fee;
+    return (
+      <div className="rounded-[14px] border border-[#ffb86b]/20 bg-[#ffb86b]/10 px-3 py-2 text-[11px] leading-5 text-[#ffd9a8] md:rounded-[16px]">
+        <div className="flex justify-between gap-2">
+          <span>{locale === 'uz' ? 'Buyurtma' : 'Заказ'}</span>
+          <span>{fmtSum(feeInfo.order_amount)}</span>
+        </div>
+        <div className="flex justify-between gap-2">
+          <span>{locale === 'uz' ? 'Waitly xizmat to‘lovi' : 'Сервисный сбор Waitly'}</span>
+          <span>{fmtSum(feeInfo.waitly_fee)}</span>
+        </div>
+        <div className="mt-1 flex justify-between gap-2 border-t border-[#ffb86b]/20 pt-1 font-bold text-white">
+          <span>{locale === 'uz' ? 'Jami' : 'Итого'}</span>
+          <span>{fmtSum(total)}</span>
+        </div>
+      </div>
+    );
+  }
+  if (policy) {
+    return (
+      <div className="rounded-[14px] border border-[#ffb86b]/20 bg-[#ffb86b]/10 px-3 py-2 text-[11px] leading-5 text-[#ffd9a8] md:rounded-[16px]">
+        {locale === 'uz' ? (policy.label_uz || policy.label_ru) : (policy.label_ru || policy.label_uz)}
+      </div>
+    );
+  }
+  return null;
+}
+
 function TopStat({ label, value, accent = false }: { label: string; value: string; accent?: boolean }) {
   return (
-    <div className={`rounded-[16px] border px-3 py-3 md:rounded-[24px] md:px-4 md:py-4 ${accent ? 'border-[#0f766e]/18 bg-[#0f766e]/8' : 'border-white/70 bg-slate-50'}`}>
-      <div className="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-400 md:text-[11px]">{label}</div>
-      <div className="mt-1 text-xl font-black tracking-[-0.06em] text-slate-950 md:mt-3 md:text-3xl">{value}</div>
+    <div className={`rounded-[18px] border ${accent ? 'border-[#0f766e]/30 bg-[#0f766e]/10' : 'border-white/10 bg-white/[0.05]'} px-4 py-3`}>
+      <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/40">{label}</div>
+      <div className="mt-1 text-xl font-black text-white">{value}</div>
     </div>
   );
 }
