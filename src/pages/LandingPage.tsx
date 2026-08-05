@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useLocale } from '@/context/LocaleContext';
 
 import { WaitlyArchitecture } from '@/components/landing/moonlauncher/MoonlauncherArchitecture';
 import { WaitlyFinalCta } from '@/components/landing/moonlauncher/MoonlauncherFinalCta';
@@ -7,8 +8,10 @@ import { WaitlyHero } from '@/components/landing/moonlauncher/MoonlauncherHero';
 import { WaitlyMetrics } from '@/components/landing/moonlauncher/MoonlauncherMetrics';
 import { WaitlyProof } from '@/components/landing/moonlauncher/MoonlauncherProof';
 import { WaitlySurfaces } from '@/components/landing/moonlauncher/MoonlauncherSurfaces';
+import { LegalFooter } from '@/components/landing/LegalFooter';
 
 export default function LandingPage() {
+  const { t } = useLocale();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
@@ -32,6 +35,8 @@ export default function LandingPage() {
         <WaitlyProof />
         <WaitlyFinalCta />
       </main>
+
+      <LegalFooter />
     </div>
   );
 }
