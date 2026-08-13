@@ -20,4 +20,16 @@ export default defineConfig({
       '/static': 'http://localhost:8000',
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          ui: ['lucide-react', 'react-icons'],
+          charts: ['chart.js', 'react-chartjs-2'],
+          utils: ['axios', 'xlsx'],
+        },
+      },
+    },
+  },
 });

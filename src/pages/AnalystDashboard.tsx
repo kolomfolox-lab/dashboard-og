@@ -27,7 +27,7 @@ interface StatsPayload {
 }
 
 export default function AnalystDashboardPage() {
-  const { locale } = useLocale();
+  const { locale, t } = useLocale();
   const [stats, setStats] = useState<StatsPayload | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -56,7 +56,7 @@ export default function AnalystDashboardPage() {
   const days = (stats?.daily_revenue || []).map(d =>
     new Date(d.date).toLocaleDateString(locale === 'uz' ? 'uz-UZ' : 'ru-RU', { weekday: 'short' }),
   );
-  const fallbackDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const fallbackDays = [t('analyst_day_mon', 'Mon'), t('analyst_day_tue', 'Tue'), t('analyst_day_wed', 'Wed'), t('analyst_day_thu', 'Thu'), t('analyst_day_fri', 'Fri'), t('analyst_day_sat', 'Sat'), t('analyst_day_sun', 'Sun')];
 
   const maxRevenue = Math.max(...revenueData, 1);
   const maxOrders = Math.max(...ordersData, 1);
@@ -89,9 +89,9 @@ export default function AnalystDashboardPage() {
   if (loading) {
     return (
       <AppShell
-        title={locale === 'uz' ? 'Analitik paneli' : 'Панель аналитика'}
-        subtitle={locale === 'uz' ? 'Asosiy ko\'rsatkichlar, grafiklar va hisobotlar (faqat o\'qish).' : 'Ключевые метрики, графики и отчёты (только чтение).'}
-        eyebrow={locale === 'uz' ? 'Analitika' : 'Аналитика'}
+        title={t('analyst_title', 'Панель аналитика')}
+        subtitle={t('analyst_subtitle', 'Ключевые метрики, графики и отчёты (только чтение).')}
+        eyebrow={t('analyst_eyebrow', 'Аналитика')}
       >
         <div className="flex h-[400px] items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-white/40" />
@@ -105,22 +105,22 @@ export default function AnalystDashboardPage() {
 
   return (
     <AppShell
-      title={locale === 'uz' ? 'Analitik paneli' : 'Панель аналитика'}
-      subtitle={locale === 'uz' ? 'Asosiy ko\'rsatkichlar, grafiklar va hisobotlar (faqat o\'qish).' : 'Ключевые метрики, графики и отчёты (только чтение).'}
-      eyebrow={locale === 'uz' ? 'Analitika' : 'Аналитика'}
+      title={t('analyst_title', 'Панель аналитика')}
+      subtitle={t('analyst_subtitle', 'Ключевые метрики, графики и отчёты (только чтение).')}
+      eyebrow={t('analyst_eyebrow', 'Аналитика')}
     >
       <div className="space-y-6">
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <MetricCard title={locale === 'uz' ? 'Bugungi tushum' : 'Выручка сегодня'} value={formatMoney(revenueToday)} note={locale === 'uz' ? '+12% haftaga nisbatan' : '+12% к прошлой неделе'} icon={DollarSign} tone="coral" />
-          <MetricCard title={locale === 'uz' ? 'Buyurtmalar' : 'Заказы сегодня'} value={ordersToday} note={locale === 'uz' ? 'Oxirgi 24 soat' : 'Последние 24ч'} icon={ShoppingBag} tone="cyan" />
-          <MetricCard title={locale === 'uz' ? 'O\'rtacha чек' : 'Средний чек'} value={formatMoney(avgCheck)} note={locale === 'uz' ? 'Bu hafta' : 'На этой неделе'} icon={TrendingUp} tone="sand" />
-          <MetricCard title={locale === 'uz' ? 'Faol mehmonlar' : 'Активные гости'} value={activeGuests} note={locale === 'uz' ? 'Hozir restoranda' : 'Сейчас в ресторане'} icon={UsersRound} tone="mint" />
+          <MetricCard title={t('analyst_revenue_today', 'Выручка сегодня')} value={formatMoney(revenueToday)} note={t('analyst_week_compare', '+12% к прошлой неделе')} icon={DollarSign} tone="coral" />
+          <MetricCard title={t('analyst_orders_today', 'Заказы сегодня')} value={ordersToday} note={t('analyst_last_24h', 'Последние 24ч')} icon={ShoppingBag} tone="cyan" />
+          <MetricCard title={t('analyst_avg_check', 'Средний чек')} value={formatMoney(avgCheck)} note={t('analyst_this_week', 'На этой неделе')} icon={TrendingUp} tone="sand" />
+          <MetricCard title={t('analyst_active_guests', 'Активные гости')} value={activeGuests} note={t('analyst_now_in_restaurant', 'Сейчас в ресторане')} icon={UsersRound} tone="mint" />
         </div>
 
         <div className="grid gap-6 xl:grid-cols-2">
-          <Panel title={locale === 'uz' ? 'Haftalik tushum' : 'Еженедельная выручка'} eyebrow={locale === 'uz' ? 'Dinamika' : 'Динамика'}>
+          <Panel title={t('analyst_weekly_revenue', 'Еженедельная выручка')} eyebrow={t('analyst_dynamics', 'Динамика')}>
             {!hasRevenueData ? (
-              <div className="flex h-[300px] items-center justify-center text-sm text-white/40">{locale === 'uz' ? 'Ma\'lumot yo\'q' : 'Нет данных'}</div>
+              <div className="flex h-[300px] items-center justify-center text-sm text-white/40">{t('analyst_no_data', 'Нет данных')}</div>
             ) : (
               <div className="flex h-[300px] items-end justify-between gap-2 px-2">
                 {revenueData.map((val, i) => (
@@ -133,9 +133,9 @@ export default function AnalystDashboardPage() {
               </div>
             )}
           </Panel>
-          <Panel title={locale === 'uz' ? 'Haftalik buyurtmalar' : 'Еженедельные заказы'} eyebrow={locale === 'uz' ? 'Hajm' : 'Объём'}>
+          <Panel title={t('analyst_weekly_orders', 'Еженедельные заказы')} eyebrow={t('analyst_volume', 'Объём')}>
             {!hasRevenueData ? (
-              <div className="flex h-[300px] items-center justify-center text-sm text-white/40">{locale === 'uz' ? 'Ma\'lumot yo\'q' : 'Нет данных'}</div>
+              <div className="flex h-[300px] items-center justify-center text-sm text-white/40">{t('analyst_no_data', 'Нет данных')}</div>
             ) : (
               <div className="flex h-[300px] items-end justify-between gap-2 px-2">
                 {ordersData.map((val, i) => (
@@ -151,9 +151,9 @@ export default function AnalystDashboardPage() {
         </div>
 
         <div className="grid gap-6 xl:grid-cols-3">
-          <Panel title={locale === 'uz' ? 'Top kategoriyalar' : 'Топ категории'} eyebrow={locale === 'uz' ? 'Mahsulotlar' : 'Продукты'}>
+          <Panel title={t('analyst_top_categories', 'Топ категории')} eyebrow={t('analyst_products', 'Продукты')}>
             {topCategories.length === 0 ? (
-              <div className="text-sm text-white/40">{locale === 'uz' ? 'Ma\'lumot yo\'q' : 'Нет данных'}</div>
+              <div className="text-sm text-white/40">{t('analyst_no_data', 'Нет данных')}</div>
             ) : (
               <div className="space-y-3">
                 {topCategories.slice(0, 4).map((cat, i) => (
@@ -170,9 +170,9 @@ export default function AnalystDashboardPage() {
               </div>
             )}
           </Panel>
-          <Panel title={locale === 'uz' ? 'Eng yuqori soatlar' : 'Часы пик'} eyebrow={locale === 'uz' ? 'Yuklama' : 'Нагрузка'}>
+          <Panel title={t('analyst_peak_hours', 'Часы пик')} eyebrow={t('analyst_load', 'Нагрузка')}>
             {!hasHourData ? (
-              <div className="flex h-[200px] items-center justify-center text-sm text-white/40">{locale === 'uz' ? 'Ma\'lumot yo\'q' : 'Нет данных'}</div>
+              <div className="flex h-[200px] items-center justify-center text-sm text-white/40">{t('analyst_no_data', 'Нет данных')}</div>
             ) : (
               <div className="flex h-[200px] items-end justify-between gap-2 px-2">
                 {ordersByHour.map((o, i) => (
@@ -184,9 +184,9 @@ export default function AnalystDashboardPage() {
               </div>
             )}
           </Panel>
-          <Panel title={locale === 'uz' ? 'O\'rtacha tekshirish' : 'Средний чек по дням'} eyebrow={locale === 'uz' ? 'Analitika' : 'Аналитика'}>
+          <Panel title={t('analyst_avg_check_by_day', 'Средний чек по дням')} eyebrow={t('analyst_analytics', 'Аналитика')}>
             {avgCheckByDay.length === 0 ? (
-              <div className="text-sm text-white/40">{locale === 'uz' ? 'Ma\'lumot yo\'q' : 'Нет данных'}</div>
+              <div className="text-sm text-white/40">{t('analyst_no_data', 'Нет данных')}</div>
             ) : (
               <div className="space-y-2">
                 {avgCheckByDay.map((check, i) => (
@@ -205,26 +205,26 @@ export default function AnalystDashboardPage() {
           </Panel>
         </div>
 
-        <Panel title={locale === 'uz' ? 'Qisqacha xulosa' : 'Краткое резюме'} eyebrow={locale === 'uz' ? 'Hisobot' : 'Отчёт'}>
+        <Panel title={t('analyst_summary', 'Краткое резюме')} eyebrow={t('analyst_report', 'Отчёт')}>
           <div className="grid gap-4 md:grid-cols-3">
             <div className="rounded-2xl border border-white/5 bg-white/2 p-4">
-              <div className="text-[10px] font-bold uppercase tracking-widest text-[#7dd3fc]">{locale === 'uz' ? 'O\'sish' : 'Рост'}</div>
+              <div className="text-[10px] font-bold uppercase tracking-widest text-[#7dd3fc]">{t('analyst_growth', 'Рост')}</div>
               <div className="mt-2 text-2xl font-black text-white">
                 {revenueData.length > 1
                   ? `+${((revenueData[revenueData.length - 1] / revenueData[revenueData.length - 2] - 1) * 100).toFixed(1)}%`
                   : '—'}
               </div>
-              <div className="mt-1 text-xs text-white/40">{locale === 'uz' ? 'Oxirgi oyga nisbatan' : 'По сравнению с прошлым месяцем'}</div>
+              <div className="mt-1 text-xs text-white/40">{t('analyst_vs_last_month', 'По сравнению с прошлым месяцем')}</div>
             </div>
             <div className="rounded-2xl border border-white/5 bg-white/2 p-4">
-              <div className="text-[10px] font-bold uppercase tracking-widest text-[#f97360]">{locale === 'uz' ? 'O\'rtacha baho' : 'Средняя оценка'}</div>
+              <div className="text-[10px] font-bold uppercase tracking-widest text-[#f97360]">{t('analyst_avg_rating', 'Средняя оценка')}</div>
               <div className="mt-2 text-2xl font-black text-white">4.7</div>
-              <div className="mt-1 text-xs text-white/40">{locale === 'uz' ? 'Mehmonlarning fikrlari' : 'Отзывы гостей'}</div>
+              <div className="mt-1 text-xs text-white/40">{t('analyst_guest_reviews', 'Отзывы гостей')}</div>
             </div>
             <div className="rounded-2xl border border-white/5 bg-white/2 p-4">
-              <div className="text-[10px] font-bold uppercase tracking-widest text-[#34d399]">{locale === 'uz' ? 'Qaytish darajasi' : 'Возвращаемость'}</div>
+              <div className="text-[10px] font-bold uppercase tracking-widest text-[#34d399]">{t('analyst_return_rate', 'Возвращаемость')}</div>
               <div className="mt-2 text-2xl font-black text-white">62%</div>
-              <div className="mt-1 text-xs text-white/40">{locale === 'uz' ? 'Takroriy mehmonlar' : 'Повторные гости'}</div>
+              <div className="mt-1 text-xs text-white/40">{t('analyst_returning_guests', 'Повторные гости')}</div>
             </div>
           </div>
         </Panel>

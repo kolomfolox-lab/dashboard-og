@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils';
+import { useLocale } from '@/context/LocaleContext';
 
 type Tone = 'coral' | 'cyan' | 'mint' | 'sand';
 
@@ -34,6 +35,7 @@ export type OwnerComparisonItem = {
 };
 
 export function OwnerComparisonStrip({ items }: { items: OwnerComparisonItem[] }) {
+  const { t } = useLocale();
   return (
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
       {items.map((item) => {
@@ -46,7 +48,7 @@ export function OwnerComparisonStrip({ items }: { items: OwnerComparisonItem[] }
             <div className="flex items-center justify-between">
               <div className="text-[11px] font-semibold uppercase tracking-[0.28em] text-white/38">{item.label}</div>
               <span className={cn('text-[10px] font-bold uppercase tracking-[0.2em]', delta !== null && delta > 0 ? 'text-emerald-400/60' : 'text-white/20')}>
-                {delta !== null ? (delta > 0 ? 'Trend ↑' : 'Trend ↓') : '—'}
+                {delta !== null ? (delta > 0 ? '↑' : '↓') : '—'}
               </span>
             </div>
             <div className={cn('mt-3 font-display text-2xl font-bold', tone.text)}>{item.value}</div>
@@ -55,7 +57,7 @@ export function OwnerComparisonStrip({ items }: { items: OwnerComparisonItem[] }
               <div className={cn('h-full rounded-full bg-gradient-to-r transition-all duration-1000 group-hover:animate-pulse', tone.bar)} style={{ width: `${width}%` }} />
             </div>
             <div className={cn('mt-3 text-xs font-bold uppercase tracking-[0.18em]', delta === null ? 'text-white/34' : delta >= 0 ? 'text-emerald-300' : 'text-red-300')}>
-              {delta === null ? 'Нет данных' : `${delta >= 0 ? '↑' : '↓'} ${Math.abs(delta).toFixed(1)}%`}
+              {delta !== null ? `${delta >= 0 ? '↑' : '↓'} ${Math.abs(delta).toFixed(1)}%` : null}
             </div>
           </div>
         );

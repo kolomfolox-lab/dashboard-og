@@ -1,157 +1,108 @@
-import { BarChart3, Bell, BookOpenText, Boxes, Calendar, ChevronDown, ChevronRight, ContactRound, CreditCard, Gift, LayoutDashboard, LineChart, LockKeyhole, Moon, Receipt, Settings2, Store, Sun, UsersRound, UtensilsCrossed, Waves } from 'lucide-react';
+import { Activity, BarChart3, Bell, BookOpenText, Boxes, Calendar, CheckSquare, ChevronDown, ChevronRight, ClipboardList, Coffee, ContactRound, CreditCard, DollarSign, Gift, LayoutDashboard, LineChart, Link, LockKeyhole, Moon, Receipt, RefreshCw, Settings2, ShoppingCart, Store, Sun, TrendingDown, Tv, UsersRound, UtensilsCrossed, Wallet, Waves } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { BrandMark } from '@/components/app/BrandMark';
-import { OwnerWelcomeDialog } from '@/components/app/OwnerWelcomeDialog';
+import { AIAssistant } from '@/components/app/AIAssistant';
 import { Button } from '@/components/ui/button';
 import { ProfileDropdown } from '@/components/ui/profile-dropdown';
 import { Select } from '@/components/ui/select';
 import { Sidebar, SidebarBody, SidebarLink } from '@/components/ui/sidebar';
 import { useAuth } from '@/context/AuthContext';
 import { useLocale } from '@/context/LocaleContext';
+import { FEATURES } from '@/config/features';
 import { useTheme } from '@/context/ThemeContext';
+import { ownerAPI } from '@/services/api';
 
 type NavItem = { to: string; labelKey: string; fallback: string; icon: any; featureKey?: string };
-type NavGroup = { label: string; items: NavItem[] };
+type NavGroup = { label: string; labelKey: string; items: NavItem[] };
 
 const navByRole: Record<string, NavGroup[]> = {
   SUPER_ADMIN: [
-    { label: '', items: [
+    { label: '', labelKey: '', items: [
       { to: '/dashboard', labelKey: 'nav_dashboard', fallback: 'Dashboard', icon: LayoutDashboard },
       { to: '/restaurants', labelKey: 'nav_restaurants', fallback: 'Networks', icon: Store },
       { to: '/keys', labelKey: 'nav_keys', fallback: 'Keys', icon: LockKeyhole },
     ]},
-    { label: '', items: [
+    { label: '', labelKey: '', items: [
       { to: '/analytics', labelKey: 'nav_analytics', fallback: 'Analytics', icon: LineChart },
+      { to: '/finances', labelKey: 'nav_finances', fallback: 'Финансы', icon: Wallet },
+      { to: '/cashflow', labelKey: 'nav_cashflow', fallback: 'Cash Flow', icon: Activity },
       { to: '/reports', labelKey: 'nav_reports', fallback: 'Reports', icon: BarChart3 },
-      { to: '/data-export', labelKey: 'nav_data_export', fallback: 'Data Export', icon: BarChart3 },
       { to: '/payments', labelKey: 'nav_payments', fallback: 'Payments', icon: Receipt },
+      { to: '/expenses', labelKey: 'nav_expenses', fallback: 'Expenses', icon: TrendingDown },
+      { to: '/hr', labelKey: 'nav_hr', fallback: 'HR', icon: UsersRound },
+      { to: '/notifications', labelKey: 'nav_notifications', fallback: 'Notifications', icon: Bell },
       { to: '/users', labelKey: 'nav_people', fallback: 'People', icon: UsersRound },
+      { to: '/payroll', labelKey: 'nav_payroll', fallback: 'Зарплата', icon: Receipt },
       { to: '/permissions', labelKey: 'nav_permissions', fallback: 'Permissions', icon: LockKeyhole },
       { to: '/settings', labelKey: 'nav_settings', fallback: 'Settings', icon: Settings2 },
     ]},
   ],
   CHAIN_OWNER: [
-    { label: 'Operations', items: [
+    { label: 'Operations', labelKey: 'nav_group_operations', items: [
       { to: '/dashboard', labelKey: 'nav_dashboard', fallback: 'Dashboard', icon: LayoutDashboard },
+      { to: '/finances', labelKey: 'nav_finances', fallback: 'Финансы', icon: Wallet },
+      { to: '/cashflow', labelKey: 'nav_cashflow', fallback: 'Cash Flow', icon: Activity },
       { to: '/bookings', labelKey: 'nav_bookings', fallback: 'Bookings', icon: Calendar },
       { to: '/tables', labelKey: 'nav_tables', fallback: 'Tables', icon: UsersRound },
       { to: '/menu', labelKey: 'nav_menu', fallback: 'Menu', icon: UtensilsCrossed },
       { to: '/inventory', labelKey: 'nav_inventory', fallback: 'Inventory', icon: Boxes },
+      { to: '/tech-cards', labelKey: 'nav_tech_cards', fallback: 'Tech Cards', icon: UtensilsCrossed },
+      { to: '/kds', labelKey: 'nav_kds', fallback: 'KDS — Кухонный экран', icon: Tv },
+      { to: '/suppliers', labelKey: 'nav_suppliers', fallback: 'Закупки', icon: ShoppingCart },
+      { to: '/expenses', labelKey: 'nav_expenses', fallback: 'Расходы', icon: TrendingDown },
     ]},
-    { label: 'Analytics', items: [
+    { label: 'Analytics', labelKey: 'nav_group_analytics', items: [
       { to: '/analytics', labelKey: 'nav_analytics', fallback: 'Analytics', icon: LineChart },
       { to: '/attendance', labelKey: 'nav_attendance', fallback: 'Attendance', icon: BarChart3 },
     ]},
-    { label: 'Guests', items: [
+    { label: 'Guests', labelKey: 'nav_group_guests', items: [
       { to: '/crm', labelKey: 'nav_crm', fallback: 'CRM', icon: ContactRound },
       { to: '/loyalty', labelKey: 'nav_loyalty', fallback: 'Loyalty', icon: Gift, featureKey: 'loyalty_program' },
-      { to: '/surveys', labelKey: 'nav_surveys', fallback: 'Surveys', icon: ContactRound },
-      { to: '/auto-notify', labelKey: 'nav_auto_notify', fallback: 'Auto Notify', icon: ContactRound },
     ]},
-    { label: 'Management', items: [
+    { label: 'Management', labelKey: 'nav_group_management', items: [
       { to: '/restaurants', labelKey: 'nav_restaurants', fallback: 'Operations', icon: Store },
-      { to: '/users', labelKey: 'nav_team', fallback: 'Team', icon: UsersRound, featureKey: 'hr_module' },
-      { to: '/tech-cards', labelKey: 'nav_tech_cards', fallback: 'Tech Cards', icon: UtensilsCrossed },
+      { to: '/users', labelKey: 'nav_team', fallback: 'Team', icon: UsersRound },
       { to: '/online-menu-studio', labelKey: 'nav_online_menu', fallback: 'Online Menu', icon: BookOpenText, featureKey: 'online_menu' },
       { to: '/promo', labelKey: 'nav_promo', fallback: 'Promo', icon: Gift },
     ]},
-    { label: 'System', items: [
+    { label: 'System', labelKey: 'nav_group_system', items: [
       { to: '/reports', labelKey: 'nav_reports', fallback: 'Reports', icon: BarChart3 },
-      { to: '/data-export', labelKey: 'nav_data_export', fallback: 'Data Export', icon: BarChart3 },
       { to: '/payments', labelKey: 'nav_payments', fallback: 'Payments', icon: Receipt },
+      { to: '/hr', labelKey: 'nav_hr', fallback: 'HR', icon: UsersRound },
+      { to: '/notifications', labelKey: 'nav_notifications', fallback: 'Notifications', icon: Bell },
+      { to: '/payroll', labelKey: 'nav_payroll', fallback: 'Зарплата', icon: Receipt },
       { to: '/permissions', labelKey: 'nav_permissions', fallback: 'Permissions', icon: LockKeyhole },
       { to: '/subscription', labelKey: 'nav_subscription', fallback: 'Subscription', icon: CreditCard },
       { to: '/settings', labelKey: 'nav_settings', fallback: 'Settings', icon: Settings2 },
     ]},
   ],
-  ACCOUNTANT: [
-    { label: '', items: [
-      { to: '/accountant', labelKey: 'nav_accountant', fallback: 'Accountant', icon: LayoutDashboard },
-      { to: '/payments', labelKey: 'nav_payments', fallback: 'Payments', icon: Receipt },
-      { to: '/reports', labelKey: 'nav_reports', fallback: 'Reports', icon: BarChart3 },
-      { to: '/data-export', labelKey: 'nav_data_export', fallback: 'Data Export', icon: BarChart3 },
-    ]},
-  ],
-  MARKETER: [
-    { label: '', items: [
-      { to: '/marketer', labelKey: 'nav_marketer', fallback: 'Marketer', icon: LayoutDashboard },
-      { to: '/promo', labelKey: 'nav_promo', fallback: 'Promo', icon: Gift },
-      { to: '/auto-notify', labelKey: 'nav_auto_notify', fallback: 'Auto Notify', icon: Bell },
-      { to: '/surveys', labelKey: 'nav_surveys', fallback: 'Surveys', icon: ContactRound },
-    ]},
-  ],
-  ANALYST: [
-    { label: '', items: [
-      { to: '/analyst', labelKey: 'nav_analyst', fallback: 'Analyst', icon: LayoutDashboard },
-      { to: '/analytics', labelKey: 'nav_analytics', fallback: 'Analytics', icon: LineChart },
-      { to: '/reports', labelKey: 'nav_reports', fallback: 'Reports', icon: BarChart3 },
-      { to: '/data-export', labelKey: 'nav_data_export', fallback: 'Data Export', icon: BarChart3 },
-    ]},
-  ],
-  SHIFT_LEADER: [
-    { label: '', items: [
-      { to: '/shift-leader', labelKey: 'nav_dashboard', fallback: 'Shift', icon: LayoutDashboard },
-    ]},
-  ],
-  DISPATCHER: [
-    { label: '', items: [
-      { to: '/dispatcher', labelKey: 'nav_dashboard', fallback: 'Dispatch', icon: LayoutDashboard },
-    ]},
-  ],
-  COURIER: [
-    { label: '', items: [
-      { to: '/courier', labelKey: 'nav_dashboard', fallback: 'Courier', icon: LayoutDashboard },
-    ]},
-  ],
-  SUPPORT: [
-    { label: '', items: [
-      { to: '/support', labelKey: 'nav_dashboard', fallback: 'Support', icon: LayoutDashboard },
-    ]},
-  ],
-  AUDITOR: [
-    { label: '', items: [
-      { to: '/auditor', labelKey: 'nav_dashboard', fallback: 'Auditor', icon: LayoutDashboard },
-    ]},
-  ],
-  SUPPLIER: [
-    { label: '', items: [
-      { to: '/supplier', labelKey: 'nav_dashboard', fallback: 'Supplier', icon: LayoutDashboard },
-    ]},
-  ],
   RESTAURANT_OWNER: [
-    { label: 'Operations', items: [
-      { to: '/dashboard', labelKey: 'nav_dashboard', fallback: 'Dashboard', icon: LayoutDashboard },
-      { to: '/bookings', labelKey: 'nav_bookings', fallback: 'Bookings', icon: Calendar },
-      { to: '/tables', labelKey: 'nav_tables', fallback: 'Tables', icon: UsersRound },
-      { to: '/menu', labelKey: 'nav_menu', fallback: 'Menu', icon: UtensilsCrossed },
-      { to: '/inventory', labelKey: 'nav_inventory', fallback: 'Inventory', icon: Boxes },
+    { label: 'Operations', labelKey: 'nav_group_operations', items: [
+      { to: '/dashboard', labelKey: 'nav_dashboard', fallback: 'Главная', icon: LayoutDashboard },
+      { to: '/menu', labelKey: 'nav_menu', fallback: 'Меню', icon: UtensilsCrossed },
+      { to: '/tables', labelKey: 'nav_tables', fallback: 'Столы', icon: UsersRound },
+      { to: '/bookings', labelKey: 'nav_bookings', fallback: 'Брони', icon: Calendar },
+      { to: '/inventory', labelKey: 'nav_inventory', fallback: 'Склад', icon: Boxes },
+      { to: '/tech-cards', labelKey: 'nav_tech_cards', fallback: 'Техкарты', icon: UtensilsCrossed },
+      { to: '/suppliers', labelKey: 'nav_suppliers', fallback: 'Закупки', icon: ShoppingCart },
+      { to: '/kds', labelKey: 'nav_kds', fallback: 'KDS — Кухонный экран', icon: Tv },
+      { to: '/finances', labelKey: 'nav_finances', fallback: 'Финансы', icon: Wallet },
+      { to: '/expenses', labelKey: 'nav_expenses', fallback: 'Расходы', icon: TrendingDown },
+      { to: '/cashflow', labelKey: 'nav_cashflow', fallback: 'Cash Flow', icon: Activity },
     ]},
-    { label: 'Analytics', items: [
-      { to: '/analytics', labelKey: 'nav_analytics', fallback: 'Analytics', icon: LineChart },
-      { to: '/attendance', labelKey: 'nav_attendance', fallback: 'Attendance', icon: BarChart3 },
-      { to: '/reports', labelKey: 'nav_reports', fallback: 'Reports', icon: BarChart3 },
-    ]},
-    { label: 'Guests', items: [
+    { label: 'Guests', labelKey: 'nav_group_guests', items: [
       { to: '/crm', labelKey: 'nav_crm', fallback: 'CRM', icon: ContactRound },
-      { to: '/loyalty', labelKey: 'nav_loyalty', fallback: 'Loyalty', icon: Gift, featureKey: 'loyalty_program' },
-      { to: '/surveys', labelKey: 'nav_surveys', fallback: 'Surveys', icon: ContactRound },
-      { to: '/auto-notify', labelKey: 'nav_auto_notify', fallback: 'Auto Notify', icon: ContactRound },
+      { to: '/loyalty', labelKey: 'nav_loyalty', fallback: 'Лояльность', icon: Gift },
     ]},
-    { label: 'Management', items: [
-      { to: '/restaurants', labelKey: 'nav_restaurants', fallback: 'Restaurants', icon: Store },
-      { to: '/users', labelKey: 'nav_team', fallback: 'Team', icon: UsersRound, featureKey: 'hr_module' },
-      { to: '/tech-cards', labelKey: 'nav_tech_cards', fallback: 'Tech Cards', icon: UtensilsCrossed },
-      { to: '/online-menu-studio', labelKey: 'nav_online_menu', fallback: 'Online Menu', icon: BookOpenText, featureKey: 'online_menu' },
-      { to: '/promo', labelKey: 'nav_promo', fallback: 'Promo', icon: Gift },
-    ]},
-    { label: 'System', items: [
-      { to: '/data-export', labelKey: 'nav_data_export', fallback: 'Data Export', icon: BarChart3 },
-      { to: '/payments', labelKey: 'nav_payments', fallback: 'Payments', icon: Receipt },
-      { to: '/permissions', labelKey: 'nav_permissions', fallback: 'Permissions', icon: LockKeyhole },
-      { to: '/pricing', labelKey: 'nav_pricing', fallback: 'Pricing', icon: CreditCard },
-      { to: '/subscription', labelKey: 'nav_subscription', fallback: 'Subscription', icon: LockKeyhole },
-      { to: '/settings', labelKey: 'nav_settings', fallback: 'Settings', icon: Settings2 },
+    { label: 'Settings', labelKey: 'nav_group_system', items: [
+      { to: '/analytics', labelKey: 'nav_analytics', fallback: 'Аналитика', icon: LineChart },
+      { to: '/hr', labelKey: 'nav_hr', fallback: 'HR', icon: UsersRound },
+      { to: '/notifications', labelKey: 'nav_notifications', fallback: 'Notifications', icon: Bell },
+      { to: '/users', labelKey: 'nav_team', fallback: 'Команда', icon: UsersRound },
+      { to: '/reports', labelKey: 'nav_reports', fallback: 'Отчёты', icon: BarChart3 },
+      { to: '/payments', labelKey: 'nav_payments', fallback: 'Платежи', icon: Receipt },
+      { to: '/settings', labelKey: 'nav_settings', fallback: 'Настройки', icon: Settings2 },
     ]},
   ],
 };
@@ -174,23 +125,38 @@ export function AppShell({ title, subtitle, eyebrow, restaurants = [], selectedR
   const { theme, toggle: toggleTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
+  const isOwner = user?.role === 'CHAIN_OWNER' || user?.role === 'RESTAURANT_OWNER';
+  const [shellRestaurants, setShellRestaurants] = useState<any[]>([]);
+  const [shellSelectedRestaurantId, setShellSelectedRestaurantId] = useState('');
+  useEffect(() => {
+    if (!isOwner || restaurants.length > 0) return;
+    let active = true;
+    ownerAPI.getMe().then((response) => {
+      if (!active) return;
+      const nextRestaurants = response.data?.restaurants || [];
+      const savedId = localStorage.getItem('waitly-selected-restaurant') || '';
+      setShellRestaurants(nextRestaurants);
+      setShellSelectedRestaurantId(nextRestaurants.some((item: any) => item.id === savedId) ? savedId : nextRestaurants[0]?.id || '');
+    }).catch(() => undefined);
+    return () => { active = false; };
+  }, [isOwner, restaurants.length]);
+  const availableRestaurants = restaurants.length > 0 ? restaurants : shellRestaurants;
+  const availableSelectedRestaurantId = selectedRestaurantId || shellSelectedRestaurantId || availableRestaurants[0]?.id || '';
+  const handleShellRestaurantChange = (restaurantId: string) => {
+    setShellSelectedRestaurantId(restaurantId);
+    localStorage.setItem('waitly-selected-restaurant', restaurantId);
+    onRestaurantChange?.(restaurantId);
+  };
   const [open, setOpen] = useState(true);
-  const selectedRestaurant = restaurants.find((restaurant) => restaurant.id === selectedRestaurantId) || restaurants[0] || null;
+  const selectedRestaurant = availableRestaurants.find((restaurant) => restaurant.id === availableSelectedRestaurantId) || availableRestaurants[0] || null;
   const navItems = (navByRole[user?.role as keyof typeof navByRole] || []).map(group => ({
     ...group,
     items: group.items.filter(item => {
       if (!item.featureKey) return true;
-      if (!selectedRestaurant?.features) return true;
-      return selectedRestaurant.features[item.featureKey] === true;
+      return FEATURES[item.featureKey] === true;
     }),
   })).filter(group => group.items.length > 0);
-  const welcomeStorageKey = user?.id ? `waitly-owner-welcome:${user.id}` : 'waitly-owner-welcome';
-  const shouldWelcomeOwner = user?.role === 'RESTAURANT_OWNER' || user?.role === 'CHAIN_OWNER';
-  const [welcomeOpen, setWelcomeOpen] = useState(() => {
-    if (!shouldWelcomeOwner) return false;
-    return localStorage.getItem(welcomeStorageKey) !== 'done';
-  });
-  const activeWorkspace = selectedRestaurant?.name || 'Waitly dashboard';
+  const activeWorkspace = selectedRestaurant?.name || (isOwner ? t('shell_workspace_loading', 'Загрузка рабочей зоны…') : t('appShell_active_workspace', 'Waitly dashboard'));
   const effectiveSubscriptionGate = subscriptionGate || (user?.role !== 'SUPER_ADMIN' && selectedRestaurant ? { active: selectedRestaurant.subscription_active !== false, restaurantName: selectedRestaurant.name } : undefined);
   const roleLabels: Record<string, string> = {
     SUPER_ADMIN: t('role_super_admin', 'Platform admin'),
@@ -205,6 +171,16 @@ export function AppShell({ title, subtitle, eyebrow, restaurants = [], selectedR
   };
   const makeLink = (item: NavItem) => ({ label: t(item.labelKey, item.fallback), href: item.to, icon: <item.icon className="h-4 w-4 flex-shrink-0 text-white/72" /> });
   const handleLogout = () => { logout(); navigate('/login'); };
+  const handleRestaurantDelete = async (restaurantId: string) => {
+    const restaurant = availableRestaurants.find((item) => item.id === restaurantId);
+    if (!restaurant || !window.confirm(`Удалить заведение «${restaurant.name}»? Это действие нельзя отменить.`)) return;
+    try {
+      await ownerAPI.deleteRestaurant(restaurantId);
+      window.location.reload();
+    } catch (error: any) {
+      window.alert(error?.response?.data?.error || 'Не удалось удалить заведение.');
+    }
+  };
 
   const [expandedGroups, setExpandedGroups] = useState<Set<number>>(() => {
     const initial = new Set<number>();
@@ -222,11 +198,6 @@ export function AppShell({ title, subtitle, eyebrow, restaurants = [], selectedR
       return next;
     });
   };
-  const completeWelcome = () => {
-    localStorage.setItem(welcomeStorageKey, 'done');
-    localStorage.setItem('waitly-onboarding-complete', 'true');
-    setWelcomeOpen(false);
-  };
   const openNotification = () => {
     const notification = document.getElementById('waitly-notification');
     if (!notification) return;
@@ -236,9 +207,6 @@ export function AppShell({ title, subtitle, eyebrow, restaurants = [], selectedR
 
   return (
     <div className="min-h-screen text-white">
-      {welcomeOpen && shouldWelcomeOwner ? (
-        <OwnerWelcomeDialog ownerName={user?.full_name} workspaceName={activeWorkspace} onComplete={completeWelcome} />
-      ) : null}
       <div className="mx-auto flex min-h-screen w-full max-w-[1920px]">
         <Sidebar open={open} setOpen={setOpen} animate={false}>
           <SidebarBody className="bg-theme-sidebar z-50 justify-between gap-8 border-r border-theme-surface px-4 py-5 backdrop-blur-2xl md:sticky md:top-0 md:h-screen">
@@ -258,7 +226,7 @@ export function AppShell({ title, subtitle, eyebrow, restaurants = [], selectedR
                         onClick={() => group.label ? toggleGroup(gi) : null}
                         className={`flex items-center justify-between rounded-xl px-2.5 py-2 text-[10px] font-semibold uppercase tracking-[0.22em] ${group.label ? 'cursor-pointer text-theme-muted hover:text-theme-secondary hover:bg-white/[0.03]' : 'text-theme-muted'}`}
                       >
-                        <span>{group.label || ''}</span>
+                        <span>{group.labelKey ? t(group.labelKey, group.label || '') : (group.label || '')}</span>
                         {group.label ? (
                           isOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />
                         ) : null}
@@ -301,26 +269,27 @@ export function AppShell({ title, subtitle, eyebrow, restaurants = [], selectedR
                   {eyebrow ? <div className="text-[11px] font-semibold uppercase tracking-[0.34em] text-[#8fd4ff]">{eyebrow}</div> : null}
                   <div className="mt-2 flex flex-wrap items-center gap-3">
                     <h1 className="font-display text-3xl leading-none text-theme md:text-[2.4rem]">{title}</h1>
-                    <span className="inline-flex rounded-full border border-theme bg-theme-panel px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-theme-secondary">{roleLabels[user?.role || ''] || 'Operator'}</span>
+                    <span className="inline-flex rounded-full border border-theme bg-theme-panel px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-theme-secondary">{roleLabels[user?.role || ''] || t('appShell_operator', 'Operator')}</span>
                   </div>
                   <p className="mt-3 max-w-4xl text-sm leading-7 text-theme-secondary">{subtitle}</p>
-                  {user?.full_name ? <div className="mt-2 flex items-center gap-2 text-xs text-theme-secondary"><span>С возвращением, <strong className="text-theme">{user.full_name.split(' ')[0]}</strong></span></div> : null}
+                  {user?.full_name ? <div className="mt-2 flex items-center gap-2 text-xs text-theme-secondary"><span>{t('appShell_welcome_back', 'С возвращением, ')}<strong className="text-theme">{user.full_name.split(' ')[0]}</strong></span></div> : null}
                 </div>
                 <div className="flex flex-col gap-3 lg:min-w-[520px] sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
                   <label className="flex items-center gap-2 rounded-2xl border border-theme bg-[var(--input-bg)] px-4 py-3 text-sm text-theme-secondary"><span className="text-theme-muted">{t('shell_language', 'Language')}</span><div className="relative"><select value={locale} onChange={(event) => setLocale(event.target.value as 'ru' | 'en' | 'uz')} className="appearance-none bg-transparent pr-7 text-sm font-semibold text-theme outline-none"><option value="ru">RU</option><option value="en">EN</option><option value="uz">UZ</option></select><ChevronDown className="pointer-events-none absolute right-0 top-1/2 h-4 w-4 -translate-y-1/2 text-theme-secondary" /></div></label>
-                  {restaurants.length > 0 && onRestaurantChange ? <Select placeholder={t('shell_workspace_select', 'Workspace')} options={restaurants.map(r => ({ value: r.id, label: r.name }))} value={selectedRestaurantId} onChange={onRestaurantChange} /> : null}
+                   {isOwner ? <Select placeholder={t('shell_workspace_select', 'Рабочая зона')} options={availableRestaurants.map(r => ({ value: r.id, label: r.name }))} value={availableSelectedRestaurantId} onChange={handleShellRestaurantChange} actionLabel={t('shell_add_workspace', 'Добавить заведение')} onAction={() => navigate('/setup')} onDelete={availableRestaurants.length > 0 ? handleRestaurantDelete : undefined} /> : null}
                   <button onClick={toggleTheme} className="rounded-2xl border border-theme bg-[var(--input-bg)] p-3 text-theme-secondary hover:text-theme transition-colors">{theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}</button>
                   <div className="relative"><Button variant="ghost" size="icon" className="group relative overflow-hidden rounded-2xl border border-theme bg-[var(--input-bg)] hover:bg-theme-panel" onClick={openNotification}><Bell className="h-4 w-4 text-theme-secondary transition-transform group-hover:scale-110" /><span className="absolute right-2 top-2 flex h-1.5 w-1.5 rounded-full bg-[#f97360]" /></Button></div>
                   <ProfileDropdown className="w-full sm:w-auto" data={profileData} onSignOut={handleLogout} />
-                  <div id="waitly-notification" className="pointer-events-none fixed bottom-8 right-8 z-[100] flex w-80 translate-y-full items-start gap-4 rounded-3xl border border-theme bg-[var(--modal-bg)] p-5 opacity-0 shadow-[0_20px_50px_rgba(0,0,0,0.4)] transition-all duration-500 ease-out"><div className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl border border-[#f97360]/20 bg-[#f97360]/10"><Waves className="h-5 w-5 text-[#f97360]" /></div><div><div className="text-xs font-bold uppercase tracking-widest text-theme-muted">Waitly Pulse</div><p className="mt-1 text-sm leading-relaxed text-theme-secondary">{effectiveSubscriptionGate && !effectiveSubscriptionGate.active ? 'Subscription is inactive. Open the activation page to restore this workspace.' : t('shell_notifications', 'System sync successful. All core modules are running.')}</p></div></div>
+                  <div id="waitly-notification" className="pointer-events-none fixed bottom-8 right-8 z-[100] flex w-80 translate-y-full items-start gap-4 rounded-3xl border border-theme bg-[var(--modal-bg)] p-5 opacity-0 shadow-[0_20px_50px_rgba(0,0,0,0.4)] transition-all duration-500 ease-out"><div className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl border border-[#f97360]/20 bg-[#f97360]/10"><Waves className="h-5 w-5 text-[#f97360]" /></div><div><div className="text-xs font-bold uppercase tracking-widest text-theme-muted">{t('appShell_waitly_pulse', 'Waitly Pulse')}</div><p className="mt-1 text-sm leading-relaxed text-theme-secondary">{effectiveSubscriptionGate && !effectiveSubscriptionGate.active ? t('appShell_subscription_inactive_notification', 'Subscription is inactive. Open the activation page to restore this workspace.') : t('shell_notifications', 'System sync successful. All core modules are running.')}</p></div></div>
                 </div>
               </div>
             </header>
-            {effectiveSubscriptionGate && !effectiveSubscriptionGate.active ? <div className="mb-5 rounded-[28px] border border-amber-300/18 bg-[linear-gradient(135deg,rgba(249,115,96,0.16),rgba(247,178,103,0.08))] p-4 shadow-[0_18px_50px_rgba(15,23,42,0.12)]"><div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between"><div className="flex items-start gap-3"><div className="grid h-11 w-11 place-items-center rounded-2xl border border-amber-300/20 bg-black/20"><LockKeyhole className="h-5 w-5 text-[#ffd28d]" /></div><div><div className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#ffd28d]">Waitly Control paywall</div><div className="mt-1 text-sm font-semibold text-theme">{effectiveSubscriptionGate.restaurantName ? `${effectiveSubscriptionGate.restaurantName}: subscription is inactive.` : 'Subscription is inactive.'}</div><div className="mt-1 text-sm text-theme-secondary">Core modules stay limited until the owner activates a subscription. This notice stays visible across owner pages.</div></div></div><Button variant="secondary" size="sm" onClick={() => navigate('/subscription')}>Activate subscription</Button></div></div> : null}
+            {effectiveSubscriptionGate && !effectiveSubscriptionGate.active ? <div className="mb-5 rounded-[28px] border border-amber-300/18 bg-[linear-gradient(135deg,rgba(249,115,96,0.16),rgba(247,178,103,0.08))] p-4 shadow-[0_18px_50px_rgba(15,23,42,0.12)]"><div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between"><div className="flex items-start gap-3"><div className="grid h-11 w-11 place-items-center rounded-2xl border border-amber-300/20 bg-black/20"><LockKeyhole className="h-5 w-5 text-[#ffd28d]" /></div><div><div className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#ffd28d]">{t('appShell_paywall', 'Waitly Control paywall')}</div><div className="mt-1 text-sm font-semibold text-theme">{effectiveSubscriptionGate.restaurantName ? t('appShell_restaurant_inactive', '{name}: subscription is inactive.').replace('{name}', effectiveSubscriptionGate.restaurantName) : t('appShell_subscription_inactive', 'Subscription is inactive.')}</div><div className="mt-1 text-sm text-theme-secondary">{t('appShell_paywall_description', 'Core modules stay limited until the owner activates a subscription. This notice stays visible across owner pages.')}</div></div></div><Button variant="secondary" size="sm" onClick={() => navigate('/subscription')}>{t('appShell_activate_subscription', 'Activate subscription')}</Button></div></div> : null}
             <main className="pb-10">{children}</main>
           </div>
         </div>
       </div>
+      <AIAssistant restaurantId={selectedRestaurantId} />
     </div>
   );
 }

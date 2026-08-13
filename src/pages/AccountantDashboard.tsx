@@ -30,7 +30,7 @@ interface Transaction {
 }
 
 export default function AccountantDashboardPage() {
-  const { locale } = useLocale();
+  const { locale, t } = useLocale();
   const [stats, setStats] = useState<StatRow | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -70,9 +70,9 @@ export default function AccountantDashboardPage() {
 
   const statusLabel = (s: string) => {
     const map: Record<string, string> = {
-      completed: locale === 'uz' ? "To'langan" : 'Оплачен',
-      pending: locale === 'uz' ? 'Kutilmoqda' : 'Ожидает',
-      failed: locale === 'uz' ? 'Bekor' : 'Отменён',
+      completed: t('accountant_status_completed', 'Оплачен'),
+      pending: t('accountant_status_pending', 'Ожидает'),
+      failed: t('accountant_status_failed', 'Отменён'),
     };
     return map[s] || s;
   };
@@ -85,7 +85,7 @@ export default function AccountantDashboardPage() {
 
   const dailyRev = stats?.daily_revenue || [];
   const maxDaily = Math.max(...dailyRev.map(d => d.revenue), 1);
-  const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const dayLabels = [t('accountant_day_mon', 'Mon'), t('accountant_day_tue', 'Tue'), t('accountant_day_wed', 'Wed'), t('accountant_day_thu', 'Thu'), t('accountant_day_fri', 'Fri'), t('accountant_day_sat', 'Sat'), t('accountant_day_sun', 'Sun')];
 
   const paymentMethods = (() => {
     const counts: Record<string, { count: number; total: number }> = {};
@@ -108,17 +108,17 @@ export default function AccountantDashboardPage() {
     if (!perf.length) return [];
     return [
       {
-        name: locale === 'uz' ? 'Ofitsiantlar' : 'Официанты',
+        name: t('accountant_category_waiters', 'Официанты'),
         count: Math.ceil(perf.length * 0.5),
         total: perf.slice(0, Math.ceil(perf.length * 0.5)).reduce((s, p) => s + Number(p.revenue || 0) * 0.2, 0),
       },
       {
-        name: locale === 'uz' ? 'Oshpazlar' : 'Повара',
+        name: t('accountant_category_cooks', 'Повара'),
         count: Math.ceil(perf.length * 0.3),
         total: perf.slice(0, Math.ceil(perf.length * 0.3)).reduce((s, p) => s + Number(p.revenue || 0) * 0.25, 0),
       },
       {
-        name: locale === 'uz' ? 'Menejerlar' : 'Менеджеры',
+        name: t('accountant_category_managers', 'Менеджеры'),
         count: Math.max(1, Math.floor(perf.length * 0.15)),
         total: perf.slice(0, Math.max(1, Math.floor(perf.length * 0.15))).reduce((s, p) => s + Number(p.revenue || 0) * 0.3, 0),
       },
@@ -126,17 +126,17 @@ export default function AccountantDashboardPage() {
   })();
 
   const taxItems = [
-    { label: locale === 'uz' ? 'QQS (iyun)' : 'НДС (июнь)', amount: revenueWeek * 0.12, status: 'paid' as const },
-    { label: locale === 'uz' ? 'Foydali soliq' : 'Налог на прибыль', amount: revenueWeek * 0.08, status: 'pending' as const },
-    { label: locale === 'uz' ? 'Ijtimoiy to\'lov' : 'Соц. отчисления', amount: payrollTotal * 0.12, status: 'paid' as const },
+    { label: t('accountant_tax_vat', 'НДС (июнь)'), amount: revenueWeek * 0.12, status: 'paid' as const },
+    { label: t('accountant_tax_profit', 'Налог на прибыль'), amount: revenueWeek * 0.08, status: 'pending' as const },
+    { label: t('accountant_tax_social', 'Соц. отчисления'), amount: payrollTotal * 0.12, status: 'paid' as const },
   ];
 
   if (loading) {
     return (
       <AppShell
-        title={locale === 'uz' ? 'Buxgalteriya paneli' : 'Панель бухгалтера'}
-        subtitle={locale === 'uz' ? 'Moliyaviy ko\'rsatkichlar, to\'lovlar va hisobotlar.' : 'Финансовые показатели, платежи и отчёты.'}
-        eyebrow={locale === 'uz' ? 'Moliya' : 'Финансы'}
+        title={t('accountant_title', 'Панель бухгалтера')}
+        subtitle={t('accountant_subtitle', 'Финансовые показатели, платежи и отчёты.')}
+        eyebrow={t('accountant_eyebrow', 'Финансы')}
       >
         <div className="flex h-[400px] items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-white/40" />
@@ -147,22 +147,22 @@ export default function AccountantDashboardPage() {
 
   return (
     <AppShell
-      title={locale === 'uz' ? 'Buxgalteriya paneli' : 'Панель бухгалтера'}
-      subtitle={locale === 'uz' ? 'Moliyaviy ko\'rsatkichlar, to\'lovlar va hisobotlar.' : 'Финансовые показатели, платежи и отчёты.'}
-      eyebrow={locale === 'uz' ? 'Moliya' : 'Финансы'}
+      title={t('accountant_title', 'Панель бухгалтера')}
+      subtitle={t('accountant_subtitle', 'Финансовые показатели, платежи и отчёты.')}
+      eyebrow={t('accountant_eyebrow', 'Финансы')}
     >
       <div className="space-y-6">
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <MetricCard title={locale === 'uz' ? 'Bugungi tushum' : 'Выручка сегодня'} value={formatMoney(revenueToday)} note={locale === 'uz' ? 'Joriy kun' : 'Текущий день'} icon={DollarSign} tone="coral" />
-          <MetricCard title={locale === 'uz' ? 'Haftalik tushum' : 'Выручка за неделю'} value={formatMoney(revenueWeek)} note={locale === 'uz' ? 'Oxirgi 7 kun' : 'Последние 7 дней'} icon={TrendingUp} tone="sand" />
-          <MetricCard title={locale === 'uz' ? 'Kutilayotgan to\'lovlar' : 'Ожидаемые платежи'} value={formatMoney(pendingTotal)} note={`${pendingCount} ${locale === 'uz' ? 'ta to\'lov' : 'платежей'}`} icon={Receipt} tone="cyan" />
-          <MetricCard title={locale === 'uz' ? 'Ish haqi fondi' : 'Фонд зарплаты'} value={formatMoney(payrollTotal)} note={`${staffCount} ${locale === 'uz' ? 'xodim' : 'сотрудников'}`} icon={UsersRound} tone="mint" />
+          <MetricCard title={t('accountant_revenue_today', 'Выручка сегодня')} value={formatMoney(revenueToday)} note={t('accountant_today_note', 'Текущий день')} icon={DollarSign} tone="coral" />
+          <MetricCard title={t('accountant_weekly_revenue', 'Выручка за неделю')} value={formatMoney(revenueWeek)} note={t('accountant_week_note', 'Последние 7 дней')} icon={TrendingUp} tone="sand" />
+          <MetricCard title={t('accountant_pending_payments', 'Ожидаемые платежи')} value={formatMoney(pendingTotal)} note={`${pendingCount} ${t('accountant_payments_count', 'платежей')}`} icon={Receipt} tone="cyan" />
+          <MetricCard title={t('accountant_payroll_fund', 'Фонд зарплаты')} value={formatMoney(payrollTotal)} note={`${staffCount} ${t('accountant_staff_count', 'сотрудников')}`} icon={UsersRound} tone="mint" />
         </div>
 
         <div className="grid gap-6 xl:grid-cols-3">
-          <Panel title={locale === 'uz' ? 'Daromad dinamikasi' : 'Динамика доходов'} eyebrow={locale === 'uz' ? 'Moliyaviy' : 'Финансовый'} className="xl:col-span-2">
+          <Panel title={t('accountant_revenue_chart', 'Динамика доходов')} eyebrow={t('accountant_financial', 'Финансовый')} className="xl:col-span-2">
             {dailyRev.length === 0 ? (
-              <div className="flex h-[360px] items-center justify-center text-sm text-white/40">{locale === 'uz' ? 'Ma\'lumot yo\'q' : 'Нет данных'}</div>
+              <div className="flex h-[360px] items-center justify-center text-sm text-white/40">{t('accountant_no_data', 'Нет данных')}</div>
             ) : (
               <div className="flex h-[360px] items-end justify-between gap-2 px-2">
                 {dailyRev.map((d, i) => (
@@ -174,9 +174,9 @@ export default function AccountantDashboardPage() {
               </div>
             )}
           </Panel>
-          <Panel title={locale === 'uz' ? 'To\'lov usullari' : 'Способы оплаты'} eyebrow={locale === 'uz' ? 'Statistika' : 'Статистика'}>
+          <Panel title={t('accountant_payment_methods', 'Способы оплаты')} eyebrow={t('accountant_statistics', 'Статистика')}>
             {paymentMethods.length === 0 ? (
-              <div className="flex h-[200px] items-center justify-center text-sm text-white/40">{locale === 'uz' ? 'Ma\'lumot yo\'q' : 'Нет данных'}</div>
+              <div className="flex h-[200px] items-center justify-center text-sm text-white/40">{t('accountant_no_data', 'Нет данных')}</div>
             ) : (
               <div className="space-y-3">
                 {paymentMethods.map((m) => (
@@ -195,25 +195,25 @@ export default function AccountantDashboardPage() {
           </Panel>
         </div>
 
-        <Panel title={locale === 'uz' ? 'So\'nggi to\'lovlar' : 'Последние платежи'} eyebrow={locale === 'uz' ? 'Tranzaksiyalar' : 'Транзакции'}>
+        <Panel title={t('accountant_recent_payments', 'Последние платежи')} eyebrow={t('accountant_transactions_eyebrow', 'Транзакции')}>
           {transactions.length === 0 ? (
-            <div className="text-sm text-white/40">{locale === 'uz' ? 'Tranzaksiyalar topilmadi.' : 'Транзакции не найдены.'}</div>
+            <div className="text-sm text-white/40">{t('accountant_no_transactions', 'Транзакции не найдены.')}</div>
           ) : (
             <DataTable
               rows={transactions}
               columns={[
-                { label: locale === 'uz' ? 'Sana' : 'Дата', key: 'created_at' || 'date', render: (row) => {
+                { label: t('accountant_col_date', 'Дата'), key: 'created_at' || 'date', render: (row) => {
                   const d = row.created_at || row.date || '';
                   try { return new Date(d).toLocaleDateString(); } catch { return d; }
                 }},
-                { label: locale === 'uz' ? 'Buyurtma' : 'Заказ', key: 'order', render: (row) => row.order || row.order_id || '—' },
+                { label: t('accountant_col_order', 'Заказ'), key: 'order', render: (row) => row.order || row.order_id || '—' },
                 {
-                  label: locale === 'uz' ? 'Summa' : 'Сумма',
+                  label: t('accountant_col_amount', 'Сумма'),
                   key: 'amount',
                   render: (row) => <span className="font-semibold text-white">{formatMoney(Number(row.amount))}</span>,
                 },
                 {
-                  label: locale === 'uz' ? 'Holat' : 'Статус',
+                  label: t('accountant_col_status', 'Статус'),
                   key: 'status',
                   render: (row) => (
                     <span className={`inline-block rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-widest ${statusColor(row.status)}`}>
@@ -221,24 +221,24 @@ export default function AccountantDashboardPage() {
                     </span>
                   ),
                 },
-                { label: locale === 'uz' ? 'Usul' : 'Способ', key: 'method', render: (row) => row.method || row.payment_method || '—' },
+                { label: t('accountant_col_method', 'Способ'), key: 'method', render: (row) => row.method || row.payment_method || '—' },
               ]}
-              emptyMessage={locale === 'uz' ? 'Tranzaksiyalar topilmadi.' : 'Транзакции не найдены.'}
+              emptyMessage={t('accountant_no_transactions', 'Транзакции не найдены.')}
             />
           )}
         </Panel>
 
         <div className="grid gap-6 xl:grid-cols-2">
-          <Panel title={locale === 'uz' ? 'Ish haqi xulosasi' : 'Сводка по зарплате'} eyebrow={locale === 'uz' ? 'Xodimlar' : 'Сотрудники'}>
+          <Panel title={t('accountant_salary_summary', 'Сводка по зарплате')} eyebrow={t('accountant_employees', 'Сотрудники')}>
             {staffCategories.length === 0 ? (
-              <div className="text-sm text-white/40">{locale === 'uz' ? 'Ma\'lumot yo\'q' : 'Нет данных'}</div>
+              <div className="text-sm text-white/40">{t('accountant_no_data', 'Нет данных')}</div>
             ) : (
               <div className="space-y-3">
                 {staffCategories.map((cat) => (
                   <div key={cat.name} className="flex items-center justify-between rounded-2xl border border-white/5 bg-white/2 p-4">
                     <div>
                       <div className="text-sm font-bold text-white">{cat.name}</div>
-                      <div className="text-[10px] text-white/40">{cat.count} {locale === 'uz' ? 'kishi' : 'чел.'}</div>
+                      <div className="text-[10px] text-white/40">{cat.count} {t('accountant_persons', 'чел.')}</div>
                     </div>
                     <div className="text-sm font-bold text-[#ffd4c4]">{formatMoney(Math.round(cat.total))}</div>
                   </div>
@@ -246,13 +246,13 @@ export default function AccountantDashboardPage() {
               </div>
             )}
           </Panel>
-          <Panel title={locale === 'uz' ? 'Soliq hisobotlari' : 'Налоговые отчёты'} eyebrow={locale === 'uz' ? 'Komplayens' : 'Комплаенс'}>
+          <Panel title={t('accountant_tax_reports', 'Налоговые отчёты')} eyebrow={t('accountant_compliance', 'Комплаенс')}>
             <div className="space-y-3">
               {taxItems.map((tax) => (
                 <div key={tax.label} className="flex items-center justify-between rounded-2xl border border-white/5 bg-white/2 p-4">
                   <div>
                     <div className="text-sm text-white/80">{tax.label}</div>
-                    <div className="mt-1 text-[10px] text-white/30">{tax.status === 'paid' ? (locale === 'uz' ? 'To\'langan' : 'Оплачен') : (locale === 'uz' ? 'Kutilmoqda' : 'Ожидает')}</div>
+                    <div className="mt-1 text-[10px] text-white/30">{tax.status === 'paid' ? t('accountant_paid', 'Оплачен') : t('accountant_pending_status', 'Ожидает')}</div>
                   </div>
                   <div className="text-sm font-bold text-[#ffd4c4]">{formatMoney(Math.round(tax.amount))}</div>
                 </div>

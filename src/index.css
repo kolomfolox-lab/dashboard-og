@@ -6,6 +6,41 @@
   --font-display: 'Manrope', sans-serif;
   --color-coral: #f97360;
   --color-cyan-light: #8fd4ff;
+  --color-background: #06111c;
+  --color-foreground: #ffffff;
+  --color-card: #0b1622;
+  --color-card-foreground: #ffffff;
+  --color-popover: #0c1420;
+  --color-popover-foreground: #ffffff;
+  --color-primary: #f97360;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #8fd4ff;
+  --color-secondary-foreground: #06111c;
+  --color-muted: rgba(255, 255, 255, 0.08);
+  --color-muted-foreground: rgba(255, 255, 255, 0.42);
+  --color-accent: rgba(255, 255, 255, 0.1);
+  --color-accent-foreground: #ffffff;
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #ffffff;
+  --color-border: rgba(255, 255, 255, 0.1);
+  --color-input: rgba(0, 0, 0, 0.14);
+  --color-ring: #f97360;
+  --chart-1: #f97360;
+  --chart-2: #8fd4ff;
+  --chart-3: #34d399;
+  --chart-4: #fbbf24;
+  --chart-5: #a78bfa;
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+
+  @keyframes accordion-down {
+    from { height: 0; }
+    to { height: var(--radix-accordion-content-height); }
+  }
+  @keyframes accordion-up {
+    from { height: var(--radix-accordion-content-height); }
+    to { height: 0; }
+  }
 }
 
 :root,

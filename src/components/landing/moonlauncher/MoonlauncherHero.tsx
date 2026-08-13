@@ -1,5 +1,4 @@
 import {
-  ArrowRight,
   BadgeCheck,
   Globe2,
   QrCode,
@@ -11,6 +10,7 @@ import {
 
 import { ownerSignals } from '@/components/landing/moonlauncher/data';
 import { Button } from '@/components/ui/button';
+import { InteractiveHoverButton } from '@/components/ui/interactive-hover-button';
 
 export function WaitlyHero() {
   return (
@@ -36,13 +36,10 @@ export function WaitlyHero() {
             owner control, guest-facing trust, QR-driven experiences, and public product surfaces that all feel like one brand.
           </p>
 
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Button asChild size="lg">
-              <a href="https://app.moonlauncher.org" target="_blank" rel="noreferrer">
-                Launch Waitly Control
-                <ArrowRight className="h-4 w-4" />
-              </a>
-            </Button>
+          <div className="mt-8 flex flex-wrap items-center gap-3">
+            <a href="https://app.moonlauncher.org" target="_blank" rel="noreferrer">
+              <InteractiveHoverButton text="Get Started" className="h-14 w-48 text-base" />
+            </a>
             <Button asChild variant="outline" size="lg">
               <a href="https://reviews.moonlauncher.org" target="_blank" rel="noreferrer">
                 Explore Reviews Hub

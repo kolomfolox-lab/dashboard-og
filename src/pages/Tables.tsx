@@ -83,7 +83,7 @@ export default function TablesPage() {
       setRows(tableRes.data || []);
       setObjects(mapRes.data || []);
     } catch (err: any) {
-      setError(err?.response?.data?.error || 'Failed to load tables.');
+      setError(err?.response?.data?.error || t('tables_load_error', 'Failed to load tables.'));
     } finally {
       setLoading(false);
     }
@@ -107,23 +107,23 @@ export default function TablesPage() {
         pos_x: view === 'hall' ? 80 + offset : undefined,
         pos_y: view === 'hall' ? 80 : undefined,
       });
-      setInfo('Table created.');
+      setInfo(t('tables_created_info', 'Table created.'));
       setNumber('');
       await load();
     } catch (err: any) {
-      setError(err?.response?.data?.error || 'Failed to create table.');
+      setError(err?.response?.data?.error || t('tables_create_error', 'Failed to create table.'));
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleDelete = async (row: OwnerTable) => {
-    if (!window.confirm(`Delete table ${row.number}?`)) return;
+    if (!window.confirm(t('tables_delete_confirm', 'Delete table {number}?').replace('{number}', row.number))) return;
     try {
       await ownerAPI.deleteTable(row.id);
       await load();
     } catch (err: any) {
-      setError(err?.response?.data?.error || 'Failed to delete table.');
+      setError(err?.response?.data?.error || t('tables_delete_error', 'Failed to delete table.'));
     }
   };
 
@@ -278,7 +278,7 @@ export default function TablesPage() {
         prev.map((r) => (r.id === table.id ? { ...r, pos_x: posX, pos_y: posY } : r)),
       );
     } catch (err: any) {
-      setError(err?.response?.data?.error || 'Failed to place table.');
+      setError(err?.response?.data?.error || t('tables_place_error', 'Failed to place table.'));
     }
   };
 
@@ -297,10 +297,10 @@ export default function TablesPage() {
       if (workspace.selectedRestaurantId) {
         await ownerAPI.saveHallMap(workspace.selectedRestaurantId, objects);
       }
-      setInfo('Layout saved.');
+      setInfo(t('tables_layout_saved', 'Layout saved.'));
       setSelectedId(null);
     } catch (err: any) {
-      setError(err?.response?.data?.error || 'Failed to save layout.');
+      setError(err?.response?.data?.error || t('tables_layout_save_error', 'Failed to save layout.'));
     }
   };
 
@@ -310,8 +310,8 @@ export default function TablesPage() {
   if (!isSubscribed) {
     return (
       <AppShell
-        title="Tables"
-        subtitle="Manage tables and QR"
+        title={t('tables_app_title', 'Tables')}
+        subtitle={t('tables_app_subtitle_short', 'Manage tables and QR')}
         restaurants={workspace.restaurants}
         selectedRestaurantId={workspace.selectedRestaurantId}
         onRestaurantChange={workspace.setSelectedRestaurantId}
@@ -327,9 +327,9 @@ export default function TablesPage() {
 
   return (
     <AppShell
-      title="Tables"
-      subtitle="Manage tables, QR codes, and hall layout"
-      eyebrow="Service floor"
+      title={t('tables_app_title', 'Tables')}
+      subtitle={t('tables_app_subtitle', 'Manage tables, QR codes, and hall layout')}
+      eyebrow={t('tables_app_eyebrow', 'Service floor')}
       restaurants={workspace.restaurants}
       selectedRestaurantId={workspace.selectedRestaurantId}
       onRestaurantChange={workspace.setSelectedRestaurantId}
@@ -340,11 +340,11 @@ export default function TablesPage() {
             <input
               value={number}
               onChange={(e) => setNumber(e.target.value)}
-              placeholder="1, 2, VIP-1..."
+              placeholder={t('tables_number_placeholder', '1, 2, VIP-1...')}
               className="flex-1 rounded-2xl border border-[var(--panel-border)] bg-[var(--input-bg)] px-4 py-2.5 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)]"
             />
             <Button type="submit" disabled={submitting || !workspace.selectedRestaurantId} size="sm">
-              <Plus className="mr-1.5 h-4 w-4" /> Add
+              <Plus className="mr-1.5 h-4 w-4" /> {t('tables_add_table_btn', 'Add')}
             </Button>
           </form>
           <div className="flex gap-1 rounded-2xl border border-[var(--panel-border)] bg-[var(--input-bg)] p-0.5">
@@ -357,7 +357,7 @@ export default function TablesPage() {
                   : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
               }`}
             >
-              <List className="h-3.5 w-3.5" /> List
+              <List className="h-3.5 w-3.5" /> {t('tables_list_view', 'List')}
             </button>
             <button
               type="button"
@@ -368,12 +368,12 @@ export default function TablesPage() {
                   : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
               }`}
             >
-              <LayoutGrid className="h-3.5 w-3.5" /> Hall scheme
+              <LayoutGrid className="h-3.5 w-3.5" /> {t('tables_hall_view', 'Hall scheme')}
             </button>
           </div>
           {workspace.selectedRestaurantId ? (
             <Button type="button" variant="outline" size="sm" onClick={() => ownerAPI.downloadTablesQrPdf(workspace.selectedRestaurantId!)}>
-              <Download className="mr-1.5 h-4 w-4" /> QR PDF
+              <Download className="mr-1.5 h-4 w-4" /> {t('tables_qr_pdf', 'QR PDF')}
             </Button>
           ) : null}
         </div>
@@ -390,37 +390,37 @@ export default function TablesPage() {
         ) : null}
 
         {view === 'list' ? (
-          <Panel title="Tables list" eyebrow="QR control">
+          <Panel title={t('tables_list_title', 'Tables list')} eyebrow={t('tables_list_eyebrow', 'QR control')}>
             <DataTable
               rows={rows}
-              emptyMessage={loading ? 'Loading...' : 'No tables yet.'}
+              emptyMessage={loading ? t('tables_loading', 'Loading...') : t('tables_empty_list', 'No tables yet.')}
               columns={[
                 {
-                  label: 'Table',
+                  label: t('tables_col_table', 'Table'),
                   key: 'number',
                   render: (row) => (
-                    <div className="font-semibold text-[var(--text-primary)]">Table {row.number}</div>
+                    <div className="font-semibold text-[var(--text-primary)]">{t('tables_table_label', 'Table {number}').replace('{number}', row.number)}</div>
                   ),
                 },
-                { label: 'Status', key: 'is_occupied', render: (row) => (row.is_occupied ? 'Occupied' : 'Free') },
-                { label: 'Waiter', key: 'waiter', render: (row) => row.waiter || '\u2014' },
+                { label: t('tables_col_status', 'Status'), key: 'is_occupied', render: (row) => (row.is_occupied ? t('tables_occupied', 'Occupied') : t('tables_free', 'Free')) },
+                { label: t('tables_col_waiter', 'Waiter'), key: 'waiter', render: (row) => row.waiter || '\u2014' },
                 {
-                  label: 'Position',
+                  label: t('tables_col_position', 'Position'),
                   key: 'pos_x',
                   render: (row) => (row.pos_x != null ? `${row.pos_x}, ${row.pos_y}` : '\u2014'),
                 },
                 {
-                  label: 'QR',
+                  label: t('tables_col_qr', 'QR'),
                   key: 'qr_url',
                   render: (row) => (
                     <button onClick={() => ownerAPI.downloadTableQrPng(row.id)}
                       className="inline-flex items-center gap-1 text-[#8fd4ff] hover:text-white transition text-sm">
-                      <QrCode className="h-4 w-4" /> PNG
+                      <QrCode className="h-4 w-4" /> {t('tables_qr_png', 'PNG')}
                     </button>
                   ),
                 },
                 {
-                  label: 'Action',
+                  label: t('tables_col_action', 'Action'),
                   key: 'id',
                   render: (row) => (
                     <div className="flex gap-2">
@@ -435,9 +435,9 @@ export default function TablesPage() {
           </Panel>
         ) : (
           <Panel
-            title="Hall scheme"
-            eyebrow="Floor plan editor"
-            description="Draw walls, zones, and drag tables to create your restaurant layout."
+            title={t('tables_hall_title', 'Hall scheme')}
+            eyebrow={t('tables_hall_eyebrow', 'Floor plan editor')}
+            description={t('tables_hall_description', 'Draw walls, zones, and drag tables to create your restaurant layout.')}
           >
             <div className="mb-4 flex flex-wrap items-center gap-2">
               <div className="flex gap-1 rounded-2xl border border-[var(--panel-border)] bg-[var(--input-bg)] p-1">
@@ -450,7 +450,7 @@ export default function TablesPage() {
                       : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
                   }`}
                 >
-                  <Minus className="h-3 w-3" /> Select
+                  <Minus className="h-3 w-3" /> {t('tables_tool_select', 'Select')}
                 </button>
                 {TOOLS.map((tool) => (
                   <button
@@ -463,7 +463,7 @@ export default function TablesPage() {
                         : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
                     }`}
                   >
-                    <Square className="h-3 w-3" style={{ color: tool.color }} /> {tool.label}
+                    <Square className="h-3 w-3" style={{ color: tool.color }} /> {t('tables_tool_' + tool.type, tool.label)}
                   </button>
                 ))}
               </div>
@@ -474,7 +474,7 @@ export default function TablesPage() {
                   </Button>
                 )}
                 <Button size="sm" onClick={handleSaveLayout}>
-                  <Save className="mr-1.5 h-4 w-4" /> Save layout
+                  <Save className="mr-1.5 h-4 w-4" /> {t('tables_save_layout', 'Save layout')}
                 </Button>
               </div>
             </div>
@@ -483,14 +483,14 @@ export default function TablesPage() {
               {TOOLS.map((tool) => (
                 <span key={tool.type} className="flex items-center gap-1.5">
                   <span className="inline-block h-3 w-3 rounded-sm" style={{ backgroundColor: tool.color }} />
-                  {tool.label}
+                  {t('tables_tool_' + tool.type, tool.label)}
                 </span>
               ))}
               <span className="ml-auto flex items-center gap-1.5">
                 <span className="inline-grid h-3 w-3 place-items-center rounded border border-[#f97360]/40 bg-[#f97360]/15 text-[7px] font-bold text-[#f97360]">
                   T
                 </span>
-                Tables
+                {t('tables_legend_tables', 'Tables')}
               </span>
             </div>
 
@@ -547,9 +547,9 @@ export default function TablesPage() {
                   <div className="absolute -right-1.5 -top-1.5 flex gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
                     <button onClick={(e) => { e.stopPropagation(); ownerAPI.downloadTableQrPng(table.id); }}
                       className="grid h-4 w-4 place-items-center rounded-full bg-[#8fd4ff]/80 text-[8px] text-white hover:bg-[#8fd4ff]"
-                      title="Download QR">Q</button>
+                      title={t('tables_download_qr_title', 'Download QR')}>{t('tables_download_qr_btn', 'Q')}</button>
                     <button onClick={(e) => { e.stopPropagation(); handleDelete(table); }}
-                      className="grid h-4 w-4 place-items-center rounded-full bg-red-500/80 text-[9px] text-white hover:bg-red-500">×</button>
+                      className="grid h-4 w-4 place-items-center rounded-full bg-red-500/80 text-[9px] text-white hover:bg-red-500">{'\u00D7'}</button>
                   </div>
                 </div>
               ))}
@@ -564,7 +564,7 @@ export default function TablesPage() {
             {unplaced.length > 0 && (
               <div className="mt-4">
                 <div className="mb-2 text-xs font-semibold text-[var(--text-secondary)]">
-                  Unplaced tables ({unplaced.length}) {'\u2014'} click to place on canvas
+                  {t('tables_unplaced_label', 'Unplaced tables ({count}) \u2014 click to place on canvas').replace('{count}', String(unplaced.length))}
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {unplaced.map((table) => (
@@ -574,7 +574,7 @@ export default function TablesPage() {
                       className="flex items-center gap-2 rounded-xl border border-dashed border-[var(--panel-border)] bg-[var(--panel-bg)] px-3 py-2 text-sm text-[var(--text-primary)] transition hover:border-[#f97360]/50 hover:bg-[#f97360]/5"
                     >
                       <Plus className="h-3 w-3 text-[#f97360]" />
-                      <span className="font-semibold">Table {table.number}</span>
+                      <span className="font-semibold">{t('tables_table_label', 'Table {number}').replace('{number}', table.number)}</span>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();

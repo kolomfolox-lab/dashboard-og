@@ -1,31 +1,46 @@
-﻿import { useEffect, useState } from 'react';
-import { BadgeCheck, Building2, Mail, Pencil, Plus, ShieldPlus, Store, Trash2, UserRound, UsersRound, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { DollarSign, Phone, Plus, UserRound, UsersRound, Copy } from 'lucide-react';
+import { toast } from 'sonner';
 
 import { AppShell } from '@/components/app/AppShell';
-import { DataTable } from '@/components/app/DataTable';
-import { MetricCard } from '@/components/app/MetricCard';
-import { Panel } from '@/components/app/Panel';
-import { SubscriptionExpired } from '@/components/app/SubscriptionExpired';
+import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group';
+import { Label } from '@/components/ui/label';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useAuth } from '@/context/AuthContext';
 import { useLocale } from '@/context/LocaleContext';
 import { useOwnerWorkspace } from '@/hooks/useOwnerWorkspace';
 import { adminAPI, ownerAPI } from '@/services/api';
 
-function normalizeRows(payload: any) {
-  if (Array.isArray(payload)) return payload;
-  if (Array.isArray(payload?.results)) return payload.results;
+function toArray(data: any): any[] {
+  if (Array.isArray(data)) return data;
+  if (data?.results && Array.isArray(data.results)) return data.results;
   return [];
 }
 
-const STAFF_ROLES = ['WAITER', 'HEAD_WAITER', 'HOSTESS', 'CHEF', 'COOK'];
-const OWNER_ROLES = ['RESTAURANT_OWNER', 'CHAIN_OWNER'];
-const emptyForm = {
-  id: '',
-  full_name: '',
-  phone_number: '',
-  email: '',
-  role: 'WAITER',
+const roleLabels: Record<string, string> = {
+  WAITER: 'Официант',
+  CHEF: 'Повар',
+  MANAGER: 'Менеджер',
+  KITCHEN_MANAGER: 'Зав. кухней',
+  HOSTESS: 'Хостес',
+  SHIFT_LEADER: 'Старший смены',
+  BARTENDER: 'Бармен',
+  BARISTA: 'Бариста',
+};
+
+const roleTones: Record<string, string> = {
+  WAITER: 'bg-[#8fd4ff]/12 text-[#8fd4ff]',
+  CHEF: 'bg-[#f97360]/12 text-[#f97360]',
+  MANAGER: 'bg-[#a78bfa]/12 text-[#a78bfa]',
+  KITCHEN_MANAGER: 'bg-[#ffd28d]/12 text-[#ffd28d]',
+  HOSTESS: 'bg-emerald-500/12 text-emerald-400',
 };
 
 export default function UsersPage() {
@@ -35,333 +50,289 @@ export default function UsersPage() {
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [info, setInfo] = useState('');
+  const [editingRate, setEditingRate] = useState<string | null>(null);
+  const [rateValue, setRateValue] = useState('');
+  const [showCreate, setShowCreate] = useState(false);
+  const [createForm, setCreateForm] = useState({ full_name: '', phone_number: '', role: 'WAITER', email: '' });
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState(emptyForm);
-  const [staffDialogOpen, setStaffDialogOpen] = useState(false);
   const isSuperAdmin = user?.role === 'SUPER_ADMIN';
-  const showSubscriptionWarning = user?.role === 'RESTAURANT_OWNER' && workspace.selectedRestaurant?.subscription_active === false;
 
   const load = async () => {
     setLoading(true);
     setError('');
     try {
-      const response = isSuperAdmin ? await adminAPI.getOwners() : await ownerAPI.getStaff(workspace.selectedRestaurantId);
-      const nextRows = normalizeRows(response.data).filter((row: any) => {
-        if (!isSuperAdmin) return true;
-        return row.role === 'Chain Owner' || row.role === 'Restaurant Owner' || row.role === 'CHAIN_OWNER' || row.role === 'RESTAURANT_OWNER';
-      });
-      setRows(nextRows);
+      const restaurantId = workspace.selectedRestaurantId;
+      const response = isSuperAdmin ? await adminAPI.getOwners() : await ownerAPI.getStaff(restaurantId);
+      setRows(toArray(response.data));
     } catch (err: any) {
-      setError(err?.response?.data?.error || (locale === 'uz' ? 'Odamlar royxatini yuklab bolmadi.' : 'Не удалось загрузить список.'));
+      setError(err?.response?.data?.error || err?.response?.data?.detail || err?.message || 'Load failed');
       setRows([]);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    void load();
-  }, [locale, isSuperAdmin, user?.role, workspace.selectedRestaurantId, workspace.selectedRestaurant?.subscription_active]);
+  useEffect(() => { void load(); }, [locale, isSuperAdmin, user?.role, workspace.selectedRestaurantId]);
 
-  const handleActivateSubscription = async (key: string) => {
-    if (!workspace.selectedRestaurantId) throw new Error('No workspace selected');
-    await ownerAPI.activateSubscription({ key, restaurant_id: workspace.selectedRestaurantId });
-    workspace.reload();
-  };
-
-  const resetForm = () => {
-    setForm({ ...emptyForm, role: isSuperAdmin ? 'RESTAURANT_OWNER' : 'WAITER' });
-  };
-
-  const openCreateStaff = () => {
-    resetForm();
-    setError('');
-    setInfo('');
-    setStaffDialogOpen(true);
-  };
-
-  const handleEdit = (row: any) => {
-    setForm({
-      id: row.id,
-      full_name: row.full_name || '',
-      phone_number: row.phone_number || row.phone || '',
-      email: row.email || '',
-      role: row.role_code || row.role || (isSuperAdmin ? 'RESTAURANT_OWNER' : 'WAITER'),
-    });
-    setInfo('');
-    setError('');
-    setStaffDialogOpen(true);
-  };
-
-  const handleSaveStaff = async () => {
-    if (!isSuperAdmin && !workspace.selectedRestaurantId) {
-      setError(locale === 'uz' ? 'Avval restoran tanlang.' : 'Сначала выбери ресторан.');
-      return;
-    }
-    if (!form.full_name.trim() || !form.phone_number.trim()) {
-      setError(locale === 'uz' ? 'Ism va telefon majburiy.' : 'Имя и телефон обязательны.');
-      return;
-    }
-
-    setSaving(true);
-    setError('');
-    setInfo('');
+  const saveRate = async (staffId: string) => {
     try {
-      if (isSuperAdmin) {
-        if (form.id) {
-          await adminAPI.updateOwner(form.id, {
-            full_name: form.full_name.trim(),
-            email: form.email.trim() || undefined,
-            role: form.role,
-          });
-          setInfo(locale === 'uz' ? 'Owner yangilandi.' : 'Владелец обновлен.');
-        } else {
-          await adminAPI.createOwner({
-            full_name: form.full_name.trim(),
-            phone_number: form.phone_number.trim(),
-            email: form.email.trim() || undefined,
-            role: form.role,
-          });
-          setInfo(locale === 'uz' ? 'Owner qoshildi.' : 'Владелец добавлен.');
-        }
-      } else if (form.id) {
-        await ownerAPI.updateStaff(form.id, {
-          full_name: form.full_name.trim(),
-          role: form.role,
-        });
-        setInfo(locale === 'uz' ? 'Staff yangilandi.' : 'Сотрудник обновлен.');
-      } else {
-        await ownerAPI.createStaff({
-          restaurant_id: workspace.selectedRestaurantId,
-          full_name: form.full_name.trim(),
-          phone_number: form.phone_number.trim(),
-          email: form.email.trim() || undefined,
-          role: form.role,
-        });
-        setInfo(locale === 'uz' ? 'Staff qoshildi.' : 'Сотрудник добавлен.');
-      }
-      resetForm();
-      setStaffDialogOpen(false);
+      await ownerAPI.updateStaff(staffId, { hourly_rate: Number(rateValue) });
+      toast.success(t('users_rate_saved', 'Ставка сохранена'));
+      setEditingRate(null);
+      await load();
+    } catch {
+      toast.error(t('users_rate_error', 'Ошибка'));
+    }
+  };
+
+  const handleCreate = async () => {
+    if (!createForm.full_name.trim() || !createForm.phone_number.trim() || !workspace.selectedRestaurantId) return;
+    setSaving(true);
+    try {
+      await ownerAPI.createStaff({
+        restaurant_id: workspace.selectedRestaurantId,
+        full_name: createForm.full_name.trim(),
+        phone_number: createForm.phone_number.trim(),
+        role: createForm.role,
+        email: createForm.email.trim() || undefined,
+      });
+      toast.success(t('users_created', 'Сотрудник добавлен'));
+      setShowCreate(false);
+      setCreateForm({ full_name: '', phone_number: '', role: 'WAITER', email: '' });
       await load();
     } catch (err: any) {
-      setError(err?.response?.data?.error || (locale === 'uz' ? 'Saqlab bolmadi.' : 'Не удалось сохранить сотрудника.'));
+      toast.error(err?.response?.data?.error || err?.response?.data?.detail || 'Ошибка');
     } finally {
       setSaving(false);
     }
   };
 
-  const handleToggleActive = async (row: any) => {
-    try {
-      setError('');
-      setInfo('');
-      if (isSuperAdmin) {
-        await adminAPI.updateOwner(row.id, {
-          full_name: row.full_name,
-          email: row.email || undefined,
-          role: row.role_code || row.role,
-          is_active: !row.is_active,
-        });
-      } else {
-        await ownerAPI.updateStaff(row.id, { is_active: !row.is_active });
-      }
-      setInfo(isSuperAdmin ? (!row.is_active ? 'Owner activated.' : 'Owner deactivated.') : (!row.is_active ? 'Staff activated.' : 'Staff deactivated.'));
-      await load();
-    } catch (err: any) {
-      setError(err?.response?.data?.error || 'Could not update staff status.');
-    }
-  };
-
-  const handleDeleteStaff = async (row: any) => {
-    if (!window.confirm(`Delete ${row.full_name || (isSuperAdmin ? 'this owner' : 'this staff member')}?`)) return;
-    try {
-      setError('');
-      setInfo('');
-      if (isSuperAdmin) {
-        await adminAPI.deleteOwner(row.id);
-      } else {
-        await ownerAPI.deleteStaff(row.id);
-      }
-      if (form.id === row.id) resetForm();
-      setInfo(isSuperAdmin ? 'Owner deleted.' : 'Staff member deleted.');
-      await load();
-    } catch (err: any) {
-      setError(err?.response?.data?.error || (isSuperAdmin ? 'Could not delete owner.' : 'Could not delete staff.'));
-    }
-  };
-
-  const handleResendInvite = async (row: any) => {
-    try {
-      setError('');
-      setInfo('');
-      const response = await ownerAPI.resendStaffInvite(row.id);
-      setInfo(response.data?.message || 'Invite sent.');
-    } catch (err: any) {
-      setError(err?.response?.data?.error || 'Could not resend invite.');
-    }
+  const copyPhone = (phone: string) => {
+    navigator.clipboard?.writeText(phone).then(() => toast.success(t('users_phone_copied', 'Телефон скопирован')));
   };
 
   return (
-    <AppShell
-      title={isSuperAdmin ? t('users_title_superadmin', 'Владельцы на платформе') : t('users_title_owner', 'Команда ресторана')}
-      subtitle={isSuperAdmin ? t('users_subtitle_superadmin', 'Здесь видны только владельцы сетей и ресторанов без staff-шума.') : t('users_subtitle_owner', 'Команда ресторана снова управляется прямо из React.')}
-      eyebrow={isSuperAdmin ? (locale === 'uz' ? 'Ownerlar' : 'Владельцы') : (locale === 'uz' ? 'Jamoa' : 'Команда')}
-      restaurants={workspace.restaurants}
-      selectedRestaurantId={workspace.selectedRestaurantId}
-      onRestaurantChange={workspace.setSelectedRestaurantId}
-    >
-      <div className="space-y-4">
-        {showSubscriptionWarning ? (
-          <SubscriptionExpired restaurantId={workspace.selectedRestaurantId} restaurantName={workspace.selectedRestaurant?.name} onActivate={handleActivateSubscription} />
-        ) : null}
+    <>
+      <AppShell
+        title={isSuperAdmin ? t('users_title_superadmin', 'Owners') : t('users_title_owner', 'Команда')}
+        subtitle={isSuperAdmin ? 'All owners' : `${t('users_staff', 'Сотрудников')}: ${rows.length}`}
+        eyebrow={isSuperAdmin ? 'Owners' : 'Team'}
+        restaurants={workspace.restaurants}
+        selectedRestaurantId={workspace.selectedRestaurantId}
+        onRestaurantChange={workspace.setSelectedRestaurantId}
+      >
+        <div className="space-y-4">
+          <Breadcrumb className="mb-1">
+            <BreadcrumbList>
+              <BreadcrumbItem><span className="text-theme-secondary">Waitly</span></BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>{isSuperAdmin ? 'Owners' : t('users_title_owner', 'Команда')}</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
 
-        <div className="grid gap-4 md:grid-cols-3">
-          <MetricCard title={locale === 'uz' ? 'Yuklanganlar' : 'Загружено'} value={rows.length} note={isSuperAdmin ? (locale === 'uz' ? 'Faqat owner rollar' : 'Только owner-роли') : (locale === 'uz' ? 'Joriy restoran jamoasi' : 'Команда текущего ресторана')} icon={UsersRound} tone="cyan" />
-          <MetricCard title={locale === 'uz' ? 'Faol akkauntlar' : 'Активные аккаунты'} value={rows.filter((entry) => entry.is_active !== false).length} note={locale === 'uz' ? 'Kirish huquqi bor foydalanuvchilar' : 'Пользователи с доступом'} icon={BadgeCheck} tone="mint" />
-          <MetricCard title={locale === 'uz' ? 'Joriy rol' : 'Текущая роль'} value={user?.role || 'Member'} note={locale === 'uz' ? 'Kirish darajasi' : 'Уровень доступа'} icon={UserRound} tone="sand" />
-        </div>
+          {error ? (
+            <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-5 py-4 text-sm text-red-200">
+              {error}
+              <button onClick={load} className="ml-3 underline hover:text-white">{t('retry', 'Retry')}</button>
+            </div>
+          ) : null}
 
-        {staffDialogOpen ? (
-          <div className="fixed inset-0 z-[120] grid place-items-center bg-black/62 px-4 py-6 backdrop-blur-xl" onClick={() => { if (!saving) setStaffDialogOpen(false); }}>
-            <div className="w-full max-w-2xl rounded-[34px] border border-white/12 bg-[#0d1825] p-5 shadow-[0_30px_120px_rgba(0,0,0,0.5)]" onClick={(event) => event.stopPropagation()}>
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[#8fd4ff]">{isSuperAdmin ? 'Quick owner' : 'Quick staff'}</div>
-                  <h2 className="mt-2 font-display text-3xl text-white">
-                    {form.id
-                      ? isSuperAdmin
-                        ? (locale === 'uz' ? 'Ownerni tahrirlash' : 'Редактировать владельца')
-                        : (locale === 'uz' ? 'Xodimni tahrirlash' : 'Редактировать сотрудника')
-                      : isSuperAdmin
-                      ? (locale === 'uz' ? 'Yangi owner' : 'Новый владелец')
-                      : (locale === 'uz' ? 'Yangi xodim' : 'Новый сотрудник')}
-                  </h2>
-                  <p className="mt-2 text-sm leading-6 text-white/56">{isSuperAdmin ? (locale === 'uz' ? 'Owner akkauntini yarating. Keyin unga restoran yoki tarmoq biriktirish mumkin.' : 'Создай owner-аккаунт. Потом к нему можно привязать ресторан или сеть.') : (locale === 'uz' ? 'Kerakli minimal ma`lumotlarni kiriting. Taklif email bo`lsa yuboriladi.' : 'Только нужные поля. Если email указан, можно отправить приглашение.')}</p>
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card className="border-theme bg-[var(--panel-bg)]">
+              <CardHeader>
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <CardTitle className="text-sm font-semibold text-theme-secondary">{t('users_loaded', 'Всего')}</CardTitle>
+                    {loading ? <Skeleton className="mt-3 h-8 w-16 bg-white/8" /> : <div className="mt-2 font-display text-3xl font-black text-theme">{rows.length}</div>}
+                    <CardDescription className="mt-1">{t('users_staff', 'Сотрудников')}</CardDescription>
+                  </div>
+                  <div className="grid h-11 w-11 place-items-center rounded-2xl bg-[#8fd4ff]/12">
+                    <UsersRound className="h-5 w-5 text-[#8fd4ff]" />
+                  </div>
                 </div>
-                <Button variant="ghost" size="icon" onClick={() => setStaffDialogOpen(false)} disabled={saving}>
-                  <X className="h-5 w-5" />
-                </Button>
-              </div>
+              </CardHeader>
+            </Card>
+            <Card className="border-theme bg-[var(--panel-bg)]">
+              <CardHeader>
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <CardTitle className="text-sm font-semibold text-theme-secondary">{t('users_current_role', 'Текущая роль')}</CardTitle>
+                    <div className="mt-2 font-display text-2xl font-black text-theme">{user?.full_name || user?.role || '-'}</div>
+                    <CardDescription className="mt-1">ID: {(user?.id || '').slice(0, 8)}</CardDescription>
+                  </div>
+                  <div className="grid h-11 w-11 place-items-center rounded-2xl bg-[#ffd28d]/12">
+                    <UserRound className="h-5 w-5 text-[#ffd28d]" />
+                  </div>
+                </div>
+              </CardHeader>
+            </Card>
+          </div>
 
-              <div className="mt-5 grid gap-4 md:grid-cols-2">
-                <InlineField label={locale === 'uz' ? 'Ism' : 'Имя'} value={form.full_name} onChange={(value) => setForm((current) => ({ ...current, full_name: value }))} placeholder="Ivan Perrdunov" />
-                <InlineField label={locale === 'uz' ? 'Telefon' : 'Телефон'} value={form.phone_number} onChange={(value) => setForm((current) => ({ ...current, phone_number: value }))} placeholder="+998 90 000 00 00" disabled={Boolean(form.id)} />
-                <InlineField label="Email" value={form.email} onChange={(value) => setForm((current) => ({ ...current, email: value }))} placeholder="name@example.com" disabled={Boolean(form.id)} />
-                <label className="block rounded-[24px] border border-white/8 bg-black/12 p-4">
-                  <div className="text-xs uppercase tracking-[0.24em] text-white/40">{locale === 'uz' ? 'Rol' : 'Роль'}</div>
-                  <select value={form.role} onChange={(event) => setForm((current) => ({ ...current, role: event.target.value }))} className="mt-3 w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white outline-none">
-                    {(isSuperAdmin ? OWNER_ROLES : STAFF_ROLES).map((role) => <option key={role} value={role} className="bg-[#09131e]">{role}</option>)}
-                  </select>
-                </label>
+          <Card className="border-theme bg-[var(--panel-bg)]">
+            <CardHeader>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <CardTitle className="text-lg text-theme">{isSuperAdmin ? 'Owners' : t('users_staff_list', 'Сотрудники')}</CardTitle>
+                  <CardDescription>{t('users_staff_desc', 'Управление командой: роли и почасовая ставка.')}</CardDescription>
+                </div>
+                {!isSuperAdmin ? (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button onClick={() => setShowCreate(true)} disabled={!workspace.selectedRestaurantId}>
+                        <Plus className="mr-1.5 h-4 w-4" />{t('users_add', 'Добавить')}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>{t('users_add_tooltip', 'Пригласить нового сотрудника')}</TooltipContent>
+                  </Tooltip>
+                ) : null}
               </div>
-
-              {staffDialogOpen && error ? <div className="mt-4 rounded-[24px] border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-100">{error}</div> : null}
-              {staffDialogOpen && info ? <div className="mt-4 rounded-[24px] border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm text-emerald-100">{info}</div> : null}
-
-              <div className="mt-5 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-                <Button variant="outline" onClick={() => { resetForm(); setError(''); setInfo(''); setStaffDialogOpen(false); }} disabled={saving}>
-                  {locale === 'uz' ? 'Bekor qilish' : 'Отмена'}
-                </Button>
-                <Button onClick={() => void handleSaveStaff()} disabled={saving || (!isSuperAdmin && !workspace.selectedRestaurantId)} className="min-w-[190px]">
-                  <ShieldPlus className="mr-2 h-4 w-4" />
-                  {saving ? (locale === 'uz' ? 'Saqlanmoqda...' : 'Сохраняю...') : form.id ? (locale === 'uz' ? 'Saqlash' : 'Сохранить') : (locale === 'uz' ? 'Qo`shish' : 'Добавить')}
-                </Button>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-hidden rounded-2xl border border-theme">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>{t('name', 'Имя')}</TableHead>
+                      <TableHead>{t('role', 'Должность')}</TableHead>
+                      <TableHead>{t('phone', 'Телефон')}</TableHead>
+                      <TableHead className="text-right">{t('users_hourly_rate', 'Ставка/час')}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {loading ? (
+                      Array.from({ length: 4 }).map((_, i) => (
+                        <TableRow key={i}>
+                          <TableCell colSpan={4}><Skeleton className="h-5 w-full bg-white/6" /></TableCell>
+                        </TableRow>
+                      ))
+                    ) : rows.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={4} className="py-10 text-center text-theme-muted">{t('no_data', 'Нет данных')}</TableCell>
+                      </TableRow>
+                    ) : (
+                      rows.map((row) => (
+                        <ContextMenu key={row.id}>
+                          <ContextMenuTrigger asChild>
+                            <TableRow className="cursor-context-menu">
+                              <TableCell>
+                                <div className="flex items-center gap-3">
+                                  <div className="grid h-9 w-9 place-items-center rounded-xl bg-white/6">
+                                    <UserRound className="h-4 w-4 text-theme-secondary" />
+                                  </div>
+                                  <span className="font-semibold text-theme">{row.full_name || '-'}</span>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <span className={`inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-widest ${roleTones[row.role] || 'bg-white/6 text-theme-secondary'}`}>
+                                  {roleLabels[row.role] || row.role || '-'}
+                                </span>
+                              </TableCell>
+                              <TableCell>
+                                <button type="button" onClick={() => copyPhone(row.phone || row.phone_number || '')} className="inline-flex items-center gap-1.5 text-theme-secondary transition hover:text-theme">
+                                  <Phone className="h-3.5 w-3.5" />
+                                  {row.phone || row.phone_number || '-'}
+                                </button>
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {editingRate === row.id ? (
+                                  <div className="flex items-center justify-end gap-2">
+                                    <InputGroup className="w-28">
+                                      <InputGroupInput
+                                        type="number"
+                                        value={rateValue}
+                                        onChange={(e) => setRateValue(e.target.value)}
+                                        className="rounded-xl px-3 py-1.5"
+                                        autoFocus
+                                      />
+                                    </InputGroup>
+                                    <Button size="sm" variant="secondary" onClick={() => saveRate(row.id)}>{t('save', 'OK')}</Button>
+                                    <Button size="sm" variant="ghost" onClick={() => setEditingRate(null)}>{t('cancel', 'X')}</Button>
+                                  </div>
+                                ) : (
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <button
+                                        type="button"
+                                        onClick={() => { setEditingRate(row.id); setRateValue(String(row.hourly_rate || 0)); }}
+                                        className="inline-flex items-center gap-1.5 text-sm font-semibold text-theme-secondary transition hover:text-theme"
+                                      >
+                                        <DollarSign className="h-3.5 w-3.5 text-emerald-400" />
+                                        {Number(row.hourly_rate || 0).toLocaleString()} UZS
+                                      </button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>{t('users_edit_rate', 'Изменить ставку')}</TooltipContent>
+                                  </Tooltip>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          </ContextMenuTrigger>
+                          <ContextMenuContent className="border-theme bg-[var(--modal-bg)]">
+                            <ContextMenuItem onClick={() => { setEditingRate(row.id); setRateValue(String(row.hourly_rate || 0)); }}>
+                              <DollarSign className="h-3.5 w-3.5" /> {t('users_edit_rate', 'Изменить ставку')}
+                            </ContextMenuItem>
+                            <ContextMenuItem onClick={() => copyPhone(row.phone || row.phone_number || '')}>
+                              <Copy className="h-3.5 w-3.5" /> {t('users_copy_phone', 'Скопировать телефон')}
+                            </ContextMenuItem>
+                          </ContextMenuContent>
+                        </ContextMenu>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
               </div>
+            </CardContent>
+          </Card>
+        </div>
+      </AppShell>
+
+      <Dialog open={showCreate} onOpenChange={setShowCreate}>
+        <DialogContent className="border-theme bg-[var(--modal-bg)] text-theme">
+          <DialogHeader>
+            <DialogTitle>{t('users_add', 'Новый сотрудник')}</DialogTitle>
+            <DialogDescription>{t('users_add_desc', 'Сотрудник получит доступ к мобильному приложению по номеру телефона.')}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="u-name" className="text-xs font-semibold uppercase tracking-widest text-theme-muted">{t('users_name_placeholder', 'Имя *')}</Label>
+              <InputGroup>
+                <InputGroupAddon align="inline-start"><UserRound className="h-4 w-4 text-theme-muted" /></InputGroupAddon>
+                <InputGroupInput id="u-name" value={createForm.full_name} onChange={(e) => setCreateForm({ ...createForm, full_name: e.target.value })} placeholder={t('users_name_placeholder', 'Имя *')} className="pl-9" />
+              </InputGroup>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="u-phone" className="text-xs font-semibold uppercase tracking-widest text-theme-muted">{t('users_phone_placeholder', 'Телефон *')}</Label>
+              <InputGroup>
+                <InputGroupAddon align="inline-start"><Phone className="h-4 w-4 text-theme-muted" /></InputGroupAddon>
+                <InputGroupInput id="u-phone" value={createForm.phone_number} onChange={(e) => setCreateForm({ ...createForm, phone_number: e.target.value })} placeholder="+998..." className="pl-9" />
+              </InputGroup>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="u-email" className="text-xs font-semibold uppercase tracking-widest text-theme-muted">{t('users_email_placeholder', 'Email (необязательно)')}</Label>
+              <InputGroup>
+                <InputGroupInput id="u-email" value={createForm.email} onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })} placeholder="name@example.com" />
+              </InputGroup>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="u-role" className="text-xs font-semibold uppercase tracking-widest text-theme-muted">{t('role', 'Должность')}</Label>
+              <select id="u-role" value={createForm.role} onChange={(e) => setCreateForm({ ...createForm, role: e.target.value })} className="w-full rounded-2xl border border-theme bg-[var(--input-bg)] px-4 py-3 text-sm text-theme outline-none focus:border-[#f97360]/60">
+                <option value="WAITER" className="bg-[#09131e]">{t('role_waiter', 'Официант')}</option>
+                <option value="CHEF" className="bg-[#09131e]">{t('role_chef', 'Повар')}</option>
+                <option value="MANAGER" className="bg-[#09131e]">{t('role_manager', 'Менеджер')}</option>
+                <option value="KITCHEN_MANAGER" className="bg-[#09131e]">{t('role_kitchen_manager', 'Зав. кухней')}</option>
+                <option value="HOSTESS" className="bg-[#09131e]">{t('role_hostess', 'Хостес')}</option>
+              </select>
             </div>
           </div>
-        ) : null}
-
-        <Panel
-          title={isSuperAdmin ? (locale === 'uz' ? 'Owner katalogi' : 'Каталог владельцев') : (locale === 'uz' ? 'Jamoa royxati' : 'Список команды')}
-          eyebrow={locale === 'uz' ? 'Royxat' : 'Список'}
-          description={isSuperAdmin ? (locale === 'uz' ? 'Superadmin bu yerda faqat chain owner va restaurant ownerlarni koradi.' : 'Суперадмин здесь видит только chain owner и restaurant owner.') : (locale === 'uz' ? 'Joriy restoran boyicha staff royxati.' : 'Список staff по текущему ресторану с управлением.') }
-          action={
-            <Button onClick={openCreateStaff} disabled={!isSuperAdmin && !workspace.selectedRestaurantId} className="h-11 px-5">
-              <Plus className="mr-2 h-4 w-4" />
-              {locale === 'uz' ? 'Qo`shish' : 'Добавить'}
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setShowCreate(false)}>{t('cancel', 'Отмена')}</Button>
+            <Button onClick={handleCreate} disabled={saving || !createForm.full_name.trim() || !createForm.phone_number.trim()}>
+              {saving ? <Skeleton className="h-4 w-4 rounded-full bg-white/20" /> : <><Plus className="mr-1.5 h-4 w-4" />{t('users_add', 'Добавить')}</>}
             </Button>
-          }
-        >
-          {!staffDialogOpen && error ? <div className="mb-4 rounded-[24px] border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-100">{error}</div> : null}
-          {!staffDialogOpen && info ? <div className="mb-4 rounded-[24px] border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm text-emerald-100">{info}</div> : null}
-          <DataTable
-            rows={rows}
-            emptyMessage={loading ? (locale === 'uz' ? 'Yuklanmoqda...' : 'Загрузка...') : (locale === 'uz' ? 'Malumot topilmadi.' : 'Данные не найдены.')}
-            columns={isSuperAdmin ? [
-              { label: locale === 'uz' ? 'Ism' : 'Имя', key: 'full_name', render: (row) => <div className="font-semibold text-white"><div className="flex items-center gap-2">{row.full_name || (locale === 'uz' ? 'Nomsiz owner' : 'Без имени')}{row.is_active !== false && row.email ? <BadgeCheck className="h-4 w-4 text-[#34d399]" /> : null}</div>{row.created_at ? <div className="text-xs text-white/40 mt-0.5">Участник с {new Date(row.created_at).toLocaleDateString('ru-RU', { month: 'short', year: 'numeric' })}</div> : null}</div> },
-              { label: 'Email', key: 'email', render: (row) => row.email || '—' },
-              { label: locale === 'uz' ? 'Telefon' : 'Телефон', key: 'phone', render: (row) => row.phone || row.phone_number || '—' },
-              { label: locale === 'uz' ? 'Rol' : 'Роль', key: 'role', render: (row) => <div className="inline-flex items-center gap-1.5"><ShieldPlus className="h-3.5 w-3.5 text-[#8fd4ff]" /><span className="font-medium">{row.role}</span></div> },
-              { label: locale === 'uz' ? 'Tarmoqlar' : 'Сетей', key: 'chains', render: (row) => <div className="inline-flex items-center gap-2"><Building2 className="h-4 w-4 text-[#8fd4ff]" /> {row.chains ?? 0}</div> },
-              { label: locale === 'uz' ? 'Restoranlar' : 'Ресторанов', key: 'restaurants', render: (row) => <div className="inline-flex items-center gap-2"><Store className="h-4 w-4 text-[#ffb78f]" /> {row.restaurants ?? 0}</div> },
-              { label: locale === 'uz' ? 'Holat' : 'Статус', key: 'is_active', render: (row) => row.is_active !== false ? <span className="inline-flex items-center gap-1.5 text-[#34d399]"><BadgeCheck className="h-3.5 w-3.5" />{locale === 'uz' ? 'Faol' : 'Активен'}</span> : <span className="text-white/40">{locale === 'uz' ? 'Nofaol' : 'Неактивен'}</span> },
-              {
-                label: locale === 'uz' ? 'Amallar' : 'Действия',
-                key: 'id',
-                render: (row) => (
-                  <div className="flex flex-wrap gap-2">
-                    <Button variant="secondary" size="sm" onClick={() => handleEdit(row)}>
-                      <Pencil className="mr-2 h-3.5 w-3.5" />
-                      Edit
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => void handleToggleActive(row)}>
-                      {row.is_active !== false ? 'Disable' : 'Enable'}
-                    </Button>
-                    <Button variant="destructive" size="sm" onClick={() => void handleDeleteStaff(row)}>
-                      <Trash2 className="mr-2 h-3.5 w-3.5" />
-                      Delete
-                    </Button>
-                  </div>
-                ),
-              },
-            ] : [
-              { label: locale === 'uz' ? 'Ism' : 'Имя', key: 'full_name', render: (row) => <div className="font-semibold text-white"><div className="flex items-center gap-2">{row.full_name || (locale === 'uz' ? 'Nomsiz foydalanuvchi' : 'Без имени')}{row.is_active ? <BadgeCheck className="h-4 w-4 text-[#34d399]" /> : null}</div></div> },
-              { label: locale === 'uz' ? 'Telefon' : 'Телефон', key: 'phone_number', render: (row) => row.phone_number || row.phone || '—' },
-              { label: 'Email', key: 'email', render: (row) => row.email || '—' },
-              { label: locale === 'uz' ? 'Rol' : 'Роль', key: 'role', render: (row) => <div className="inline-flex items-center gap-1.5"><ShieldPlus className="h-3.5 w-3.5 text-[#8fd4ff]" /><span className="font-medium">{row.role}</span></div> },
-              { label: locale === 'uz' ? 'Holat' : 'Статус', key: 'is_active', render: (row) => row.is_active ? <span className="inline-flex items-center gap-1.5 text-[#34d399]"><BadgeCheck className="h-3.5 w-3.5" />{locale === 'uz' ? 'Faol' : 'Активен'}</span> : <span className="text-white/40">{locale === 'uz' ? 'Nofaol' : 'Неактивен'}</span> },
-              {
-                label: locale === 'uz' ? 'Amallar' : 'Действия',
-                key: 'id',
-                render: (row) => (
-                  <div className="flex flex-wrap gap-2">
-                    <Button variant="secondary" size="sm" onClick={() => handleEdit(row)}>
-                      <Pencil className="mr-2 h-3.5 w-3.5" />
-                      Edit
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => void handleToggleActive(row)}>
-                      {row.is_active ? 'Disable' : 'Enable'}
-                    </Button>
-                    {row.email ? (
-                      <Button variant="outline" size="sm" onClick={() => void handleResendInvite(row)}>
-                        <Mail className="mr-2 h-3.5 w-3.5" />
-                        Invite
-                      </Button>
-                    ) : null}
-                    <Button variant="destructive" size="sm" onClick={() => void handleDeleteStaff(row)}>
-                      <Trash2 className="mr-2 h-3.5 w-3.5" />
-                      Delete
-                    </Button>
-                  </div>
-                ),
-              },
-            ]}
-          />
-        </Panel>
-      </div>
-    </AppShell>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
-
-function InlineField({ label, value, onChange, placeholder, disabled = false }: { label: string; value: string; onChange: (value: string) => void; placeholder?: string; disabled?: boolean }) {
-  return (
-    <label className="block rounded-[24px] border border-white/8 bg-black/12 p-4">
-      <div className="text-xs uppercase tracking-[0.24em] text-white/40">{label}</div>
-      <input value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} disabled={disabled} className="mt-3 w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white outline-none placeholder:text-white/28 disabled:cursor-not-allowed disabled:opacity-50" />
-    </label>
-  );
-}
-
-
-
-

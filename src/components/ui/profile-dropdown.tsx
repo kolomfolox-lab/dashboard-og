@@ -2,6 +2,7 @@
 import { BarChart3, CreditCard, FileText, LogOut, Settings, UserRound } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { DropdownMenu } from '@/components/ui/dropdown-menu';
+import { useLocale } from '@/context/LocaleContext';
 import { useNavigate } from 'react-router-dom';
 
 export interface ProfileInfo {
@@ -37,16 +38,17 @@ function InitialAvatar({ name, avatar }: { name: string; avatar?: string }) {
 }
 
 export function ProfileDropdown({ data, className, onSignOut, ...props }: ProfileDropdownProps) {
+  const { t } = useLocale();
   const navigate = useNavigate();
   const shortWorkspace = data.workspace && data.workspace.length > 28 ? `${data.workspace.slice(0, 28)}...` : data.workspace;
 
   const options = [
-    { label: 'Profile', onClick: () => navigate('/settings'), Icon: <UserRound className="h-4 w-4 text-[#8fd4ff]" /> },
-    { label: data.workspace || 'Workspace', onClick: () => navigate('/dashboard'), Icon: <BarChart3 className="h-4 w-4 text-[#8fd4ff]" /> },
-    { label: data.subscription || 'Plan', onClick: () => navigate('/settings'), Icon: <CreditCard className="h-4 w-4 text-[#8fd4ff]" /> },
-    { label: 'Settings', onClick: () => navigate('/settings'), Icon: <Settings className="h-4 w-4 text-[#8fd4ff]" /> },
-    { label: 'Docs', onClick: () => window.open('https://21st.dev', '_blank'), Icon: <FileText className="h-4 w-4 text-[#8fd4ff]" /> },
-    { label: 'Sign out', onClick: onSignOut || (() => {}), Icon: <LogOut className="h-4 w-4 text-[#ef4444]" /> },
+    { label: t('profileDropdown_profile', 'Profile'), onClick: () => navigate('/settings'), Icon: <UserRound className="h-4 w-4 text-[#8fd4ff]" /> },
+    { label: data.workspace || t('profileDropdown_workspace', 'Workspace'), onClick: () => navigate('/dashboard'), Icon: <BarChart3 className="h-4 w-4 text-[#8fd4ff]" /> },
+    { label: data.subscription || t('profileDropdown_plan', 'Plan'), onClick: () => navigate('/settings'), Icon: <CreditCard className="h-4 w-4 text-[#8fd4ff]" /> },
+    { label: t('profileDropdown_settings', 'Settings'), onClick: () => navigate('/settings'), Icon: <Settings className="h-4 w-4 text-[#8fd4ff]" /> },
+    { label: t('profileDropdown_docs', 'Docs'), onClick: () => window.open('https://21st.dev', '_blank'), Icon: <FileText className="h-4 w-4 text-[#8fd4ff]" /> },
+    { label: t('profileDropdown_sign_out', 'Sign out'), onClick: onSignOut || (() => {}), Icon: <LogOut className="h-4 w-4 text-[#ef4444]" /> },
   ];
 
   return (

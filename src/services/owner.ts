@@ -358,6 +358,9 @@ export const ownerAPI = {
   getIikoSettings: (restaurantId: string) =>
     api.get('/owner/iiko-settings/', { params: { restaurant_id: restaurantId } }),
 
+  getPrintSettings: (restaurantId: string) =>
+    api.get<{ print_ws_url: string; restaurant_id: string }>('/owner/print-settings/', { params: { restaurant_id: restaurantId } }),
+
   updateIikoSettings: (restaurantId: string, payload: { iiko_api_key?: string; iiko_org_id?: string }) =>
     api.post('/owner/iiko-settings/', { ...payload, restaurant_id: restaurantId }),
 

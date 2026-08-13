@@ -17,20 +17,9 @@ const extractRows = <T,>(payload: T[] | { results: T[] }): T[] => {
   return payload.results || [];
 };
 
-const formatMoney = (value: string | number) => {
-  const amount = Number(value || 0);
-  if (!Number.isFinite(amount)) return '0 UZS';
-  return new Intl.NumberFormat('ru-UZ', { maximumFractionDigits: 0 }).format(amount) + ' UZS';
-};
-
-const formatDate = (value?: string | null) => {
-  if (!value) return '-';
-  return new Intl.DateTimeFormat('ru-UZ', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date(value));
-};
-
 export default function CRMPage() {
   const { user } = useAuth();
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const workspace = useOwnerWorkspace(user?.role === 'RESTAURANT_OWNER' || user?.role === 'CHAIN_OWNER' || user?.role === 'MANAGER');
   const [guests, setGuests] = useState<OwnerCrmGuest[]>([]);
   const [insights, setInsights] = useState<OwnerFeedbackInsight[]>([]);
@@ -43,6 +32,20 @@ export default function CRMPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [info, setInfo] = useState('');
+
+  const localeForDate = locale === 'uz' ? 'uz-UZ' : locale === 'en' ? 'en-US' : 'ru-RU';
+  const localeForNumber = locale === 'uz' ? 'uz-UZ' : locale === 'en' ? 'en-US' : 'ru-RU';
+
+  const formatMoney = (value: string | number) => {
+    const amount = Number(value || 0);
+    if (!Number.isFinite(amount)) return t('crm_zero_uzs', '0 UZS');
+    return new Intl.NumberFormat(localeForNumber, { maximumFractionDigits: 0 }).format(amount) + ' UZS';
+  };
+
+  const formatDate = (value?: string | null) => {
+    if (!value) return t('crm_dash', '-');
+    return new Intl.DateTimeFormat(localeForDate, { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date(value));
+  };
 
   const selectedGuest = useMemo(
     () => guests.find((guest) => guest.id === selectedGuestId) || guests[0] || null,
@@ -138,7 +141,7 @@ export default function CRMPage() {
           <MetricCard title={t('crm_metric_repeat', 'Repeat guests')} value={repeatGuests} note={t('crm_metric_repeat_note', 'More than one visit')} icon={Repeat2} tone="mint" />
           <MetricCard title={t('crm_metric_regulars', 'Regulars (10+)')} value={guests.filter(g => g.total_visits >= 10).length} note={t('crm_metric_regulars_note', 'Loyal regular guests')} icon={Star} tone="coral" />
           <MetricCard title={t('crm_metric_spend', 'Tracked spend')} value={formatMoney(totalSpend)} note={t('crm_metric_spend_note', 'From linked orders')} icon={WalletCards} tone="sand" />
-          <MetricCard title={t('crm_metric_rating', 'Feedback rating')} value={latestInsight ? Number(latestInsight.average_rating).toFixed(1) : '0.0'} note={latestInsight ? `${latestInsight.reviews_count} reviews` : t('crm_metric_rating_note', 'No insight yet')} icon={Star} tone="coral" />
+          <MetricCard title={t('crm_metric_rating', 'Feedback rating')} value={latestInsight ? Number(latestInsight.average_rating).toFixed(1) : t('crm_zero_rating', '0.0')} note={latestInsight ? `${t('crm_reviews_count', 'reviews')}: ${latestInsight.reviews_count}` : t('crm_metric_rating_note', 'No insight yet')} icon={Star} tone="coral" />
         </div>
 
         {error ? <div className="rounded-[24px] border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-100">{error}</div> : null}
@@ -182,8 +185,8 @@ export default function CRMPage() {
                       <div className="mt-1 text-sm text-white/48">{guest.phone_number || guest.telegram_username || t('crm_guest_no_contact', 'No contact yet')}</div>
                     </div>
                     <div className="flex flex-wrap gap-2 text-xs text-white/58">
-                      {guest.total_visits >= 10 && <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1 text-amber-300">★ Постоянный</span>}
-                      <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1">{guest.total_visits} visits</span>
+                      {guest.total_visits >= 10 && <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1 text-amber-300">{t('crm_regular_badge', '★ Постоянный')}</span>}
+                      <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1">{guest.total_visits} {t('crm_visits_count', 'visits')}</span>
                       <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1">{formatMoney(guest.total_spend)}</span>
                       <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1">{formatDate(guest.last_visit_at)}</span>
                     </div>
@@ -205,15 +208,15 @@ export default function CRMPage() {
                   <div className="text-xs uppercase tracking-[0.26em] text-white/38">{t('crm_selected_guest', 'Selected guest')}</div>
                   <div className="mt-2 font-display text-2xl text-white">{selectedGuest.display_name || selectedGuest.first_name || selectedGuest.telegram_username || t('crm_guest_unknown', 'Guest')}</div>
                   <div className="mt-2 grid gap-2 text-sm text-white/58">
-                    <span>{t('crm_contact', 'Contact')}: {selectedGuest.phone_number || selectedGuest.telegram_username || '-'}</span>
-                    <span>{t('crm_language', 'Language')}: {selectedGuest.language?.toUpperCase?.() || '-'}</span>
+                    <span>{t('crm_contact', 'Contact')}: {selectedGuest.phone_number || selectedGuest.telegram_username || t('crm_dash', '-')}</span>
+                    <span>{t('crm_language', 'Language')}: {selectedGuest.language?.toUpperCase?.() || t('crm_dash', '-')}</span>
                     <span>{t('crm_last_visit', 'Last visit')}: {formatDate(selectedGuest.last_visit_at)}</span>
                   </div>
                 </div>
 
                 <label className="block rounded-[24px] border border-white/8 bg-black/12 p-4">
                   <div className="flex items-center gap-2 text-xs uppercase tracking-[0.24em] text-white/40"><Tags className="h-4 w-4" />{t('crm_tags', 'Tags')}</div>
-                  <input value={draftTags} onChange={(event) => setDraftTags(event.target.value)} placeholder="vip, birthday, loves spicy" className="mt-3 w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white outline-none placeholder:text-white/28 focus:border-[#f97360]" />
+                  <input value={draftTags} onChange={(event) => setDraftTags(event.target.value)} placeholder={t('crm_tags_placeholder', 'vip, birthday, loves spicy')} className="mt-3 w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white outline-none placeholder:text-white/28 focus:border-[#f97360]" />
                 </label>
 
                 <label className="block rounded-[24px] border border-white/8 bg-black/12 p-4">
@@ -236,8 +239,8 @@ export default function CRMPage() {
               emptyMessage={selectedGuest ? t('crm_empty_visits', 'No visits for this guest yet.') : t('crm_select_guest_empty', 'Select a guest to edit CRM notes.')}
               columns={[
                 { label: t('crm_col_started', 'Started'), key: 'started_at', render: (row) => formatDate(row.started_at) },
-                { label: t('crm_col_table', 'Table'), key: 'table_number', render: (row) => row.table_number || '-' },
-                { label: t('crm_col_seat', 'Seat'), key: 'seat_label', render: (row) => row.seat_label || '-' },
+                { label: t('crm_col_table', 'Table'), key: 'table_number', render: (row) => row.table_number || t('crm_dash', '-') },
+                { label: t('crm_col_seat', 'Seat'), key: 'seat_label', render: (row) => row.seat_label || t('crm_dash', '-') },
                 { label: t('crm_col_source', 'Source'), key: 'source' },
               ]}
             />

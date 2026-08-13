@@ -35,7 +35,7 @@ export default function DataExportPage() {
         if (res.data.type === 'application/json' || (res.data instanceof Blob && res.data.type.includes('json'))) {
           const text = await res.data.text();
           const json = JSON.parse(text);
-          throw new Error(json.error || json.detail || 'Export failed');
+          throw new Error(json.error || json.detail || t('dataExport_export_failed', 'Export failed'));
         }
         downloadBlob(res.data, `report-${workspace.selectedRestaurant?.name || 'restaurant'}.xlsx`);
       } else if (type === 'tax') {
@@ -43,7 +43,7 @@ export default function DataExportPage() {
         if (res.data.type === 'application/json' || (res.data instanceof Blob && res.data.type.includes('json'))) {
           const text = await res.data.text();
           const json = JSON.parse(text);
-          throw new Error(json.error || json.detail || 'Tax export failed');
+          throw new Error(json.error || json.detail || t('dataExport_tax_export_failed', 'Tax export failed'));
         }
         downloadBlob(res.data, `tax_report_${workspace.selectedRestaurant?.name || 'restaurant'}.xlsx`);
       } else if (type === 'orders') {
@@ -93,38 +93,38 @@ export default function DataExportPage() {
         downloadBlob(new Blob([buf]), `inventory-${workspace.selectedRestaurant?.name || 'stock'}-${Date.now()}.xlsx`);
       }
     } catch (err: any) {
-      setError(err?.message || 'Export failed. Make sure the server is running.');
+      setError(err?.message || t('dataExport_error', 'Export failed. Make sure the server is running.'));
     } finally {
       setExporting(false);
     }
   };
 
   return (
-    <AppShell title="Data Export" subtitle="Export restaurant data for accounting, tax reports, and analysis." eyebrow="Waitly Data"
+    <AppShell title={t('dataExport_title', 'Data Export')} subtitle={t('dataExport_subtitle', 'Export restaurant data for accounting, tax reports, and analysis.')} eyebrow={t('dataExport_eyebrow', 'Waitly Data')}
       restaurants={workspace.restaurants}
       selectedRestaurantId={workspace.selectedRestaurantId}
       onRestaurantChange={workspace.setSelectedRestaurantId}
     >
       <div className="grid gap-4 md:grid-cols-2">
-        <Panel title="Restaurant report" eyebrow="Excel" description="Full restaurant report with orders, revenue, and staff stats.">
+        <Panel title={t('dataExport_restaurant_title', 'Restaurant report')} eyebrow={t('dataExport_excel', 'Excel')} description={t('dataExport_restaurant_desc', 'Full restaurant report with orders, revenue, and staff stats.')}>
           <Button variant="secondary" onClick={() => handleExport('restaurant')} disabled={exporting || !workspace.selectedRestaurantId} className="w-full">
-            <FileSpreadsheet className="mr-2 h-4 w-4" />Export Excel report
+            <FileSpreadsheet className="mr-2 h-4 w-4" />{t('dataExport_restaurant_btn', 'Export Excel report')}
           </Button>
         </Panel>
-        <Panel title="Orders" eyebrow="Excel" description="Raw order data with statuses, dates, totals, and table info.">
+        <Panel title={t('dataExport_orders_title', 'Orders')} eyebrow={t('dataExport_excel', 'Excel')} description={t('dataExport_orders_desc', 'Raw order data with statuses, dates, totals, and table info.')}>
           <Button variant="secondary" onClick={() => handleExport('orders')} disabled={exporting || !workspace.selectedRestaurantId} className="w-full">
-            <Download className="mr-2 h-4 w-4" />Export orders (xlsx)
+            <Download className="mr-2 h-4 w-4" />{t('dataExport_orders_btn', 'Export orders (xlsx)')}
           </Button>
         </Panel>
-        <Panel title="Tax report" eyebrow="Uzbekistan" description="Formatted report for the Tax Committee of Uzbekistan (solik hisoboti) with tax calculations.">
-          <p className="mb-4 text-sm text-theme-secondary">Includes: gross revenue, turnover tax (4%), social tax estimate, daily breakdown, and net profit.</p>
+        <Panel title={t('dataExport_tax_title', 'Tax report')} eyebrow={t('dataExport_tax_eyebrow', 'Uzbekistan')} description={t('dataExport_tax_desc', 'Formatted report for the Tax Committee of Uzbekistan (solik hisoboti) with tax calculations.')}>
+          <p className="mb-4 text-sm text-theme-secondary">{t('dataExport_tax_note', 'Includes: gross revenue, turnover tax (4%), social tax estimate, daily breakdown, and net profit.')}</p>
           <Button variant="secondary" onClick={() => handleExport('tax')} disabled={exporting || !workspace.selectedRestaurantId} className="w-full">
-            <Download className="mr-2 h-4 w-4" />Download tax report (Excel)
+            <Download className="mr-2 h-4 w-4" />{t('dataExport_tax_btn', 'Download tax report (Excel)')}
           </Button>
         </Panel>
-        <Panel title="Inventory export" eyebrow="Stock" description="Export current stock levels and ingredient status.">
+        <Panel title={t('dataExport_inventory_title', 'Inventory export')} eyebrow={t('dataExport_inventory_eyebrow', 'Stock')} description={t('dataExport_inventory_desc', 'Export current stock levels and ingredient status.')}>
           <Button variant="secondary" onClick={() => handleExport('inventory')} disabled={exporting || !workspace.selectedRestaurantId} className="w-full">
-            <Package className="mr-2 h-4 w-4" />Export inventory (xlsx)
+            <Package className="mr-2 h-4 w-4" />{t('dataExport_inventory_btn', 'Export inventory (xlsx)')}
           </Button>
         </Panel>
       </div>

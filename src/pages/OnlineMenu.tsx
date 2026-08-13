@@ -238,12 +238,12 @@ export default function OnlineMenuPage() {
       <AppShell
         title={t('online_menu_title', 'Online Menu')}
         subtitle={t('online_menu_subtitle', 'Manage your public menu, themes, and 3D models.')}
-        eyebrow={locale === 'uz' ? 'Onlayn menyu' : 'Онлайн меню'}
+        eyebrow={t('online_menu_eyebrow', 'Онлайн меню')}
         restaurants={workspace.restaurants}
         selectedRestaurantId={workspace.selectedRestaurantId}
         onRestaurantChange={workspace.setSelectedRestaurantId}
       >
-        <div className="grid place-items-center py-20 text-white/50">Loading...</div>
+        <div className="grid place-items-center py-20 text-white/50">{t('online_menu_loading_state', 'Loading...')}</div>
       </AppShell>
     );
   }
@@ -252,7 +252,7 @@ export default function OnlineMenuPage() {
     <AppShell
       title={t('online_menu_title', 'Online Menu')}
       subtitle={t('online_menu_subtitle', 'Manage your public menu, themes, and 3D models.')}
-      eyebrow={locale === 'uz' ? 'Onlayn menyu' : 'Онлайн меню'}
+      eyebrow={t('online_menu_eyebrow', 'Онлайн меню')}
       restaurants={workspace.restaurants}
       selectedRestaurantId={workspace.selectedRestaurantId}
       onRestaurantChange={workspace.setSelectedRestaurantId}
@@ -260,9 +260,9 @@ export default function OnlineMenuPage() {
       <div className="space-y-6">
         {/* Theme Selection */}
         <Panel
-          title={locale === 'uz' ? 'Mavzu tanlash' : 'Выбор темы'}
-          eyebrow={locale === 'uz' ? 'Dizayn' : 'Дизайн'}
-          description={locale === 'uz' ? 'Menyuingiz uchun mavzu tanlang.' : 'Выберите тему для вашего меню.'}
+          title={t('online_menu_theme_title', 'Выбор темы')}
+          eyebrow={t('online_menu_theme_eyebrow', 'Дизайн')}
+          description={t('online_menu_theme_description', 'Выберите тему для вашего меню.')}
         >
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {THEMES.map((theme) => (
@@ -295,27 +295,27 @@ export default function OnlineMenuPage() {
 
         {/* Customization */}
         <Panel
-          title={locale === 'uz' ? 'Sozlash' : 'Кастомизация'}
-          eyebrow={locale === 'uz' ? 'Ranglar' : 'Цвета'}
-          description={locale === 'uz' ? 'Ranglarni ozingiz moslashtiring.' : 'Настройте цвета под себя.'}
+          title={t('online_menu_customize_title', 'Кастомизация')}
+          eyebrow={t('online_menu_customize_eyebrow', 'Цвета')}
+          description={t('online_menu_customize_description', 'Настройте цвета под себя.')}
         >
           <div className="grid gap-6 md:grid-cols-3">
             <div>
-              <label className="mb-2 block text-sm text-white/60">{locale === 'uz' ? 'Fon rangi' : 'Фон'}</label>
+              <label className="mb-2 block text-sm text-white/60">{t('online_menu_bg_color', 'Фон')}</label>
               <div className="flex items-center gap-3">
                 <input type="color" value={customBg || currentTheme.colors.bg} onChange={(e) => setCustomBg(e.target.value)} className="h-10 w-10 cursor-pointer rounded-lg border-0" />
                 <input type="text" value={customBg} onChange={(e) => setCustomBg(e.target.value)} placeholder="#0a0a0a" className="flex-1 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-white outline-none placeholder:text-white/20" />
               </div>
             </div>
             <div>
-              <label className="mb-2 block text-sm text-white/60">{locale === 'uz' ? 'Asosiy rang' : 'Акцент'}</label>
+              <label className="mb-2 block text-sm text-white/60">{t('online_menu_accent_color', 'Акцент')}</label>
               <div className="flex items-center gap-3">
                 <input type="color" value={customPrimary || currentTheme.colors.primary} onChange={(e) => setCustomPrimary(e.target.value)} className="h-10 w-10 cursor-pointer rounded-lg border-0" />
                 <input type="text" value={customPrimary} onChange={(e) => setCustomPrimary(e.target.value)} placeholder="#d4af37" className="flex-1 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-white outline-none placeholder:text-white/20" />
               </div>
             </div>
             <div>
-              <label className="mb-2 block text-sm text-white/60">{locale === 'uz' ? 'Matn rangi' : 'Текст'}</label>
+              <label className="mb-2 block text-sm text-white/60">{t('online_menu_text_color', 'Текст')}</label>
               <div className="flex items-center gap-3">
                 <input type="color" value={customText || currentTheme.colors.text} onChange={(e) => setCustomText(e.target.value)} className="h-10 w-10 cursor-pointer rounded-lg border-0" />
                 <input type="text" value={customText} onChange={(e) => setCustomText(e.target.value)} placeholder="#f5f5f5" className="flex-1 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-white outline-none placeholder:text-white/20" />
@@ -326,13 +326,13 @@ export default function OnlineMenuPage() {
 
         {/* Restaurant Info */}
         <Panel
-          title={locale === 'uz' ? 'Restoran ma\'lumotlari' : 'Информация о ресторане'}
-          eyebrow={locale === 'uz' ? 'Profil' : 'Профиль'}
-          description={locale === 'uz' ? 'Ijtimoiy tarmoqlar va aloqa.' : 'Соцсети и контакты.'}
+          title={t('online_menu_info_title', 'Информация о ресторане')}
+          eyebrow={t('online_menu_info_eyebrow', 'Профиль')}
+          description={t('online_menu_info_description', 'Соцсети и контакты.')}
         >
           <div className="grid gap-6 md:grid-cols-2">
             <div>
-              <label className="mb-2 block text-sm text-white/60">Logo</label>
+              <label className="mb-2 block text-sm text-white/60">{t('online_menu_logo_label', 'Logo')}</label>
               <div className="flex items-center gap-4">
                 {logoPreview ? (
                   <img src={logoPreview} alt="Logo" className="h-16 w-16 rounded-2xl object-cover" />
@@ -343,22 +343,22 @@ export default function OnlineMenuPage() {
                 )}
                 <label className="cursor-pointer rounded-xl border border-white/10 bg-black/20 px-4 py-2 text-sm text-white/70 transition hover:bg-white/5">
                   <Upload className="mr-2 inline h-4 w-4" />
-                  {locale === 'uz' ? 'Yuklash' : 'Загрузить'}
+                  {t('online_menu_upload', 'Загрузить')}
                   <input type="file" accept="image/*" onChange={(e) => { const f = e.target.files?.[0]; if (f) { setLogoFile(f); setLogoPreview(URL.createObjectURL(f)); } }} className="hidden" />
                 </label>
               </div>
             </div>
             <div>
-              <label className="mb-2 block text-sm text-white/60">Instagram URL</label>
+              <label className="mb-2 block text-sm text-white/60">{t('online_menu_instagram_label', 'Instagram URL')}</label>
               <input type="url" value={instagramUrl} onChange={(e) => setInstagramUrl(e.target.value)} placeholder="https://instagram.com/restaurant" className="w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-white outline-none placeholder:text-white/20" />
             </div>
             <div>
-              <label className="mb-2 block text-sm text-white/60">{locale === 'uz' ? 'Telefon' : 'Телефон'}</label>
+              <label className="mb-2 block text-sm text-white/60">{t('online_menu_phone', 'Телефон')}</label>
               <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+998 90 123 45 67" className="w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-white outline-none placeholder:text-white/20" />
             </div>
             <div>
-              <label className="mb-2 block text-sm text-white/60">{locale === 'uz' ? 'Manzil' : 'Адрес'}</label>
-              <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} placeholder={locale === 'uz' ? 'Toshkent, Chilonzor' : 'Москва, ул. Примерная 1'} className="w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-white outline-none placeholder:text-white/20" />
+              <label className="mb-2 block text-sm text-white/60">{t('online_menu_address', 'Адрес')}</label>
+              <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} placeholder={t('online_menu_address_placeholder', 'Москва, ул. Примерная 1')} className="w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-white outline-none placeholder:text-white/20" />
             </div>
           </div>
 
@@ -367,34 +367,34 @@ export default function OnlineMenuPage() {
               <div className={`relative h-6 w-12 rounded-full transition ${arEnabled ? 'bg-[#8fd4ff]' : 'bg-white/10'}`} onClick={() => setArEnabled(!arEnabled)}>
                 <div className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition ${arEnabled ? 'left-6' : 'left-0.5'}`} />
               </div>
-              <span className="text-sm text-white/70">AR {locale === 'uz' ? 'yoqish' : 'включить'}</span>
+              <span className="text-sm text-white/70">AR {t('online_menu_ar_toggle', 'включить')}</span>
             </label>
             <label className="flex cursor-pointer items-center gap-3">
               <div className={`relative h-6 w-12 rounded-full transition ${embedEnabled ? 'bg-[#8fd4ff]' : 'bg-white/10'}`} onClick={() => setEmbedEnabled(!embedEnabled)}>
                 <div className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition ${embedEnabled ? 'left-6' : 'left-0.5'}`} />
               </div>
-              <span className="text-sm text-white/70">Embed {locale === 'uz' ? 'yoqish' : 'включить'}</span>
+              <span className="text-sm text-white/70">Embed {t('online_menu_embed_toggle', 'включить')}</span>
             </label>
           </div>
 
           <div className="mt-6">
             <Button onClick={handleSave} disabled={saving} className="rounded-xl px-6">
               {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              {locale === 'uz' ? 'Saqlash' : 'Сохранить'}
+              {t('online_menu_save', 'Сохранить')}
             </Button>
           </div>
         </Panel>
 
         {/* Dishes with 3D */}
         <Panel
-          title={locale === 'uz' ? 'Taomlar va 3D modellar' : 'Блюда и 3D модели'}
-          eyebrow={locale === 'uz' ? '3D / AR' : '3D / AR'}
-          description={locale === 'uz' ? '3D model yuklang yoki buyurtma bering.' : 'Загрузите 3D модель или закажите.'}
+          title={t('online_menu_dishes_title', 'Блюда и 3D модели')}
+          eyebrow={t('online_menu_dishes_eyebrow', '3D / AR')}
+          description={t('online_menu_dishes_description', 'Загрузите 3D модель или закажите.')}
         >
           {dishesLoading ? (
-            <div className="py-8 text-center text-white/50">{locale === 'uz' ? 'Yuklanmoqda...' : 'Загрузка...'}</div>
+            <div className="py-8 text-center text-white/50">{t('online_menu_loading', 'Загрузка...')}</div>
           ) : dishes.length === 0 ? (
-            <div className="py-8 text-center text-white/50">{locale === 'uz' ? 'Taomlar yo\'q' : 'Нет блюд'}</div>
+            <div className="py-8 text-center text-white/50">{t('online_menu_no_dishes', 'Нет блюд')}</div>
           ) : (
             <div className="space-y-3">
               {dishes.map((dish: any) => (
@@ -413,18 +413,18 @@ export default function OnlineMenuPage() {
                   {dish.model_3d_url || dish.has_3d ? (
                     <div className="flex items-center gap-2 rounded-lg bg-[#8fd4ff]/10 px-3 py-1.5 text-xs font-semibold text-[#8fd4ff]">
                       <Box className="h-3.5 w-3.5" />
-                      3D
+                      {t('online_menu_3d_badge', '3D')}
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">
                       <label className="cursor-pointer rounded-lg border border-white/10 bg-black/20 px-3 py-1.5 text-xs text-white/70 transition hover:bg-white/5">
                         <Upload className="mr-1 inline h-3 w-3" />
-                        GLB
+                        {t('online_menu_glb_label', 'GLB')}
                         <input type="file" accept=".glb,.gltf" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleUpload3D(dish.id, f); }} className="hidden" />
                       </label>
                       <Button variant="ghost" size="sm" onClick={() => { setOrderDish(dish); setOrderModalOpen(true); }} className="rounded-lg px-3 text-xs">
                         <Send className="mr-1 h-3 w-3" />
-                        {locale === 'uz' ? 'Buyurtma' : 'Заказать'}
+                        {t('online_menu_order_3d', 'Заказать')}
                       </Button>
                     </div>
                   )}
@@ -436,9 +436,9 @@ export default function OnlineMenuPage() {
 
         {/* Embed & Link */}
         <Panel
-          title={locale === 'uz' ? 'Joylashtirish va havola' : 'Встраивание и ссылка'}
-          eyebrow={locale === 'uz' ? 'Kod' : 'Код'}
-          description={locale === 'uz' ? 'Saytingizga joylashtirish kodi.' : 'Код для вставки на сайт.'}
+          title={t('online_menu_embed_title', 'Встраивание и ссылка')}
+          eyebrow={t('online_menu_embed_eyebrow', 'Код')}
+          description={t('online_menu_embed_description', 'Код для вставки на сайт.')}
         >
           {menuUrl && (
             <div className="mb-4 flex items-center gap-3 rounded-xl border border-white/8 bg-black/12 p-4">
@@ -466,34 +466,34 @@ export default function OnlineMenuPage() {
                   <div className="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-full bg-green-500/20">
                     <Check className="h-8 w-8 text-green-400" />
                   </div>
-                  <div className="text-lg font-bold text-white">{locale === 'uz' ? 'Yuborildi!' : 'Отправлено!'}</div>
-                  <div className="mt-2 text-sm text-white/50">{locale === 'uz' ? 'Tez orada tayyor bo\'ladi' : 'Скоро будет готово'}</div>
+                  <div className="text-lg font-bold text-white">{t('online_menu_order_sent_title', 'Отправлено!')}</div>
+                  <div className="mt-2 text-sm text-white/50">{t('online_menu_order_sent_desc', 'Скоро будет готово')}</div>
                 </div>
               ) : (
                 <>
-                  <h3 className="mb-1 text-lg font-bold text-white">{locale === 'uz' ? '3D model buyurtma' : 'Заказ 3D модели'}</h3>
+                  <h3 className="mb-1 text-lg font-bold text-white">{t('online_menu_order_title', 'Заказ 3D модели')}</h3>
                   <p className="mb-4 text-sm text-white/50">{orderDish.name}</p>
 
                   <div className="space-y-4">
                     <div>
-                      <label className="mb-1 block text-xs text-white/50">{locale === 'uz' ? 'Izoh' : 'Комментарий'}</label>
-                      <textarea value={orderNotes} onChange={(e) => setOrderNotes(e.target.value)} rows={3} placeholder={locale === 'uz' ? 'Qo\'shimcha ma\'lumot...' : 'Дополнительные пожелания...'} className="w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-white outline-none placeholder:text-white/20" />
+                      <label className="mb-1 block text-xs text-white/50">{t('online_menu_order_comment_label', 'Комментарий')}</label>
+                      <textarea value={orderNotes} onChange={(e) => setOrderNotes(e.target.value)} rows={3} placeholder={t('online_menu_order_comment_placeholder', 'Дополнительные пожелания...')} className="w-full rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-white outline-none placeholder:text-white/20" />
                     </div>
                     <div>
-                      <label className="mb-1 block text-xs text-white/50">{locale === 'uz' ? 'Rasm (ixtiyoriy)' : 'Фото (необязательно)'}</label>
+                      <label className="mb-1 block text-xs text-white/50">{t('online_menu_order_photo_label', 'Фото (необязательно)')}</label>
                       <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-dashed border-white/10 bg-black/20 p-4 transition hover:bg-white/5">
                         <input type="file" accept="image/*" onChange={(e) => { const f = e.target.files?.[0]; if (f) setOrderImage(f); }} className="hidden" />
                         <Upload className="h-5 w-5 text-white/30" />
-                        <span className="text-sm text-white/50">{orderImage ? orderImage.name : (locale === 'uz' ? 'Rasm tanlang' : 'Выберите фото')}</span>
+                        <span className="text-sm text-white/50">{orderImage ? orderImage.name : t('online_menu_order_photo_placeholder', 'Выберите фото')}</span>
                       </label>
                     </div>
                   </div>
 
                   <div className="mt-6 flex gap-3">
-                    <Button variant="ghost" onClick={() => setOrderModalOpen(false)} className="flex-1 rounded-xl">{locale === 'uz' ? 'Bekor qilish' : 'Отмена'}</Button>
+                    <Button variant="ghost" onClick={() => setOrderModalOpen(false)} className="flex-1 rounded-xl">{t('online_menu_order_cancel', 'Отмена')}</Button>
                     <Button onClick={handleOrder3D} disabled={orderSending} className="flex-1 rounded-xl">
                       {orderSending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-                      {locale === 'uz' ? 'Yuborish' : 'Отправить'}
+                      {t('online_menu_order_send', 'Отправить')}
                     </Button>
                   </div>
                 </>

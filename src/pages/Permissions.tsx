@@ -66,32 +66,32 @@ export default function PermissionsPage() {
   const canEdit = user?.role === 'CHAIN_OWNER';
 
   return (
-    <AppShell title="Role Permissions" subtitle="Configure granular permissions for each staff role." eyebrow="Waitly Access"
+    <AppShell title={t('permissions_title', 'Role Permissions')} subtitle={t('permissions_subtitle', 'Configure granular permissions for each staff role.')} eyebrow={t('permissions_eyebrow', 'Waitly Access')}
       restaurants={workspace.restaurants}
       selectedRestaurantId={workspace.selectedRestaurantId}
       onRestaurantChange={workspace.setSelectedRestaurantId}
     >
-      <Panel title="Permission matrix" eyebrow="Безопасность" description="Toggle which roles have access to which features.">
+      <Panel title={t('permissions_matrix_title', 'Permission matrix')} eyebrow={t('permissions_matrix_eyebrow', 'Безопасность')} description={t('permissions_matrix_desc', 'Toggle which roles have access to which features.')}>
         <div className="mb-4 flex flex-wrap gap-3 text-xs">
           {Object.entries(ROLE_LABELS).map(([roleKey, roleLabel]) => {
             const count = ALL_PERMISSIONS.filter(p => rolePerms[roleKey]?.[p.key]).length;
-            return <span key={roleKey} className="inline-flex items-center gap-1.5 rounded-full border border-white/8 bg-white/5 px-3 py-1.5"><ShieldCheck className="h-3 w-3 text-[#8fd4ff]" /><span className="font-medium text-white/80">{roleLabel}</span><span className="text-white/40">{count}/{ALL_PERMISSIONS.length}</span></span>;
+            return <span key={roleKey} className="inline-flex items-center gap-1.5 rounded-full border border-white/8 bg-white/5 px-3 py-1.5"><ShieldCheck className="h-3 w-3 text-[#8fd4ff]" /><span className="font-medium text-white/80">{t(`permissions_role_${roleKey.toLowerCase()}`, roleLabel)}</span><span className="text-white/40">{count}/{ALL_PERMISSIONS.length}</span></span>;
           })}
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-white/8">
             <thead>
               <tr>
-                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.28em] text-theme-muted">Permission</th>
+                <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.28em] text-theme-muted">{t('permissions_col_permission', 'Permission')}</th>
                 {Object.entries(ROLE_LABELS).map(([key, label]) => (
-                  <th key={key} className="px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-[0.28em] text-theme-muted">{label}</th>
+                  <th key={key} className="px-3 py-3 text-center text-[11px] font-semibold uppercase tracking-[0.28em] text-theme-muted">{t(`permissions_role_${key.toLowerCase()}`, label)}</th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-white/6">
               {ALL_PERMISSIONS.map((perm) => (
                 <tr key={perm.key} className="hover:bg-white/[0.03]">
-                  <td className="px-4 py-3 text-sm text-theme">{perm.label}</td>
+                  <td className="px-4 py-3 text-sm text-theme">{t(`permissions_perm_${perm.key}`, perm.label)}</td>
                   {Object.keys(ROLE_LABELS).map((role) => (
                     <td key={role} className="px-3 py-3 text-center">
                       <button
@@ -117,12 +117,12 @@ export default function PermissionsPage() {
         {canEdit ? (
           <div className="mt-5 flex items-center gap-4">
             <Button onClick={() => setSaving(true)} disabled={saving}>
-              <Save className="mr-2 h-4 w-4" />Save permissions
+              <Save className="mr-2 h-4 w-4" />{t('permissions_save', 'Save permissions')}
             </Button>
-            <p className="text-xs text-amber-300/60">Давайте права только на нужные действия — это снижает риски.</p>
+            <p className="text-xs text-amber-300/60">{t('permissions_risk_hint', 'Давайте права только на нужные действия — это снижает риски.')}</p>
           </div>
         ) : (
-          <p className="mt-4 flex items-center gap-2 text-sm text-amber-300"><ShieldCheck className="h-4 w-4" />Only Chain Owners can edit permissions.</p>
+          <p className="mt-4 flex items-center gap-2 text-sm text-amber-300"><ShieldCheck className="h-4 w-4" />{t('permissions_chain_owner_only', 'Only Chain Owners can edit permissions.')}</p>
         )}
       </Panel>
     </AppShell>

@@ -24,7 +24,7 @@ export default function KeysPage() {
       const keysRes = await adminAPI.getKeys();
       setKeys(keysRes.data || []);
     } catch (err: any) {
-      setError(err?.response?.data?.error || (locale === 'uz' ? 'Kalitlarni yuklab bo‘lmadi.' : 'Не удалось загрузить ключи.'));
+      setError(err?.response?.data?.error || t('keys_page_load_error', 'Не удалось загрузить ключи.'));
     } finally {
       setLoading(false);
     }
@@ -41,53 +41,52 @@ export default function KeysPage() {
       await adminAPI.generateKey({ duration_months: duration, count });
       await load();
     } catch (err: any) {
-      setError(err?.response?.data?.error || (locale === 'uz' ? 'Kalit yaratib bo‘lmadi.' : 'Не удалось создать ключ.'));
+      setError(err?.response?.data?.error || t('keys_page_create_error', 'Не удалось создать ключ.'));
     } finally {
       setGenerating(false);
     }
   };
 
   const handleRevoke = async (key: any) => {
-    if (!window.confirm(`${locale === 'uz' ? 'Kalit bekor qilinsinmi' : 'Отозвать ключ'} ${key.key}?`)) return;
+    if (!window.confirm(`${t('keys_page_revoke_confirm', 'Отозвать ключ')} ${key.key}?`)) return;
     setError('');
     try {
       await adminAPI.revokeKey(key.id);
       await load();
     } catch (err: any) {
-      setError(err?.response?.data?.error || (locale === 'uz' ? 'Kalitni bekor qilib bo‘lmadi.' : 'Не удалось отозвать ключ.'));
+      setError(err?.response?.data?.error || t('keys_page_revoke_error', 'Не удалось отозвать ключ.'));
     }
   };
 
   return (
     <AppShell
-      title={locale === 'uz' ? 'Obuna kalitlari' : 'Ключи подписки'}
-      subtitle={locale === 'uz' ? 'Kalitlarni yaratish, ko‘rish va bekor qilish.' : 'Создание, просмотр и отзыв ключей.'}
-      eyebrow="Billing"
+      title={t('keys_page_title', 'Ключи подписки')}
+      subtitle={t('keys_page_subtitle', 'Создание, просмотр и отзыв ключей.')}
+      eyebrow={t('keys_page_eyebrow', 'Биллинг')}
     >
       <div className="space-y-4">
         {error ? <div className="rounded-[24px] border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-100">{error}</div> : null}
 
         <div className="rounded-[24px] border border-amber-500/15 bg-amber-500/8 px-5 py-4 text-sm text-amber-200/80">
-          <strong className="text-amber-200">Важно:</strong> каждый ресторан должен активировать ключ в течение 7 дней после генерации,
-          иначе подписка автоматически отключается. Без активного ключа гости не смогут оставлять отзывы и заказывать по QR.
+          <strong className="text-amber-200">{t('keys_page_warning_title', 'Важно:')}</strong> {t('keys_page_warning_text', 'каждый ресторан должен активировать ключ в течение 7 дней после генерации, иначе подписка автоматически отключается. Без активного ключа гости не смогут оставлять отзывы и заказывать по QR.')}
         </div>
 
-        <Panel title={locale === 'uz' ? 'Yangi kalit yaratish' : 'Создать ключ'} eyebrow={locale === 'uz' ? 'Generatsiya' : 'Генерация'} description={locale === 'uz' ? 'Yangi obuna kalitlarini yarating.' : 'Сгенерируйте новые ключи подписки.'}>
+        <Panel title={t('keys_page_generate_title', 'Создать ключ')} eyebrow={t('keys_page_generation', 'Генерация')} description={t('keys_page_generate_desc', 'Сгенерируйте новые ключи подписки.')}>
           <div className="flex flex-wrap items-end gap-4">
             <div>
-              <label className="mb-1 block text-sm text-white/60">{locale === 'uz' ? 'Muddat (oy)' : 'Срок (мес.)'}</label>
+              <label className="mb-1 block text-sm text-white/60">{t('keys_page_duration_label', 'Срок (мес.)')}</label>
               <select
                 className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-white"
                 value={duration}
                 onChange={(e) => setDuration(Number(e.target.value))}
               >
                 {[1, 3, 6, 12, 24].map((m) => (
-                  <option key={m} value={m}>{m} {locale === 'uz' ? 'oy' : 'мес.'}</option>
+                  <option key={m} value={m}>{m} {t('keys_page_months', 'мес.')}</option>
                 ))}
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-sm text-white/60">{locale === 'uz' ? 'Soni' : 'Количество'}</label>
+              <label className="mb-1 block text-sm text-white/60">{t('keys_page_count_label', 'Количество')}</label>
               <input
                 type="number"
                 min={1}
@@ -99,26 +98,26 @@ export default function KeysPage() {
             </div>
             <Button onClick={handleGenerate} disabled={generating}>
               {generating
-                ? (locale === 'uz' ? 'Yaratilmoqda...' : 'Генерация...')
-                : (locale === 'uz' ? 'Yaratish' : 'Создать')}
+                ? t('keys_page_generating', 'Генерация...')
+                : t('keys_page_create', 'Создать')}
             </Button>
           </div>
         </Panel>
 
-        <Panel title={`${keys.length}`} eyebrow={locale === 'uz' ? 'Kalitlar' : 'Ключи'} description={locale === 'uz' ? 'Barcha obuna kalitlari va ularning holati.' : 'Все ключи подписки и их статус.'}>
+        <Panel title={`${keys.length}`} eyebrow={t('keys_page_keys', 'Ключи')} description={t('keys_page_keys_desc', 'Все ключи подписки и их статус.')}>
           <div className="flex items-center gap-3 text-white/52">
             <KeyRound className="h-4 w-4 text-[#a7f3d0]" />
-            {locale === 'uz' ? 'Faol va bo‘sh kalitlar.' : 'Активные и свободные ключи.'}
+            {t('keys_page_keys_note', 'Активные и свободные ключи.')}
           </div>
           <DataTable
             rows={keys}
-            emptyMessage={locale === 'uz' ? 'Hali kalitlar yo‘q.' : 'Ключей пока нет.'}
+            emptyMessage={t('keys_page_no_keys', 'Ключей пока нет.')}
             columns={[
-              { label: locale === 'uz' ? 'Kalit' : 'Ключ', key: 'key' },
-              { label: locale === 'uz' ? 'Muddat' : 'Срок', key: 'duration_months', render: (row) => `${row.duration_months} ${locale === 'uz' ? 'oy' : 'мес.'}` },
-              { label: locale === 'uz' ? 'Faollashtirgan restoran' : 'Активировавший ресторан', key: 'activated_by', render: (row) => row.activated_by || '—' },
-              { label: locale === 'uz' ? 'Holat' : 'Статус', key: 'is_activated', render: (row) => row.is_activated ? (locale === 'uz' ? 'Faollashtirilgan' : 'Активирован') : (locale === 'uz' ? 'Bo‘sh' : 'Свободен') },
-              { label: locale === 'uz' ? 'Amal' : 'Действие', key: 'id', render: (row) => row.is_activated ? <Button variant="secondary" size="sm" onClick={() => handleRevoke(row)}>{locale === 'uz' ? 'Bekor qilish' : 'Отозвать'}</Button> : null },
+              { label: t('keys_page_col_key', 'Ключ'), key: 'key' },
+              { label: t('keys_page_col_duration', 'Срок'), key: 'duration_months', render: (row) => `${row.duration_months} ${t('keys_page_months', 'мес.')}` },
+              { label: t('keys_page_col_activated_by', 'Активировавший ресторан'), key: 'activated_by', render: (row) => row.activated_by || '—' },
+              { label: t('keys_page_col_status', 'Статус'), key: 'is_activated', render: (row) => row.is_activated ? t('keys_page_activated', 'Активирован') : t('keys_page_free', 'Свободен') },
+              { label: t('keys_page_col_action', 'Действие'), key: 'id', render: (row) => row.is_activated ? <Button variant="secondary" size="sm" onClick={() => handleRevoke(row)}>{t('keys_page_revoke', 'Отозвать')}</Button> : null },
             ]}
           />
         </Panel>

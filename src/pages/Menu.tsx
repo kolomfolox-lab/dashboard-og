@@ -1,18 +1,23 @@
-import { Plus, Search, UtensilsCrossed, Pencil, Trash2, Eye, EyeOff, X, Image as ImageIcon } from 'lucide-react';
+import { Plus, Search, UtensilsCrossed, Pencil, Trash2, Eye, EyeOff, X, Image as ImageIcon, Coffee, Layers } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { AppShell } from '@/components/app/AppShell';
+import { DataTable } from '@/components/app/DataTable';
 import { Panel } from '@/components/app/Panel';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 import { useLocale } from '@/context/LocaleContext';
 import { useOwnerWorkspace } from '@/hooks/useOwnerWorkspace';
-import { ownerAPI, type OwnerMenuCategory, type OwnerMenuDish } from '@/services/api';
+import { ownerAPI, modifierAPI, type OwnerMenuCategory, type OwnerMenuDish } from '@/services/api';
 import { formatMoney } from '@/lib/utils';
+import { showToast } from '@/lib/toast';
+
+type Tab = 'dishes' | 'modifiers';
 
 export default function MenuPage() {
   const { user } = useAuth();
   const { t, locale } = useLocale();
   const workspace = useOwnerWorkspace(user?.role === 'RESTAURANT_OWNER' || user?.role === 'CHAIN_OWNER');
+  const [tab, setTab] = useState<Tab>('dishes');
   const [categories, setCategories] = useState<OwnerMenuCategory[]>([]);
   const [dishes, setDishes] = useState<OwnerMenuDish[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,7 +31,18 @@ export default function MenuPage() {
   const [saving, setSaving] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const load = async () => {
+  // ── Modifier state ──
+  const [modGroups, setModGroups] = useState<any[]>([]);
+  const [groupModal, setGroupModal] = useState(false);
+  const [groupForm, setGroupForm] = useState({ name: '', is_required: false, max_options: 1 });
+  const [optionModal, setOptionModal] = useState<{ groupId: string; open: boolean }>({ groupId: '', open: false });
+  const [optionForm, setOptionForm] = useState({ name: '', price_modifier: '', is_default: false });
+  const [dishModModal, setDishModModal] = useState(false);
+  const [dishModDish, setDishModDish] = useState<string>('');
+  const [dishModGroups, setDishModGroups] = useState<string[]>([]);
+  const [saveModLoading, setSaveModLoading] = useState(false);
+
+  const loadDishes = async () => {
     if (!workspace.selectedRestaurantId) return;
     setLoading(true);
     try {
@@ -36,38 +52,17 @@ export default function MenuPage() {
       ]);
       setCategories(catRes.data);
       setDishes(dishRes.data);
-    } catch { /* ignore */ }
+    } catch { showToast(t('menu_load_error', 'Ошибка загрузки'), 'error'); }
     finally { setLoading(false); }
   };
 
-  useEffect(() => { void load(); }, [workspace.selectedRestaurantId]);
-
-  const filteredDishes = dishes.filter(d => {
-    if (search && !d.name.toLowerCase().includes(search.toLowerCase())) return false;
-    if (filterCat && d.category_id !== filterCat) return false;
-    return true;
-  });
-
-  const handleSaveCategory = async () => {
-    if (!catName.trim() || !workspace.selectedRestaurantId) return;
-    setSaving(true);
+  const loadModifiers = async () => {
+    if (!workspace.selectedRestaurantId) return;
     try {
-      if (catModal.edit) {
-        await ownerAPI.updateMenuCategory(catModal.edit.id, { name: catName.trim() });
-      } else {
-        await ownerAPI.createMenuCategory({ restaurant_id: workspace.selectedRestaurantId, name: catName.trim() });
-      }
-      setCatModal({ open: false });
-      setCatName('');
-      await load();
-    } catch { /* ignore */ }
-    finally { setSaving(false); }
-  };
-
-  const handleDeleteCategory = async (id: string) => {
-    if (!confirm(locale === 'uz' ? 'Kategoriyani o\'chirishni tasdiqlaysizmi?' : 'Удалить категорию?')) return;
-    await ownerAPI.deleteMenuCategory(id);
-    await load();
+      const res = await modifierAPI.getGroups(workspace.selectedRestaurantId);
+      const data = res.data;
+      setModGroups(Array.isArray(data) ? data : (data.results || []));
+    } catch {}
   };
 
   const handleSaveDish = async () => {
@@ -92,202 +87,300 @@ export default function MenuPage() {
       setDishModal({ open: false });
       setDishForm({ name: '', description: '', ingredients: '', price: '', cooking_time: 15, category_id: '', is_available: true });
       setDishImage(null);
-      await load();
-    } catch { /* ignore */ }
+      await loadDishes();
+      showToast(t('mod_saved', 'Сохранено'), 'success');
+    } catch { showToast(t('save_error', 'Ошибка'), 'error'); }
     finally { setSaving(false); }
   };
 
-  const handleDeleteDish = async (id: string) => {
-    if (!confirm(locale === 'uz' ? 'Taomni o\'chirishni tasdiqlaysizmi?' : 'Удалить блюдо?')) return;
-    await ownerAPI.deleteMenuDish(id);
-    await load();
+  const handleDeleteDish = async (dish: OwnerMenuDish) => {
+    if (!window.confirm(locale === 'uz' ? `«${dish.name}» taomini o'chirishni tasdiqlaysizmi?` : `Удалить блюдо «${dish.name}»?`)) return;
+    try {
+      await ownerAPI.deleteMenuDish(dish.id);
+      await loadDishes();
+      showToast(t('mod_saved', 'Удалено'), 'success');
+    } catch { showToast(t('save_error', 'Ошибка'), 'error'); }
   };
 
   const toggleAvailability = async (dish: OwnerMenuDish) => {
     const fd = new FormData();
     fd.append('is_available', String(!dish.is_available));
-    await ownerAPI.updateMenuDish(dish.id, fd);
-    await load();
+    try {
+      await ownerAPI.updateMenuDish(dish.id, fd);
+      await loadDishes();
+    } catch { showToast(t('save_error', 'Ошибка'), 'error'); }
   };
 
-  const openEditDish = (dish: OwnerMenuDish) => {
-    setDishForm({
-      name: dish.name,
-      description: dish.description,
-      ingredients: dish.ingredients,
-      price: dish.price,
-      cooking_time: dish.cooking_time,
-      category_id: dish.category_id || '',
-      is_available: dish.is_available,
-    });
-    setDishImage(null);
-    setDishModal({ open: true, edit: dish });
+  useEffect(() => {
+    if (tab === 'dishes') loadDishes();
+    else loadModifiers();
+  }, [workspace.selectedRestaurantId, tab]);
+
+  const saveGroup = async () => {
+    if (!workspace.selectedRestaurantId || !groupForm.name.trim()) return;
+    setSaveModLoading(true);
+    try {
+      await modifierAPI.createGroup({ restaurant_id: workspace.selectedRestaurantId, ...groupForm });
+      setGroupModal(false); setGroupForm({ name: '', is_required: false, max_options: 1 });
+      await loadModifiers();
+      showToast(t('mod_saved', 'Сохранено'), 'success');
+    } catch { showToast(t('save_error', 'Ошибка'), 'error'); }
+    finally { setSaveModLoading(false); }
   };
+
+  const saveOption = async () => {
+    if (!optionForm.name.trim()) return;
+    setSaveModLoading(true);
+    try {
+      await modifierAPI.createOption({
+        group_id: optionModal.groupId, name: optionForm.name,
+        price_modifier: Number(optionForm.price_modifier) || 0,
+        is_default: optionForm.is_default,
+      });
+      setOptionModal({ groupId: '', open: false }); setOptionForm({ name: '', price_modifier: '', is_default: false });
+      await loadModifiers();
+      showToast(t('mod_option_saved', 'Опция добавлена'), 'success');
+    } catch { showToast(t('save_error', 'Ошибка'), 'error'); }
+    finally { setSaveModLoading(false); }
+  };
+
+  const saveDishModifiers = async () => {
+    if (!workspace.selectedRestaurantId) return;
+    setSaveModLoading(true);
+    try {
+      await modifierAPI.setDishModifiers(dishModDish, { group_ids: dishModGroups });
+      setDishModModal(false);
+      showToast(t('mod_dish_saved', 'Модификаторы назначены'), 'success');
+    } catch { showToast(t('save_error', 'Ошибка'), 'error'); }
+    finally { setSaveModLoading(false); }
+  };
+
+  const deleteOption = async (id: string) => {
+    try { await modifierAPI.deleteOption(id); await loadModifiers(); } catch {}
+  };
+  const deleteGroup = async (id: string) => {
+    try { await modifierAPI.deleteGroup(id); await loadModifiers(); } catch {}
+  };
+
+  const filteredDishes = dishes.filter(d => {
+    if (search && !d.name.toLowerCase().includes(search.toLowerCase())) return false;
+    if (filterCat && d.category_id !== filterCat) return false;
+    return true;
+  });
 
   return (
     <AppShell
-      title={locale === 'uz' ? 'Menyu' : 'Меню'}
-      subtitle={locale === 'uz' ? 'Taomlar va kategoriyalarni boshqarish' : 'Управление блюдами и категориями'}
-      eyebrow="Menu"
+      title={tab === 'dishes' ? t('menu_title', 'Меню') : t('modifiers_title', 'Модификаторы')}
+      subtitle={tab === 'dishes' ? `${dishes.length} ${t('menu_dishes', 'блюд')}` : `${modGroups.length} групп`}
+      eyebrow={tab === 'dishes' ? t('menu_eyebrow', 'Menu') : t('modifiers_eyebrow', 'Для кофейни')}
       restaurants={workspace.restaurants}
       selectedRestaurantId={workspace.selectedRestaurantId}
       onRestaurantChange={workspace.setSelectedRestaurantId}
     >
-      <div className="space-y-5">
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2 rounded-2xl border border-theme bg-[var(--input-bg)] px-4 py-2.5">
-            <Search className="h-4 w-4 text-theme-muted" />
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder={locale === 'uz' ? 'Taom nomi...' : 'Название блюда...'} className="min-w-[180px] bg-transparent text-sm text-theme outline-none placeholder:text-theme-muted" />
-          </div>
-          <select value={filterCat} onChange={e => setFilterCat(e.target.value)} className="rounded-2xl border border-theme bg-[var(--input-bg)] px-4 py-2.5 text-sm text-theme outline-none">
-            <option value="">{locale === 'uz' ? 'Barcha kategoriyalar' : 'Все категории'}</option>
-            {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
-          <Button variant="secondary" size="sm" onClick={() => { setCatName(''); setCatModal({ open: true }); }}>
-            <Plus className="mr-1.5 h-4 w-4" />{locale === 'uz' ? 'Kategoriya' : 'Категория'}
-          </Button>
-          <Button size="sm" onClick={() => { setDishForm({ name: '', description: '', ingredients: '', price: '', cooking_time: 15, category_id: categories[0]?.id || '', is_available: true }); setDishImage(null); setDishModal({ open: true }); }}>
-            <Plus className="mr-1.5 h-4 w-4" />{locale === 'uz' ? 'Taom' : 'Блюдо'}
-          </Button>
+      <div className="space-y-4">
+        <div className="flex gap-2 rounded-2xl border border-white/8 bg-black/10 p-1.5">
+          <button onClick={() => setTab('dishes')} className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition ${tab === 'dishes' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white/70'}`}>
+            <UtensilsCrossed className="h-4 w-4" />{t('menu_dishes_tab', 'Блюда')}
+          </button>
+          <button onClick={() => setTab('modifiers')} className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition ${tab === 'modifiers' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white/70'}`}>
+            <Coffee className="h-4 w-4" />{t('modifiers_tab', 'Модификаторы')}
+          </button>
         </div>
 
-        <div className="flex flex-wrap gap-2">
-          {categories.map(cat => (
-            <div key={cat.id} className="flex items-center gap-2 rounded-full border border-theme bg-theme-panel px-4 py-1.5 text-sm">
-              <span className="text-theme">{cat.name}</span>
-              <span className="text-[11px] text-theme-muted">({cat.dish_count})</span>
-              <button onClick={() => { setCatName(cat.name); setCatModal({ open: true, edit: cat }); }} className="ml-1 text-theme-muted hover:text-theme"><Pencil className="h-3 w-3" /></button>
-              <button onClick={() => handleDeleteCategory(cat.id)} className="text-white/30 hover:text-red-400"><Trash2 className="h-3 w-3" /></button>
-            </div>
-          ))}
-        </div>
-
-        {loading ? (
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="animate-pulse rounded-3xl border border-white/10 bg-white/5 p-5">
-                <div className="mb-3 h-32 rounded-2xl bg-white/10" />
-                <div className="mb-2 h-4 w-3/4 rounded bg-white/10" />
-                <div className="h-4 w-1/2 rounded bg-white/10" />
+        {tab === 'dishes' ? (
+          <>
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="relative flex-1 max-w-xs">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/30" />
+                <input value={search} onChange={e => setSearch(e.target.value)} placeholder={t('menu_search', 'Поиск...')}
+                  className="w-full rounded-2xl border border-white/10 bg-white/5 py-2.5 pl-10 pr-4 text-sm text-white outline-none placeholder:text-white/28 focus:border-[#8fd4ff]" />
               </div>
-            ))}
-          </div>
-        ) : filteredDishes.length === 0 ? (
-          <Panel title={locale === 'uz' ? 'Taomlar yo\'q' : 'Нет блюд'} eyebrow="Menu">
-            <div className="flex flex-col items-center gap-4 py-16">
-              <UtensilsCrossed className="h-12 w-12 text-white/20" />
-              <p className="text-sm text-white/40">{locale === 'uz' ? 'Hozircha taomlar yo\'q. Yangi taom qo\'shing.' : 'Пока нет блюд. Добавьте новое блюдо.'}</p>
+              <select value={filterCat} onChange={e => setFilterCat(e.target.value)}
+                className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white outline-none focus:border-[#8fd4ff]">
+                <option value="" className="bg-[#0b1622]">{t('menu_all_categories', 'Все категории')}</option>
+                {categories.map(c => <option key={c.id} value={c.id} className="bg-[#0b1622]">{c.name}</option>)}
+              </select>
+              <Button size="sm" onClick={() => setCatModal({ open: true })}><Plus className="mr-1.5 h-4 w-4" />{t('menu_add_category', 'Категорию')}</Button>
+              <Button size="sm" onClick={() => { setDishForm({ ...dishForm, category_id: categories[0]?.id || '' }); setDishModal({ open: true }); }}><Plus className="mr-1.5 h-4 w-4" />{t('menu_add_dish', 'Блюдо')}</Button>
             </div>
-          </Panel>
-        ) : (
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
-            {filteredDishes.map(dish => (
-              <div key={dish.id} className={`group relative rounded-3xl border transition-all ${dish.is_available ? 'border-theme bg-theme-panel hover:bg-[var(--panel-bg)]' : 'border-theme opacity-55'}`}>
-                <div className="aspect-[4/3] overflow-hidden rounded-t-3xl bg-theme-panel">
-                  {dish.image ? (
-                    <img src={dish.image} alt={dish.name} className="h-full w-full object-cover" />
-                  ) : (
-                    <div className="grid h-full place-items-center"><ImageIcon className="h-8 w-8 text-theme-muted" /></div>
-                  )}
-                </div>
-                <div className="p-4">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {filteredDishes.map(dish => (
+                <div key={dish.id} className="relative rounded-3xl border border-white/8 bg-black/12 p-5 hover:border-white/20 transition">
+                  {dish.image && <img src={dish.image} alt="" className="mb-3 h-32 w-full rounded-2xl object-cover" />}
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <h3 className="truncate text-sm font-bold text-theme">{dish.name}</h3>
-                      {dish.category_name && <p className="mt-0.5 text-[10px] uppercase tracking-wider text-theme-muted">{dish.category_name}</p>}
+                      <div className="text-sm font-semibold text-white truncate">{dish.name}</div>
+                      {dish.category_name && <div className="text-xs text-white/30">{dish.category_name}</div>}
                     </div>
-                    <div className="text-right">
-                      <div className="text-sm font-bold text-[#ffd4c4]">{formatMoney(Number(dish.price))}</div>
-                      {Number(dish.cost_price) > 0 && (
-                        <div className="mt-0.5 text-[10px] text-theme-muted">
-                          себест. {formatMoney(Number(dish.cost_price))}
-                          {dish.margin_percent !== null && (
-                            <span className={dish.margin_percent >= 30 ? 'ml-1 text-emerald-400' : dish.margin_percent > 0 ? 'ml-1 text-amber-400' : 'ml-1 text-red-400'}>
-                              {dish.margin_percent >= 30 ? '✓' : ''} {dish.margin_percent}%
-                            </span>
-                          )}
-                        </div>
-                      )}
-                      {dish.average_rating >= 4 && (
-                        <div className="mt-1 text-[10px] text-amber-400">
-                          ★ {dish.average_rating}
-                        </div>
-                      )}
-                    </div>
+                    <div className="text-sm font-bold text-white shrink-0">{formatMoney(dish.price)}</div>
                   </div>
-                  {dish.ingredients && <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-theme-secondary">{dish.ingredients}</p>}
-                  <div className="mt-3 flex items-center gap-2">
-                    <button onClick={() => toggleAvailability(dish)} className={`rounded-lg border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider transition-colors ${dish.is_available ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400' : 'border-theme bg-theme-panel text-theme-muted'}`}>
-                      {dish.is_available ? <><Eye className="mr-1 inline h-3 w-3" />{locale === 'uz' ? 'Mavjud' : 'В наличии'}</> : <><EyeOff className="mr-1 inline h-3 w-3" />{locale === 'uz' ? 'Yo\'q' : 'Нет'}</>}
+                  <div className="mt-3 flex gap-2">
+                    <button onClick={() => toggleAvailability(dish)} className={`rounded-xl border px-3 py-1.5 text-xs font-semibold ${dish.is_available ? 'border-emerald-500/30 text-emerald-300' : 'border-red-500/30 text-red-300'}`}>
+                      {dish.is_available ? t('menu_available', 'В наличии') : t('menu_unavailable', 'Стоп')}
                     </button>
-                    <button onClick={() => openEditDish(dish)} className="rounded-lg border border-theme bg-theme-panel p-1.5 text-theme-muted hover:text-theme"><Pencil className="h-3.5 w-3.5" /></button>
-                    <button onClick={() => handleDeleteDish(dish.id)} className="rounded-lg border border-theme bg-theme-panel p-1.5 text-theme-muted hover:text-red-400"><Trash2 className="h-3.5 w-3.5" /></button>
+                    <button onClick={async () => {
+                      setDishModDish(dish.id);
+                      try { const r = await modifierAPI.getDishModifiers(dish.id); setDishModGroups(r.data.group_ids || []); }
+                      catch { setDishModGroups([]); }
+                      setDishModModal(true);
+                    }} className="rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/60 hover:text-white"><Coffee className="inline h-3.5 w-3.5 mr-1" />{t('menu_modifiers', 'Модификаторы')}</button>
+                    <button onClick={() => { setDishForm({ name: dish.name, description: dish.description || '', ingredients: dish.ingredients || '', price: String(dish.price), cooking_time: dish.cooking_time || 15, category_id: dish.category_id || '', is_available: dish.is_available }); setDishModal({ open: true, edit: dish }); }}
+                      className="rounded-xl border border-white/10 bg-white/5 p-1.5 text-white/40 hover:text-white"><Pencil className="h-4 w-4" /></button>
+                    <button onClick={() => handleDeleteDish(dish)} className="rounded-xl border border-white/10 bg-white/5 p-1.5 text-white/40 hover:text-red-300"><Trash2 className="h-4 w-4" /></button>
                   </div>
+                </div>
+              ))}
+            </div>
+          </>
+        ) : (
+          <div className="space-y-4">
+            <Button size="sm" onClick={() => setGroupModal(true)}>
+              <Plus className="mr-1.5 h-4 w-4" />{t('mod_add_group', 'Новая группа')}
+            </Button>
+            {modGroups.map(g => (
+              <div key={g.id} className="rounded-3xl border border-white/8 bg-black/12 p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <h3 className="text-sm font-semibold text-white">{g.name}</h3>
+                    <p className="text-xs text-white/30">{g.is_required ? 'Обязательный' : 'Необязательный'} · макс: {g.max_options}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button onClick={() => setOptionModal({ groupId: g.id, open: true })} className="rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/60 hover:text-white"><Plus className="inline h-3 w-3 mr-1" />{t('mod_add_option', 'Опция')}</button>
+                    <button onClick={() => deleteGroup(g.id)} className="rounded-xl border border-red-500/20 p-1.5 text-red-400 hover:bg-red-500/10"><Trash2 className="h-4 w-4" /></button>
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  {(g.options || []).map((o: any) => (
+                    <div key={o.id} className="flex items-center justify-between rounded-xl border border-white/5 bg-white/[0.03] px-3 py-2 text-sm">
+                      <span className="text-white/70">{o.name}{o.is_default ? ' ★' : ''}</span>
+                      <div className="flex items-center gap-2">
+                        {o.price_modifier > 0 && <span className="text-emerald-400">+{Number(o.price_modifier).toLocaleString()}</span>}
+                        <button onClick={() => deleteOption(o.id)} className="text-red-400/60 hover:text-red-400"><X className="h-3.5 w-3.5" /></button>
+                      </div>
+                    </div>
+                  ))}
+                  {(!g.options || g.options.length === 0) && <p className="text-xs text-white/20">{t('mod_no_options', 'Нет опций')}</p>}
                 </div>
               </div>
             ))}
           </div>
         )}
-      </div>
 
-      {/* Category Modal */}
-      {catModal.open && (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-[var(--overlay-bg)] backdrop-blur-sm" onClick={() => setCatModal({ open: false })}>
-          <div className="w-full max-w-md rounded-3xl border border-theme bg-[var(--modal-bg)] p-6 shadow-2xl" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold text-theme">{catModal.edit ? (locale === 'uz' ? 'Kategoriyani tahrirlash' : 'Редактировать категорию') : (locale === 'uz' ? 'Yangi kategoriya' : 'Новая категория')}</h2>
-              <button onClick={() => setCatModal({ open: false })} className="text-theme-secondary hover:text-theme"><X className="h-5 w-5" /></button>
-            </div>
-            <input value={catName} onChange={e => setCatName(e.target.value)} placeholder={locale === 'uz' ? 'Kategoriya nomi' : 'Название категории'} className="mt-4 w-full rounded-2xl border border-theme bg-[var(--input-bg)] px-4 py-3 text-sm text-theme outline-none placeholder:text-theme-muted" autoFocus />
-            <div className="mt-4 flex justify-end gap-3">
-              <Button variant="ghost" onClick={() => setCatModal({ open: false })}>{locale === 'uz' ? 'Bekor qilish' : 'Отмена'}</Button>
-              <Button onClick={handleSaveCategory} disabled={saving || !catName.trim()}>{saving ? '...' : (locale === 'uz' ? 'Saqlash' : 'Сохранить')}</Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Dish Modal */}
-      {dishModal.open && (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-[var(--overlay-bg)] backdrop-blur-sm" onClick={() => setDishModal({ open: false })}>
-          <div className="w-full max-w-lg rounded-3xl border border-theme bg-[var(--modal-bg)] p-6 shadow-2xl" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold text-theme">{dishModal.edit ? (locale === 'uz' ? 'Taomni tahrirlash' : 'Редактировать блюдо') : (locale === 'uz' ? 'Yangi taom' : 'Новое блюдо')}</h2>
-              <button onClick={() => setDishModal({ open: false })} className="text-theme-secondary hover:text-theme"><X className="h-5 w-5" /></button>
-            </div>
-            <div className="mt-4 space-y-3">
-              <input value={dishForm.name} onChange={e => setDishForm(f => ({ ...f, name: e.target.value }))} placeholder={locale === 'uz' ? 'Taom nomi' : 'Название блюда'} className="w-full rounded-2xl border border-theme bg-[var(--input-bg)] px-4 py-3 text-sm text-theme outline-none placeholder:text-theme-muted" />
-              <div className="flex gap-3">
-                <input value={dishForm.price} onChange={e => setDishForm(f => ({ ...f, price: e.target.value }))} placeholder={locale === 'uz' ? 'Narxi (sum)' : 'Цена (сум)'} className="w-1/2 rounded-2xl border border-theme bg-[var(--input-bg)] px-4 py-3 text-sm text-theme outline-none placeholder:text-theme-muted" />
-                <input value={dishForm.cooking_time} onChange={e => setDishForm(f => ({ ...f, cooking_time: Number(e.target.value) }))} type="number" min={1} placeholder={locale === 'uz' ? 'Daqiqa' : 'Минуты'} className="w-1/2 rounded-2xl border border-theme bg-[var(--input-bg)] px-4 py-3 text-sm text-theme outline-none placeholder:text-theme-muted" />
-              </div>
-              <select value={dishForm.category_id} onChange={e => setDishForm(f => ({ ...f, category_id: e.target.value }))} className="w-full rounded-2xl border border-theme bg-[var(--input-bg)] px-4 py-3 text-sm text-theme outline-none">
-                <option value="">{locale === 'uz' ? 'Kategoriya tanlang' : 'Выберите категорию'}</option>
-                {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
-              <textarea value={dishForm.description} onChange={e => setDishForm(f => ({ ...f, description: e.target.value }))} rows={2} placeholder={locale === 'uz' ? 'Ta\'rif' : 'Описание'} className="w-full rounded-2xl border border-theme bg-[var(--input-bg)] px-4 py-3 text-sm text-theme outline-none placeholder:text-theme-muted" />
-              <textarea value={dishForm.ingredients} onChange={e => setDishForm(f => ({ ...f, ingredients: e.target.value }))} rows={2} placeholder={locale === 'uz' ? 'Masalliqlar' : 'Ингредиенты'} className="w-full rounded-2xl border border-theme bg-[var(--input-bg)] px-4 py-3 text-sm text-theme outline-none placeholder:text-theme-muted" />
-              <div className="flex items-center gap-3">
-                <label className="flex cursor-pointer items-center gap-2 rounded-2xl border border-theme bg-[var(--input-bg)] px-4 py-3 text-sm text-theme-secondary hover:text-theme">
-                  <ImageIcon className="h-4 w-4" />
-                  <span>{locale === 'uz' ? 'Rasm yuklash' : 'Загрузить фото'}</span>
-                  <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={e => setDishImage(e.target.files?.[0] || null)} />
-                </label>
-                {dishImage && <span className="text-xs text-white/40">{dishImage.name}</span>}
-                {dishModal.edit?.image && !dishImage && <span className="text-xs text-white/40">{locale === 'uz' ? 'Rasm mavjud' : 'Фото есть'}</span>}
+        {groupModal && (
+          <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setGroupModal(false)}>
+            <div className="w-full max-w-md rounded-3xl border border-white/10 bg-[#0b1622] p-6 shadow-2xl" onClick={e => e.stopPropagation()}>
+              <h3 className="text-lg font-semibold text-white">{t('mod_new_group', 'Новая группа')}</h3>
+              <div className="mt-4 space-y-3">
+                <input value={groupForm.name} onChange={e => setGroupForm({ ...groupForm, name: e.target.value })} placeholder={t('mod_group_name', 'Название (Молоко, Сироп...)')}
+                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-[#8fd4ff]" />
                 <label className="flex items-center gap-2 text-sm text-white/60">
-                  <input type="checkbox" checked={dishForm.is_available} onChange={e => setDishForm(f => ({ ...f, is_available: e.target.checked }))} className="rounded border-white/20 bg-white/5" />
-                  {locale === 'uz' ? 'Mavjud' : 'В наличии'}
+                  <input type="checkbox" checked={groupForm.is_required} onChange={e => setGroupForm({ ...groupForm, is_required: e.target.checked })} />
+                  {t('mod_is_required', 'Обязательный выбор')}
                 </label>
+                <label className="text-sm text-white/60">{t('mod_max_options', 'Макс. опций:')}
+                  <input type="number" value={groupForm.max_options} min={1} onChange={e => setGroupForm({ ...groupForm, max_options: Number(e.target.value) })}
+                    className="ml-2 w-16 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-white outline-none" />
+                </label>
+                <div className="flex gap-3 pt-2">
+                  <Button onClick={saveGroup} disabled={!groupForm.name.trim() || saveModLoading} className="flex-1"><Plus className="mr-1.5 h-4 w-4" />{t('create', 'Создать')}</Button>
+                  <Button variant="outline" onClick={() => setGroupModal(false)}>{t('cancel', 'Отмена')}</Button>
+                </div>
               </div>
             </div>
-            <div className="mt-5 flex justify-end gap-3">
-              <Button variant="ghost" onClick={() => setDishModal({ open: false })}>{locale === 'uz' ? 'Bekor qilish' : 'Отмена'}</Button>
-              <Button onClick={handleSaveDish} disabled={saving || !dishForm.name.trim() || !dishForm.price}>{saving ? '...' : (locale === 'uz' ? 'Saqlash' : 'Сохранить')}</Button>
+          </div>
+        )}
+
+        {optionModal.open && (
+          <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setOptionModal({ groupId: '', open: false })}>
+            <div className="w-full max-w-md rounded-3xl border border-white/10 bg-[#0b1622] p-6 shadow-2xl" onClick={e => e.stopPropagation()}>
+              <h3 className="text-lg font-semibold text-white">{t('mod_new_option', 'Новая опция')}</h3>
+              <div className="mt-4 space-y-3">
+                <input value={optionForm.name} onChange={e => setOptionForm({ ...optionForm, name: e.target.value })} placeholder={t('mod_option_name', 'Название (Кокосовое, Карамель...)')}
+                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-[#8fd4ff]" />
+                <input type="number" value={optionForm.price_modifier} onChange={e => setOptionForm({ ...optionForm, price_modifier: e.target.value })} placeholder={t('mod_option_price', 'Доплата (5000)')}
+                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-[#8fd4ff]" />
+                <label className="flex items-center gap-2 text-sm text-white/60">
+                  <input type="checkbox" checked={optionForm.is_default} onChange={e => setOptionForm({ ...optionForm, is_default: e.target.checked })} />
+                  {t('mod_is_default', 'По умолчанию')}
+                </label>
+                <div className="flex gap-3 pt-2">
+                  <Button onClick={saveOption} disabled={!optionForm.name.trim() || saveModLoading} className="flex-1"><Plus className="mr-1.5 h-4 w-4" />{t('add', 'Добавить')}</Button>
+                  <Button variant="outline" onClick={() => setOptionModal({ groupId: '', open: false })}>{t('cancel', 'Отмена')}</Button>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {dishModModal && (
+          <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setDishModModal(false)}>
+            <div className="w-full max-w-md rounded-3xl border border-white/10 bg-[#0b1622] p-6 shadow-2xl" onClick={e => e.stopPropagation()}>
+              <h3 className="text-lg font-semibold text-white">{t('mod_dish_assign', 'Модификаторы для блюда')}</h3>
+              <div className="mt-4 space-y-2">
+                {modGroups.map(g => (
+                  <label key={g.id} className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white cursor-pointer hover:bg-white/10">
+                    <input type="checkbox" checked={dishModGroups.includes(g.id)} onChange={e => {
+                      setDishModGroups(e.target.checked ? [...dishModGroups, g.id] : dishModGroups.filter(id => id !== g.id));
+                    }} />
+                    {g.name} <span className="text-white/30">({g.options?.length || 0} опций)</span>
+                  </label>
+                ))}
+                {modGroups.length === 0 && <p className="text-sm text-white/40">{t('mod_no_groups', 'Сначала создайте группы модификаторов')}</p>}
+              </div>
+              <div className="flex gap-3 mt-6">
+                <Button onClick={saveDishModifiers} disabled={saveModLoading} className="flex-1">{t('save', 'Сохранить')}</Button>
+                <Button variant="outline" onClick={() => setDishModModal(false)}>{t('cancel', 'Отмена')}</Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {dishModal.open && (
+          <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setDishModal({ open: false })}>
+            <div className="w-full max-w-lg rounded-3xl border border-white/10 bg-[#0b1622] p-6 shadow-2xl" onClick={e => e.stopPropagation()}>
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-white">{dishModal.edit ? t('menu_edit_dish', 'Редактировать блюдо') : t('menu_add_dish', 'Новое блюдо')}</h3>
+                <button onClick={() => setDishModal({ open: false })} className="text-white/40 hover:text-white"><X className="h-5 w-5" /></button>
+              </div>
+              <div className="mt-4 space-y-3">
+                <input value={dishForm.name} onChange={e => setDishForm(f => ({ ...f, name: e.target.value }))} placeholder={t('menu_dish_name', 'Название блюда')}
+                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-white/30 focus:border-[#8fd4ff]" />
+                <div className="flex gap-3">
+                  <input value={dishForm.price} onChange={e => setDishForm(f => ({ ...f, price: e.target.value }))} placeholder={t('menu_dish_price', 'Цена (сум)')}
+                    className="w-1/2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-white/30 focus:border-[#8fd4ff]" />
+                  <input value={dishForm.cooking_time} onChange={e => setDishForm(f => ({ ...f, cooking_time: Number(e.target.value) }))} type="number" min={1} placeholder={t('menu_cook_min', 'Минуты')}
+                    className="w-1/2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-white/30 focus:border-[#8fd4ff]" />
+                </div>
+                <select value={dishForm.category_id} onChange={e => setDishForm(f => ({ ...f, category_id: e.target.value }))} className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none">
+                  <option value="" className="bg-[#0b1622]">{t('menu_select_cat', 'Выберите категорию')}</option>
+                  {categories.map(c => <option key={c.id} value={c.id} className="bg-[#0b1622]">{c.name}</option>)}
+                </select>
+                <textarea value={dishForm.description} onChange={e => setDishForm(f => ({ ...f, description: e.target.value }))} rows={2} placeholder={t('menu_dish_desc', 'Описание')}
+                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-white/30 focus:border-[#8fd4ff]" />
+                <textarea value={dishForm.ingredients} onChange={e => setDishForm(f => ({ ...f, ingredients: e.target.value }))} rows={2} placeholder={t('menu_dish_ing', 'Ингредиенты')}
+                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-white/30 focus:border-[#8fd4ff]" />
+                <div className="flex items-center gap-3">
+                  <label className="flex cursor-pointer items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/60 hover:text-white">
+                    <ImageIcon className="h-4 w-4" />
+                    <span>{t('menu_dish_photo', 'Загрузить фото')}</span>
+                    <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={e => setDishImage(e.target.files?.[0] || null)} />
+                  </label>
+                  {dishImage && <span className="text-xs text-white/40">{dishImage.name}</span>}
+                  {dishModal.edit?.image && !dishImage && <span className="text-xs text-white/40">{t('menu_has_photo', 'Фото есть')}</span>}
+                  <label className="flex items-center gap-2 text-sm text-white/60">
+                    <input type="checkbox" checked={dishForm.is_available} onChange={e => setDishForm(f => ({ ...f, is_available: e.target.checked }))} className="rounded border-white/20 bg-white/5" />
+                    {t('menu_in_stock', 'В наличии')}
+                  </label>
+                </div>
+              </div>
+              <div className="mt-5 flex justify-end gap-3">
+                <Button variant="ghost" onClick={() => setDishModal({ open: false })}>{t('cancel', 'Отмена')}</Button>
+                <Button onClick={handleSaveDish} disabled={saving || !dishForm.name.trim() || !dishForm.price}>{saving ? t('saving', 'Сохраняем…') : t('save', 'Сохранить')}</Button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </AppShell>
   );
 }

@@ -1,9 +1,12 @@
-import { FileText, FileSpreadsheet, Receipt } from 'lucide-react';
+import { FileSpreadsheet, FileText, Receipt } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { AppShell } from '@/components/app/AppShell';
-import { DataTable } from '@/components/app/DataTable';
-import { Panel } from '@/components/app/Panel';
+import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Spinner } from '@/components/ui/spinner';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useAuth } from '@/context/AuthContext';
 import { useLocale } from '@/context/LocaleContext';
 import { useOwnerWorkspace } from '@/hooks/useOwnerWorkspace';
@@ -41,48 +44,112 @@ export default function ReportsPage() {
   };
 
   return (
-    <AppShell title="Reports" subtitle="X/Z reports, tax reports, and financial summaries." eyebrow="Waitly Finance"
+    <AppShell title={t('reports_title', 'Reports')} subtitle={t('reports_subtitle', 'X/Z reports, tax reports, and financial summaries.')} eyebrow={t('reports_eyebrow', 'Waitly Finance')}
       restaurants={workspace.restaurants}
       selectedRestaurantId={workspace.selectedRestaurantId}
       onRestaurantChange={workspace.setSelectedRestaurantId}
     >
-      <div className="mb-5 grid gap-4 md:grid-cols-2">
-        <Panel title="Generate report" eyebrow="Shift reports" description="Create X (intermediate) or Z (final) reports for the current shift.">
-          <div className="flex flex-wrap gap-3">
-            <Button variant="secondary" onClick={() => generate('X')} disabled={generating || !workspace.selectedRestaurantId}>
-              <FileText className="mr-2 h-4 w-4" />Generate X-report
-            </Button>
-            <Button variant="secondary" onClick={() => generate('Z')} disabled={generating || !workspace.selectedRestaurantId}>
-              <FileSpreadsheet className="mr-2 h-4 w-4" />Generate Z-report
-            </Button>
-            <Button variant="secondary" onClick={load} disabled={loading}>
-              <Receipt className="mr-2 h-4 w-4" />Refresh
-            </Button>
-          </div>
-        </Panel>
-        <Panel title="Tax reports" eyebrow="Uzbekistan" description="Reports for the Tax Committee of Uzbekistan.">
-          <p className="text-sm text-theme-secondary">Tax report generation is available from the Data Export page.</p>
-          <div className="mt-4">
-            <Button variant="secondary" size="sm" onClick={() => window.location.href = '/data-export'}>
-              <FileSpreadsheet className="mr-2 h-4 w-4" />Go to Data Export
-            </Button>
-          </div>
-        </Panel>
+      <Breadcrumb className="mb-4">
+        <BreadcrumbList>
+          <BreadcrumbItem><span className="text-theme-secondary">Waitly</span></BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>{t('reports_title', 'Reports')}</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+
+      <div className="space-y-4">
+        <div className="grid gap-4 md:grid-cols-2">
+          <Card className="border-theme bg-[var(--panel-bg)]">
+            <CardHeader>
+              <div className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[#8fd4ff]">{t('reports_generate_eyebrow', 'Shift reports')}</div>
+              <CardTitle className="mt-2 text-lg text-theme">{t('reports_generate_title', 'Generate report')}</CardTitle>
+              <CardDescription>{t('reports_generate_desc', 'Create X (intermediate) or Z (final) reports for the current shift.')}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-3">
+                <Button variant="secondary" onClick={() => generate('X')} disabled={generating || !workspace.selectedRestaurantId}>
+                  {generating ? <Spinner className="h-4 w-4" /> : <FileText className="mr-2 h-4 w-4" />}{t('reports_generate_x', 'Generate X-report')}
+                </Button>
+                <Button variant="secondary" onClick={() => generate('Z')} disabled={generating || !workspace.selectedRestaurantId}>
+                  {generating ? <Spinner className="h-4 w-4" /> : <FileSpreadsheet className="mr-2 h-4 w-4" />}{t('reports_generate_z', 'Generate Z-report')}
+                </Button>
+                <Button variant="outline" onClick={load} disabled={loading}>
+                  {loading ? <Spinner className="h-4 w-4" /> : <Receipt className="mr-2 h-4 w-4" />}{t('reports_refresh', 'Refresh')}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-theme bg-[var(--panel-bg)]">
+            <CardHeader>
+              <div className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[#8fd4ff]">{t('reports_tax_eyebrow', 'Uzbekistan')}</div>
+              <CardTitle className="mt-2 text-lg text-theme">{t('reports_tax_title', 'Tax reports')}</CardTitle>
+              <CardDescription>{t('reports_tax_desc', 'Reports for the Tax Committee of Uzbekistan.')}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-theme-secondary">{t('reports_tax_note', 'Tax report generation is available from the Data Export page.')}</p>
+              <Button variant="secondary" size="sm" className="mt-4" onClick={() => window.location.href = '/data-export'}>
+                <FileSpreadsheet className="mr-2 h-4 w-4" />{t('reports_tax_go', 'Go to Data Export')}
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Card className="border-theme bg-[var(--panel-bg)]">
+          <CardHeader>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[#8fd4ff]">{t('reports_history_eyebrow', 'History')}</div>
+            <CardTitle className="mt-2 text-lg text-theme">{t('reports_history_title', 'Generated reports')}</CardTitle>
+            <CardDescription>{t('reports_subtitle', 'X/Z reports, tax reports, and financial summaries.')}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-hidden rounded-2xl border border-theme">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t('reports_col_type', 'Type')}</TableHead>
+                    <TableHead>{t('reports_col_date', 'Date')}</TableHead>
+                    <TableHead>{t('reports_col_orders', 'Orders')}</TableHead>
+                    <TableHead>{t('reports_col_revenue', 'Revenue')}</TableHead>
+                    <TableHead>{t('reports_col_discounts', 'Discounts')}</TableHead>
+                    <TableHead>{t('reports_col_generated_by', 'Generated by')}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {loading ? (
+                    Array.from({ length: 4 }).map((_, i) => (
+                      <TableRow key={i}>
+                        <TableCell colSpan={6}><Skeleton className="h-5 w-full bg-white/6" /></TableCell>
+                      </TableRow>
+                    ))
+                  ) : reports.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="py-10 text-center text-theme-muted">{t('reports_empty', 'No reports generated yet.')}</TableCell>
+                    </TableRow>
+                  ) : (
+                    reports.map((row: any) => (
+                      <TableRow key={row.id}>
+                        <TableCell>
+                          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/6 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-widest text-theme-secondary">
+                            <FileText className="h-3 w-3 text-[#8fd4ff]" />
+                            {row.report_type}
+                          </span>
+                        </TableCell>
+                        <TableCell>{new Date(row.created_at).toLocaleString('ru-RU')}</TableCell>
+                        <TableCell className="text-theme">{row.total_orders}</TableCell>
+                        <TableCell className="font-semibold text-theme">{`${Number(row.total_revenue).toLocaleString()} UZS`}</TableCell>
+                        <TableCell>{`${Number(row.total_discounts).toLocaleString()} UZS`}</TableCell>
+                        <TableCell>{row.generated_by_name || '—'}</TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
       </div>
-      <Panel title="Generated reports" eyebrow="History">
-        <DataTable
-          columns={[
-            { label: 'Type', key: 'report_type' },
-            { label: 'Date', key: 'created_at', render: (row) => new Date(row.created_at).toLocaleString('ru-RU') },
-            { label: 'Orders', key: 'total_orders' },
-            { label: 'Revenue', key: 'total_revenue', render: (row) => `${Number(row.total_revenue).toLocaleString()} UZS` },
-            { label: 'Discounts', key: 'total_discounts', render: (row) => `${Number(row.total_discounts).toLocaleString()} UZS` },
-            { label: 'Generated by', key: 'generated_by_name' },
-          ]}
-          rows={reports}
-          emptyMessage="No reports generated yet."
-        />
-      </Panel>
     </AppShell>
   );
 }

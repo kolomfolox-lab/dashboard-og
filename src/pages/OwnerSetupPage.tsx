@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowLeft, ArrowRight, Bot, Building2, CheckSquare, HelpCircle, Loader2, SkipForward, Store, Users } from 'lucide-react';
 import { BrandMark } from '@/components/app/BrandMark';
 import { Button } from '@/components/ui/button';
@@ -69,9 +70,12 @@ const STEP_META: Record<number, StepConfig> = {
 };
 
 const TOTAL_STEPS = 7;
+const setupEase = [0.22, 1, 0.36, 1] as const;
+const setupEnter = { initial: { opacity: 0, y: 22 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.5, ease: setupEase } };
+const setupSpring = { type: 'spring', stiffness: 420, damping: 22 } as const;
 
 export default function OwnerSetupPage() {
-  const { locale } = useLocale();
+  const { locale, t } = useLocale();
   const navigate = useNavigate();
 
   const [step, setStep] = useState(1);
@@ -82,25 +86,24 @@ export default function OwnerSetupPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const t = (ru: string, uz: string) => locale === 'uz' ? uz : ru;
   const meta = STEP_META[step];
 
   const handleNext = () => {
     setError('');
     if (step === 1 && !answers.restaurant_type) {
-      setError(t('Выберите тип заведения.', 'Muassasa turini tanlang.')); return;
+      setError(t('ownerSetup_select_type')); return;
     }
     if (step === 2 && !answers.tables_count) {
-      setError(t('Выберите количество столов.', 'Stollar sonini tanlang.')); return;
+      setError(t('ownerSetup_select_tables')); return;
     }
     if (step === 3 && !answers.staff_count) {
-      setError(t('Выберите количество сотрудников.', 'Xodimlar sonini tanlang.')); return;
+      setError(t('ownerSetup_select_staff')); return;
     }
     if (step === 5 && !chainName.trim()) {
-      setError(t('Введите название сети.', 'Tarmoq nomini kiriting.')); return;
+      setError(t('ownerSetup_enter_chain')); return;
     }
     if (step === 6 && !restaurantName.trim()) {
-      setError(t('Введите название ресторана.', 'Restoran nomini kiriting.')); return;
+      setError(t('ownerSetup_enter_restaurant')); return;
     }
     setStep(s => s + 1);
   };
@@ -117,7 +120,11 @@ export default function OwnerSetupPage() {
       });
       navigate('/dashboard', { replace: true });
     } catch (err: any) {
-      const msg = err?.response?.data?.error || t('Ошибка сохранения.', 'Saqlab bo‘lmadi.');
+      const payload = err?.response?.data;
+      const messages = payload && typeof payload === 'object'
+        ? Object.values(payload).flatMap((value: any) => Array.isArray(value) ? value : [value]).filter((value) => typeof value === 'string')
+        : [];
+      const msg = messages.join('. ') || err?.message || t('ownerSetup_save_error');
       setError(msg);
     } finally {
       setLoading(false);
@@ -140,121 +147,124 @@ export default function OwnerSetupPage() {
   const renderStep = () => {
     if (step === 1) {
       return (
-        <div className="space-y-4">
-          {RESTAURANT_TYPES.map(rt => (
-            <button key={rt.value} type="button" onClick={() => { selectOption('restaurant_type', rt.value); setTimeout(() => setStep(2), 200); }}
+        <motion.div className="space-y-4" {...setupEnter}>
+          {RESTAURANT_TYPES.map((rt, index) => (
+            <motion.button key={rt.value} type="button" onClick={() => { selectOption('restaurant_type', rt.value); setTimeout(() => setStep(2), 200); }}
               className={`flex w-full items-center gap-4 rounded-2xl border px-5 py-4 text-left transition ${
                 answers.restaurant_type === rt.value
                   ? 'border-[#f97360] bg-[#f97360]/15 text-white'
                   : 'border-white/10 bg-white/5 text-white/60 hover:border-white/20 hover:text-white/90'
-              }`}>
-              <span className="font-semibold">{locale === 'uz' ? rt.label_uz : rt.label_ru}</span>
-            </button>
+              }`} initial={{ opacity: 0, x: -24 }} animate={{ opacity: 1, x: 0 }} transition={{ ...setupEnter.transition, delay: index * 0.08 }} whileHover={{ x: 8, scale: 1.015 }} whileTap={{ scale: 0.96 }}>
+              <motion.span animate={answers.restaurant_type === rt.value ? { rotate: [0, -8, 8, 0], scale: [1, 1.12, 1] } : {}} transition={{ duration: 0.45 }}><Store className="h-5 w-5 text-[#8fd4ff]" /></motion.span>
+              <span className="flex-1 font-semibold">{locale === 'uz' ? rt.label_uz : rt.label_ru}</span>
+              <motion.span animate={{ x: [0, 3, 0] }} transition={{ duration: 1.8, repeat: Infinity, delay: index * 0.2 }}><ArrowRight className="h-4 w-4 text-white/25" /></motion.span>
+            </motion.button>
           ))}
-        </div>
+        </motion.div>
       );
     }
 
     if (step === 2) {
       return (
-        <div className="grid grid-cols-2 gap-3">
-          {TABLE_RANGES.map(tr => (
-            <button key={tr.value} type="button" onClick={() => { selectOption('tables_count', tr.value); setStep(3); }}
+        <motion.div className="grid grid-cols-2 gap-3" {...setupEnter}>
+          {TABLE_RANGES.map((tr, index) => (
+            <motion.button key={tr.value} type="button" onClick={() => { selectOption('tables_count', tr.value); setStep(3); }}
               className={`rounded-2xl border px-5 py-6 text-center text-lg font-bold transition ${
                 answers.tables_count === tr.value
                   ? 'border-[#f97360] bg-[#f97360]/15 text-white'
                   : 'border-white/10 bg-white/5 text-white/50 hover:border-white/20 hover:text-white/80'
-              }`}>
-              {tr.value}
-            </button>
+              }`} initial={{ opacity: 0, scale: 0.8, y: 16 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ ...setupSpring, delay: index * 0.08 }} whileHover={{ y: -7, rotate: index % 2 ? 1 : -1 }} whileTap={{ scale: 0.92 }}>
+              <motion.span animate={answers.tables_count === tr.value ? { scale: [1, 1.2, 1] } : {}} transition={{ duration: 0.4 }}>{tr.value}</motion.span>
+            </motion.button>
           ))}
-        </div>
+        </motion.div>
       );
     }
 
     if (step === 3) {
       return (
-        <div className="grid grid-cols-2 gap-3">
-          {STAFF_RANGES.map(sr => (
-            <button key={sr.value} type="button" onClick={() => { selectOption('staff_count', sr.value); setStep(4); }}
+        <motion.div className="grid grid-cols-2 gap-3" {...setupEnter}>
+          {STAFF_RANGES.map((sr, index) => (
+            <motion.button key={sr.value} type="button" onClick={() => { selectOption('staff_count', sr.value); setStep(4); }}
               className={`rounded-2xl border px-5 py-6 text-center text-lg font-bold transition ${
                 answers.staff_count === sr.value
                   ? 'border-[#f97360] bg-[#f97360]/15 text-white'
                   : 'border-white/10 bg-white/5 text-white/50 hover:border-white/20 hover:text-white/80'
-              }`}>
-              {sr.value}
-            </button>
+              }`} initial={{ opacity: 0, scale: 0.8, y: 16 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ ...setupSpring, delay: index * 0.08 }} whileHover={{ y: -7, rotate: index % 2 ? -1 : 1 }} whileTap={{ scale: 0.92 }}>
+              <motion.span animate={answers.staff_count === sr.value ? { scale: [1, 1.2, 1] } : {}} transition={{ duration: 0.4 }}>{sr.value}</motion.span>
+            </motion.button>
           ))}
-        </div>
+        </motion.div>
       );
     }
 
     if (step === 4) {
       return (
-        <div className="space-y-3">
-          {FEATURES.map(f => (
-            <button key={f.value} type="button" onClick={() => toggleFeature(f.value)}
+        <motion.div className="space-y-3" {...setupEnter}>
+          {FEATURES.map((f, index) => (
+            <motion.button key={f.value} type="button" onClick={() => toggleFeature(f.value)}
               className={`flex w-full items-center gap-4 rounded-2xl border px-5 py-4 text-left transition ${
                 answers.features.includes(f.value)
                   ? 'border-[#8fd4ff]/30 bg-[#8fd4ff]/10 text-white'
                   : 'border-white/10 bg-white/5 text-white/50 hover:border-white/20 hover:text-white/80'
-              }`}>
-              <CheckSquare className={`h-5 w-5 shrink-0 ${answers.features.includes(f.value) ? 'text-[#8fd4ff]' : 'text-white/20'}`} />
+              }`} initial={{ opacity: 0, x: -18 }} animate={{ opacity: 1, x: 0 }} transition={{ ...setupEnter.transition, delay: index * 0.07 }} whileHover={{ x: 7, scale: 1.01 }} whileTap={{ scale: 0.97 }}>
+              <motion.span animate={answers.features.includes(f.value) ? { rotate: [0, -12, 12, 0], scale: [1, 1.15, 1] } : {}} transition={{ duration: 0.45 }}><CheckSquare className={`h-5 w-5 shrink-0 ${answers.features.includes(f.value) ? 'text-[#8fd4ff]' : 'text-white/20'}`} /></motion.span>
               <span className="font-semibold">{locale === 'uz' ? f.label_uz : f.label_ru}</span>
-            </button>
+              {answers.features.includes(f.value) ? <motion.span initial={{ scale: 0, rotate: -45 }} animate={{ scale: 1, rotate: 0 }} transition={setupSpring} className="ml-auto text-[#8fd4ff]">✓</motion.span> : null}
+            </motion.button>
           ))}
-          <Button onClick={handleNext} className="mt-2 w-full">
-            {t('Далее', 'Keyingi')} <ArrowRight className="ml-2 h-4 w-4" />
-          </Button>
-        </div>
+          <motion.div whileHover={{ y: -3 }} whileTap={{ scale: 0.97 }}><Button onClick={handleNext} className="mt-2 w-full">
+            {t('ownerSetup_next')} <ArrowRight className="ml-2 h-4 w-4" />
+          </Button></motion.div>
+        </motion.div>
       );
     }
 
     if (step === 5) {
       return (
-        <div className="space-y-4">
-          <input value={chainName} onChange={e => setChainName(e.target.value)}
-            placeholder={t('Например: Oshxona №1', 'Masalan: Oshxona №1')}
+        <motion.div className="space-y-4" {...setupEnter}>
+          <motion.input whileFocus={{ scale: 1.015, borderColor: '#f97360' }} transition={setupSpring} value={chainName} onChange={e => setChainName(e.target.value)}
+            placeholder={t('ownerSetup_chain_placeholder')}
             className="w-full rounded-2xl border border-white/10 bg-white/5 px-5 py-4 text-white placeholder:text-white/22 focus:border-[#f97360] focus:outline-none"
             autoFocus />
-          <Button onClick={handleNext} className="w-full">
-            {t('Далее', 'Keyingi')} <ArrowRight className="ml-2 h-4 w-4" />
-          </Button>
-        </div>
+          <motion.div whileHover={{ y: -3 }} whileTap={{ scale: 0.97 }}><Button onClick={handleNext} className="w-full">
+            {t('ownerSetup_next')} <ArrowRight className="ml-2 h-4 w-4" />
+          </Button></motion.div>
+        </motion.div>
       );
     }
 
     if (step === 6) {
       return (
-        <div className="space-y-4">
-          <input value={restaurantName} onChange={e => setRestaurantName(e.target.value)}
-            placeholder={t('Название ресторана', 'Restoran nomi')}
+        <motion.div className="space-y-4" {...setupEnter}>
+          <motion.input whileFocus={{ scale: 1.015, borderColor: '#f97360' }} transition={setupSpring} value={restaurantName} onChange={e => setRestaurantName(e.target.value)}
+            placeholder={t('ownerSetup_restaurant_placeholder')}
             className="w-full rounded-2xl border border-white/10 bg-white/5 px-5 py-4 text-white placeholder:text-white/22 focus:border-[#f97360] focus:outline-none"
             autoFocus />
-          <Button onClick={handleNext} className="w-full">
-            {t('Далее', 'Keyingi')} <ArrowRight className="ml-2 h-4 w-4" />
-          </Button>
-        </div>
+          <motion.div whileHover={{ y: -3 }} whileTap={{ scale: 0.97 }}><Button onClick={handleNext} className="w-full">
+            {t('ownerSetup_next')} <ArrowRight className="ml-2 h-4 w-4" />
+          </Button></motion.div>
+        </motion.div>
       );
     }
 
     if (step === 7) {
       return (
-        <div className="space-y-4">
-          <input value={botToken} onChange={e => setBotToken(e.target.value)}
+        <motion.div className="space-y-4" {...setupEnter}>
+          <motion.input whileFocus={{ scale: 1.015, borderColor: '#f97360' }} transition={setupSpring} value={botToken} onChange={e => setBotToken(e.target.value)}
             placeholder="123456:ABCdef..."
             className="w-full rounded-2xl border border-white/10 bg-white/5 px-5 py-4 font-mono text-white placeholder:text-white/22 focus:border-[#f97360] focus:outline-none"
             autoFocus />
           <div className="flex gap-3">
-            <Button onClick={() => handleSubmit(true)} variant="secondary" className="flex-1" disabled={loading}>
-              <SkipForward className="mr-2 h-4 w-4" />{t('Пропустить', "O'tkazib yuborish")}
-            </Button>
-            <Button onClick={() => handleSubmit(false)} className="flex-1" disabled={loading || !botToken.trim()}>
+            <motion.div className="flex-1" whileHover={{ y: -3 }} whileTap={{ scale: 0.97 }}><Button onClick={() => handleSubmit(true)} variant="secondary" className="w-full" disabled={loading}>
+              <SkipForward className="mr-2 h-4 w-4" />{t('ownerSetup_skip')}
+            </Button></motion.div>
+            <motion.div className="flex-1" whileHover={{ y: -3 }} whileTap={{ scale: 0.97 }}><Button onClick={() => handleSubmit(false)} className="w-full" disabled={loading || !botToken.trim()}>
               {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              {t('Готово', 'Tayyor')}
-            </Button>
+              {t('ownerSetup_ready')}
+            </Button></motion.div>
           </div>
-        </div>
+        </motion.div>
       );
     }
 
@@ -262,42 +272,44 @@ export default function OwnerSetupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.16),transparent_26%),radial-gradient(circle_at_top_right,rgba(249,115,22,0.12),transparent_22%),linear-gradient(180deg,#07111a,#08131f_55%,#06101b)] px-4 py-10" style={{ fontFamily: "'Manrope', sans-serif" }}>
-      <div className="mx-auto flex min-h-[calc(100vh-5rem)] w-full max-w-lg items-center justify-center">
-        <div className="w-full overflow-hidden rounded-[36px] border border-white/10 bg-[#0b1622]/95 shadow-[0_30px_80px_rgba(0,0,0,0.55)]">
+    <motion.div className="min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.16),transparent_26%),radial-gradient(circle_at_top_right,rgba(249,115,22,0.12),transparent_22%),linear-gradient(180deg,#07111a,#08131f_55%,#06101b)] px-4 py-10" style={{ fontFamily: "'Manrope', sans-serif" }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.7 }}>
+      <motion.div className="pointer-events-none fixed -left-24 -top-24 h-80 w-80 rounded-full bg-[#8fd4ff]/10 blur-3xl" animate={{ x: [0, 30, 0], y: [0, 22, 0], scale: [1, 1.14, 1] }} transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }} />
+      <motion.div className="pointer-events-none fixed -bottom-28 -right-20 h-96 w-96 rounded-full bg-[#f97360]/10 blur-3xl" animate={{ x: [0, -24, 0], scale: [1, 0.88, 1] }} transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }} />
+      <motion.div className="mx-auto flex min-h-[calc(100vh-5rem)] w-full max-w-lg items-center justify-center" initial={{ y: 24, scale: 0.97 }} animate={{ y: 0, scale: 1 }} transition={{ duration: 0.7, ease: setupEase }}>
+        <motion.div className="w-full overflow-hidden rounded-[36px] border border-white/10 bg-[#0b1622]/95 shadow-[0_30px_80px_rgba(0,0,0,0.55)]" whileHover={{ boxShadow: '0 35px 100px rgba(0,0,0,0.62)' }}>
           <div className="p-8">
-            <div className="mb-8 flex justify-start">
+            <motion.div className="mb-8 flex items-center justify-between gap-4" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ ...setupEnter.transition, delay: 0.15 }}>
               <BrandMark />
-            </div>
+              <motion.button type="button" onClick={() => navigate('/dashboard')} className="inline-flex items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-xs font-semibold text-white/50 transition hover:border-white/20 hover:text-white" whileHover={{ x: -4 }} whileTap={{ scale: 0.95 }}>
+                <ArrowLeft className="h-3.5 w-3.5" /> Назад
+              </motion.button>
+            </motion.div>
 
             <div className="mb-6 flex gap-1.5">
               {Array.from({ length: TOTAL_STEPS }, (_, i) => i + 1).map(i => (
-                <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${i <= step ? 'bg-[#f97360]' : 'bg-white/10'}`} />
+                <motion.div key={i} className={`h-1 flex-1 rounded-full transition-colors ${i <= step ? 'bg-[#f97360]' : 'bg-white/10'}`} initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ ...setupSpring, delay: i * 0.06 }} />
               ))}
             </div>
 
-            {error ? <div className="mb-4 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-100">{error}</div> : null}
+            <AnimatePresence mode="wait">{error ? <motion.div key={error} className="mb-4 overflow-hidden rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-100" initial={{ opacity: 0, height: 0, y: -8 }} animate={{ opacity: 1, height: 'auto', y: 0 }} exit={{ opacity: 0, height: 0 }}>{error}</motion.div> : null}</AnimatePresence>
 
             <div className="space-y-5">
-              <div className="grid h-14 w-14 place-items-center rounded-2xl bg-[#8fd4ff]/15">
+              <motion.div className="grid h-14 w-14 place-items-center rounded-2xl bg-[#8fd4ff]/15" animate={{ rotate: [0, 4, -4, 0], scale: [1, 1.06, 1] }} transition={{ duration: 4, repeat: Infinity }}>
                 <HelpCircle className="h-6 w-6 text-[#8fd4ff]" />
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold text-white">{locale === 'uz' ? meta.title_uz : meta.title_ru}</h2>
-                <p className="mt-2 text-sm leading-7 text-white/52">{locale === 'uz' ? meta.desc_uz : meta.desc_ru}</p>
-              </div>
+              </motion.div>
+              <motion.div key={step} {...setupEnter}><h2 className="text-2xl font-bold text-white">{locale === 'uz' ? meta.title_uz : meta.title_ru}</h2><p className="mt-2 text-sm leading-7 text-white/52">{locale === 'uz' ? meta.desc_uz : meta.desc_ru}</p></motion.div>
 
-              {renderStep()}
+              <AnimatePresence mode="wait" initial={false}><motion.div key={step} className="min-w-0" initial={{ opacity: 0, x: 18 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -18 }} transition={{ duration: 0.3 }}>{renderStep()}</motion.div></AnimatePresence>
 
               {step > 1 && step < 5 && (
-                <Button variant="ghost" onClick={() => setStep(s => s - 1)} className="w-full">
-                  <ArrowLeft className="mr-2 h-4 w-4" />{t('Назад', 'Orqaga')}
-                </Button>
+                <motion.div whileHover={{ x: -4 }} whileTap={{ scale: 0.97 }}><Button variant="ghost" onClick={() => setStep(s => s - 1)} className="w-full">
+                  <ArrowLeft className="mr-2 h-4 w-4" />{t('ownerSetup_back')}
+                </Button></motion.div>
               )}
             </div>
           </div>
-        </div>
-      </div>
-    </div>
+        </motion.div>
+      </motion.div>
+    </motion.div>
   );
 }

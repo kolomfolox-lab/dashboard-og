@@ -2,40 +2,48 @@
 import { motion } from 'motion/react';
 import useEmblaCarousel from 'embla-carousel-react';
 import { Button } from '@/components/ui/button';
+import { useLocale } from '@/context/LocaleContext';
 import { cn } from '@/lib/utils';
 
-const slides = [
-  {
-    id: 'hq',
-    alt: 'Executive dashboard view',
-    title: 'One operating screen for the whole business',
-    description: 'Watch revenue, staff performance, keys, and subscription health from a command center built for actual operators.',
-    image: 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1200&q=80',
-  },
-  {
-    id: 'owner',
-    alt: 'Restaurant owner overview',
-    title: 'Owners see the floor and the money together',
-    description: 'Track active orders, team output, top dishes, and shift momentum without jumping through five screens.',
-    image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80',
-  },
-  {
-    id: 'team',
-    alt: 'Team workflow image',
-    title: 'Every panel is structured like a control room',
-    description: 'Cleaner hierarchy, stronger contrast, and better spacing mean people can actually work fast under pressure.',
-    image: 'https://images.unsplash.com/photo-1556740749-887f6717d7e4?auto=format&fit=crop&w=1200&q=80',
-  },
-  {
-    id: 'launch',
-    alt: 'Analytics and launch visual',
-    title: 'Built to scale into production rollout',
-    description: 'This React shell is ready for email OTP, Telegram auth, backend analytics, and future subdomain deployment.',
-    image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=80',
-  },
-] as const;
+function useTranslations() {
+  const { t } = useLocale();
+  return {
+    slides: [
+      {
+        id: 'hq',
+        alt: t('onboardingDialog_alt_hq', 'Executive dashboard view'),
+        title: t('onboardingDialog_title_hq', 'One operating screen for the whole business'),
+        description: t('onboardingDialog_desc_hq', 'Watch revenue, staff performance, keys, and subscription health from a command center built for actual operators.'),
+        image: 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1200&q=80',
+      },
+      {
+        id: 'owner',
+        alt: t('onboardingDialog_alt_owner', 'Restaurant owner overview'),
+        title: t('onboardingDialog_title_owner', 'Owners see the floor and the money together'),
+        description: t('onboardingDialog_desc_owner', 'Track active orders, team output, top dishes, and shift momentum without jumping through five screens.'),
+        image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80',
+      },
+      {
+        id: 'team',
+        alt: t('onboardingDialog_alt_team', 'Team workflow image'),
+        title: t('onboardingDialog_title_team', 'Every panel is structured like a control room'),
+        description: t('onboardingDialog_desc_team', 'Cleaner hierarchy, stronger contrast, and better spacing mean people can actually work fast under pressure.'),
+        image: 'https://images.unsplash.com/photo-1556740749-887f6717d7e4?auto=format&fit=crop&w=1200&q=80',
+      },
+      {
+        id: 'launch',
+        alt: t('onboardingDialog_alt_launch', 'Analytics and launch visual'),
+        title: t('onboardingDialog_title_launch', 'Built to scale into production rollout'),
+        description: t('onboardingDialog_desc_launch', 'This React shell is ready for email OTP, Telegram auth, backend analytics, and future subdomain deployment.'),
+        image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=80',
+      },
+    ] as const,
+  };
+}
 
 export function OnboardingDialog({ defaultOpen = true, onComplete }: { defaultOpen?: boolean; onComplete?: () => void }) {
+  const { t } = useLocale();
+  const { slides } = useTranslations();
   const [open, setOpen] = React.useState(defaultOpen);
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: false });
   const [activeIndex, setActiveIndex] = React.useState(0);
@@ -83,7 +91,7 @@ export function OnboardingDialog({ defaultOpen = true, onComplete }: { defaultOp
                     <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(7,17,29,0)_0%,rgba(7,17,29,0.72)_100%)]" />
                     <div className="absolute inset-x-0 bottom-0 p-6">
                       <span className="inline-flex rounded-full border border-white/16 bg-black/24 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-white/72">
-                        21st.dev inspired flow
+                        {t('onboardingDialog_badge', '21st.dev inspired flow')}
                       </span>
                     </div>
                   </div>
@@ -105,7 +113,7 @@ export function OnboardingDialog({ defaultOpen = true, onComplete }: { defaultOp
           </div>
 
           <div className="mt-5 grid gap-3 px-1">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.34em] text-[#85d6ff]">Launch walkthrough</div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.34em] text-[#85d6ff]">{t('onboardingDialog_launch_walkthrough', 'Launch walkthrough')}</div>
             <h2 className="font-display text-3xl text-white">{currentSlide.title}</h2>
             <p className="max-w-2xl text-sm leading-7 text-white/64">{currentSlide.description}</p>
           </div>
@@ -113,14 +121,14 @@ export function OnboardingDialog({ defaultOpen = true, onComplete }: { defaultOp
           <div className="mt-7 flex items-center justify-between px-1">
             <div>
               {!isFirstSlide && (
-                <Button variant="ghost" onClick={() => emblaApi?.scrollPrev()}>
-                  Back
-                </Button>
+                  <Button variant="ghost" onClick={() => emblaApi?.scrollPrev()}>
+                    {t('onboardingDialog_back', 'Back')}
+                  </Button>
               )}
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="outline" onClick={close}>Skip</Button>
-              <Button onClick={handleNext}>{isLastSlide ? 'Open workspace' : 'Next'}</Button>
+              <Button variant="outline" onClick={close}>{t('onboardingDialog_skip', 'Skip')}</Button>
+              <Button onClick={handleNext}>{isLastSlide ? t('onboardingDialog_open_workspace', 'Open workspace') : t('onboardingDialog_next', 'Next')}</Button>
             </div>
           </div>
         </div>

@@ -40,7 +40,7 @@ interface SurveyTemplate {
 }
 
 export default function MarketerDashboardPage() {
-  const { locale } = useLocale();
+  const { locale, t } = useLocale();
   const navigate = useNavigate();
   const [promos, setPromos] = useState<PromoCode[]>([]);
   const [campaigns, setCampaigns] = useState<AutoNotifySetting[]>([]);
@@ -92,9 +92,9 @@ export default function MarketerDashboardPage() {
   if (loading) {
     return (
       <AppShell
-        title={locale === 'uz' ? 'Marketing paneli' : 'Панель маркетолога'}
-        subtitle={locale === 'uz' ? 'Promo-kodlar, avtomatik xabarlar va obunachilar.' : 'Промо-коды, автоматические рассылки и подписчики.'}
-        eyebrow={locale === 'uz' ? 'Marketing' : 'Маркетинг'}
+        title={t('marketer_title', 'Панель маркетолога')}
+        subtitle={t('marketer_subtitle', 'Промо-коды, автоматические рассылки и подписчики.')}
+        eyebrow={t('marketer_eyebrow', 'Маркетинг')}
       >
         <div className="flex h-[400px] items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-white/40" />
@@ -105,30 +105,30 @@ export default function MarketerDashboardPage() {
 
   return (
     <AppShell
-      title={locale === 'uz' ? 'Marketing paneli' : 'Панель маркетолога'}
-      subtitle={locale === 'uz' ? 'Promo-kodlar, avtomatik xabarlar va obunachilar.' : 'Промо-коды, автоматические рассылки и подписчики.'}
-      eyebrow={locale === 'uz' ? 'Marketing' : 'Маркетинг'}
+      title={t('marketer_title', 'Панель маркетолога')}
+      subtitle={t('marketer_subtitle', 'Промо-коды, автоматические рассылки и подписчики.')}
+      eyebrow={t('marketer_eyebrow', 'Маркетинг')}
     >
       <div className="space-y-6">
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <MetricCard title={locale === 'uz' ? 'Faol promolar' : 'Активные промо'} value={activePromos} note={locale === 'uz' ? 'Joriy aksiyalar' : 'Текущие акции'} icon={Gift} tone="coral" />
-          <MetricCard title={locale === 'uz' ? 'Obunachilar' : 'Подписчики'} value={subscribers} note={locale === 'uz' ? 'Telegram kanallar' : 'Telegram-каналы'} icon={UsersRound} tone="cyan" />
-          <MetricCard title={locale === 'uz' ? 'Kampaniyalar' : 'Кампании'} value={activeCampaigns} note={locale === 'uz' ? 'Avto-xabarlar' : 'Авто-рассылки'} icon={Megaphone} tone="sand" />
-          <MetricCard title={locale === 'uz' ? 'Konversiya' : 'Конверсия'} value={conversionRate} note={locale === 'uz' ? 'Promo kodlar' : 'Промо-коды'} icon={Percent} tone="mint" />
+          <MetricCard title={t('marketer_active_promos', 'Активные промо')} value={activePromos} note={t('marketer_current_promos', 'Текущие акции')} icon={Gift} tone="coral" />
+          <MetricCard title={t('marketer_subscribers', 'Подписчики')} value={subscribers} note={t('marketer_telegram_channels', 'Telegram-каналы')} icon={UsersRound} tone="cyan" />
+          <MetricCard title={t('marketer_campaigns', 'Кампании')} value={activeCampaigns} note={t('marketer_auto_mailings', 'Авто-рассылки')} icon={Megaphone} tone="sand" />
+          <MetricCard title={t('marketer_conversion', 'Конверсия')} value={conversionRate} note={t('marketer_promo_codes', 'Промо-коды')} icon={Percent} tone="mint" />
         </div>
 
         <div className="grid gap-6 xl:grid-cols-2">
-          <Panel title={locale === 'uz' ? 'So\'nggi promo-kodlar' : 'Последние промо-коды'} eyebrow={locale === 'uz' ? 'Aksiyalar' : 'Акции'}>
+          <Panel title={t('marketer_recent_promos', 'Последние промо-коды')} eyebrow={t('marketer_promotions', 'Акции')}>
             {promos.length === 0 ? (
-              <div className="text-sm text-white/40">{locale === 'uz' ? 'Promo-kodlar topilmadi.' : 'Промо-коды не найдены.'}</div>
+              <div className="text-sm text-white/40">{t('marketer_no_promos', 'Промо-коды не найдены.')}</div>
             ) : (
               <>
                 <DataTable
                   rows={promos.slice(0, 5)}
                   columns={[
-                    { label: 'Code', key: 'code', render: (row) => <span className="font-mono font-bold text-white">{row.code}</span> },
+                    { label: t('marketer_col_code', 'Код'), key: 'code', render: (row) => <span className="font-mono font-bold text-white">{row.code}</span> },
                     {
-                      label: locale === 'uz' ? 'Chegirma' : 'Скидка',
+                      label: t('marketer_col_discount', 'Скидка'),
                       key: 'discount_display',
                       render: (row) => {
                         if (row.discount_display) return row.discount_display;
@@ -136,22 +136,22 @@ export default function MarketerDashboardPage() {
                         return '—';
                       },
                     },
-                    { label: locale === 'uz' ? 'Foydalanish' : 'Использовано', key: 'usage_count', render: (row) => row.usage_count ?? '—' },
-                    { label: locale === 'uz' ? 'Muddat' : 'Срок', key: 'valid_until', render: (row) => row.valid_until ? new Date(row.valid_until).toLocaleDateString() : '—' },
+                    { label: t('marketer_col_usage', 'Использовано'), key: 'usage_count', render: (row) => row.usage_count ?? '—' },
+                    { label: t('marketer_col_expiry', 'Срок'), key: 'valid_until', render: (row) => row.valid_until ? new Date(row.valid_until).toLocaleDateString() : '—' },
                   ]}
-                  emptyMessage={locale === 'uz' ? 'Promo-kodlar topilmadi.' : 'Промо-коды не найдены.'}
+                  emptyMessage={t('marketer_no_promos', 'Промо-коды не найдены.')}
                 />
                 <div className="mt-4">
                   <Button variant="secondary" size="sm" onClick={() => navigate('/promo')}>
-                    {locale === 'uz' ? 'Barcha promolar' : 'Все промо'}
+                    {t('marketer_all_promos', 'Все промо')}
                   </Button>
                 </div>
               </>
             )}
           </Panel>
-          <Panel title={locale === 'uz' ? 'Avto-xabarlar' : 'Авто-рассылки'} eyebrow={locale === 'uz' ? 'Kampaniyalar' : 'Кампании'}>
+          <Panel title={t('marketer_auto_mailings_title', 'Авто-рассылки')} eyebrow={t('marketer_campaigns_eyebrow', 'Кампании')}>
             {campaigns.length === 0 ? (
-              <div className="text-sm text-white/40">{locale === 'uz' ? 'Kampaniyalar topilmadi.' : 'Кампании не найдены.'}</div>
+              <div className="text-sm text-white/40">{t('marketer_no_campaigns', 'Кампании не найдены.')}</div>
             ) : (
               <>
                 <div className="space-y-3">
@@ -159,17 +159,17 @@ export default function MarketerDashboardPage() {
                     <div key={c.id} className="flex items-center justify-between rounded-2xl border border-white/5 bg-white/2 p-4">
                       <div>
                         <div className="text-sm font-bold text-white">{c.name || c.template_name || c.trigger_event || '—'}</div>
-                        <div className="mt-0.5 text-[10px] text-white/40">{c.sent_count ?? 0} {locale === 'uz' ? 'yuborilgan' : 'отправлено'}</div>
+                        <div className="mt-0.5 text-[10px] text-white/40">{c.sent_count ?? 0} {t('marketer_sent', 'отправлено')}</div>
                       </div>
                       <span className={`inline-block rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-widest ${statusColor(c.is_active !== false ? 'active' : 'paused')}`}>
-                        {c.is_active !== false ? (locale === 'uz' ? 'Faol' : 'Активна') : locale === 'uz' ? 'Pauza' : 'Пауза'}
+                        {c.is_active !== false ? t('marketer_active', 'Активна') : t('marketer_paused', 'Пауза')}
                       </span>
                     </div>
                   ))}
                 </div>
                 <div className="mt-4">
                   <Button variant="secondary" size="sm" onClick={() => navigate('/auto-notify')}>
-                    {locale === 'uz' ? 'Barcha kampaniyalar' : 'Все кампании'}
+                    {t('marketer_all_campaigns', 'Все кампании')}
                   </Button>
                 </div>
               </>
@@ -177,9 +177,9 @@ export default function MarketerDashboardPage() {
           </Panel>
         </div>
 
-        <Panel title={locale === 'uz' ? 'Shablonlar' : 'Шаблоны уведомлений'} eyebrow={locale === 'uz' ? 'Content' : 'Контент'}>
+        <Panel title={t('marketer_templates_title', 'Шаблоны уведомлений')} eyebrow={t('marketer_content', 'Контент')}>
           {templates.length === 0 ? (
-            <div className="text-sm text-white/40">{locale === 'uz' ? 'Shablonlar topilmadi.' : 'Шаблоны не найдены.'}</div>
+            <div className="text-sm text-white/40">{t('marketer_no_templates', 'Шаблоны не найдены.')}</div>
           ) : (
             <div className="grid gap-4 md:grid-cols-3">
               {templates.slice(0, 6).map((t) => (

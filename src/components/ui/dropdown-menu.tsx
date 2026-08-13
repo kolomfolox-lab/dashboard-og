@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronDown } from "lucide-react";
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useLocale } from "@/context/LocaleContext";
 
 type DropdownMenuProps = {
   options: {
@@ -16,6 +17,7 @@ type DropdownMenuProps = {
 };
 
 const DropdownMenu = ({ options, children, className }: DropdownMenuProps) => {
+  const { t } = useLocale();
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -25,7 +27,7 @@ const DropdownMenu = ({ options, children, className }: DropdownMenuProps) => {
         onClick={() => setIsOpen((current) => !current)}
         className={`px-4 py-2 !bg-[#11111198] hover:!bg-[#111111d1] shadow-[0_0_20px_rgba(0,0,0,0.2)] border-none rounded-xl backdrop-blur-sm ${className || ''}`}
       >
-        {children ?? "Menu"}
+        {children ?? t('dropdownMenu_menu', 'Menu')}
         <motion.span
           className="ml-2"
           animate={{ rotate: isOpen ? 180 : 0 }}
@@ -65,7 +67,7 @@ const DropdownMenu = ({ options, children, className }: DropdownMenuProps) => {
                 </motion.button>
               ))
             ) : (
-              <div className="px-4 py-2 text-xs text-white">No options</div>
+              <div className="px-4 py-2 text-xs text-white">{t('dropdownMenu_no_options', 'No options')}</div>
             )}
           </motion.div>
         )}

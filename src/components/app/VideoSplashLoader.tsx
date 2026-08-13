@@ -1,6 +1,7 @@
 ﻿import { useEffect, useState } from 'react';
 
 import { cn } from '@/lib/utils';
+import { useLocale } from '@/context/LocaleContext';
 
 interface VideoSplashLoaderProps {
   title?: string;
@@ -11,12 +12,15 @@ interface VideoSplashLoaderProps {
 }
 
 export function VideoSplashLoader({
-  title = 'Waitly is getting things ready.',
-  subtitle = 'Preparing your workspace.',
+  title,
+  subtitle,
   className,
   compact = false,
   durationMs = 4000,
 }: VideoSplashLoaderProps) {
+  const { t } = useLocale();
+  const resolvedTitle = title ?? t('videoSplash_title', 'Waitly is getting things ready.');
+  const resolvedSubtitle = subtitle ?? t('videoSplash_subtitle', 'Preparing your workspace.');
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
@@ -57,8 +61,8 @@ export function VideoSplashLoader({
           </div>
         </div>
 
-        <h2 className="mt-7 text-[31px] font-medium tracking-[-0.04em] text-[#202327] md:text-[38px]">{title}</h2>
-        <p className="mx-auto mt-3 max-w-[420px] text-[15px] leading-7 text-[#6a6f76] md:text-[16px]">{subtitle}</p>
+        <h2 className="mt-7 text-[31px] font-medium tracking-[-0.04em] text-[#202327] md:text-[38px]">{resolvedTitle}</h2>
+        <p className="mx-auto mt-3 max-w-[420px] text-[15px] leading-7 text-[#6a6f76] md:text-[16px]">{resolvedSubtitle}</p>
 
         <div className="mx-auto mt-8 w-full max-w-[320px]">
           <div className="h-[3px] overflow-hidden rounded-full bg-black/8">

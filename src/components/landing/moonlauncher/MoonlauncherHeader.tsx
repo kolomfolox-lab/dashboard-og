@@ -1,8 +1,9 @@
 import { Menu, X } from 'lucide-react';
 
-import waitlyLogo from '@/assets/waitly-logo.svg';
+import waitlyLogo from '@/assets/waitly-logo.webp';
 import { navItems } from '@/components/landing/moonlauncher/data';
 import { Button } from '@/components/ui/button';
+import { InteractiveHoverButton } from '@/components/ui/interactive-hover-button';
 
 type Props = {
   mobileOpen: boolean;
@@ -16,8 +17,8 @@ export function WaitlyHeader({ mobileOpen, onToggle, onClose }: Props) {
       <div className="mx-auto max-w-7xl rounded-[28px] border border-white/10 bg-[#081320]/84 px-4 py-3 shadow-[0_16px_50px_rgba(0,0,0,0.24)] backdrop-blur-xl md:px-5">
         <div className="flex items-center justify-between gap-4">
           <a href="#top" className="flex min-w-0 items-center gap-3">
-            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.12),rgba(255,255,255,0.04))]">
-              <img src={waitlyLogo} alt="Waitly" className="h-7 w-7 object-contain" />
+            <div className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.12),rgba(255,255,255,0.04))]">
+              <img src={waitlyLogo} alt="Waitly" className="h-10 w-10 object-contain" />
             </div>
             <div className="min-w-0">
               <div className="truncate text-sm font-black uppercase tracking-[0.28em] text-white/88">Waitly</div>
@@ -39,11 +40,9 @@ export function WaitlyHeader({ mobileOpen, onToggle, onClose }: Props) {
                 Reviews Hub
               </a>
             </Button>
-            <Button asChild size="sm">
-              <a href="https://app.moonlauncher.org" target="_blank" rel="noreferrer">
-                Open Waitly Control
-              </a>
-            </Button>
+            <a href="https://app.moonlauncher.org" target="_blank" rel="noreferrer">
+              <InteractiveHoverButton text="Login" className="h-10 w-32 text-sm" />
+            </a>
           </div>
 
           <button

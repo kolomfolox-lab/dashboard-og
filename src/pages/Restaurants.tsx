@@ -64,7 +64,7 @@ export default function RestaurantsPage() {
         setOrders([]);
       }
     } catch (err: any) {
-      setError(err?.response?.data?.error || (locale === 'uz' ? 'Restoran operatsiyalarini yuklab bo‘lmadi.' : 'Не удалось загрузить операции ресторанов.'));
+      setError(err?.response?.data?.error || t('restaurants_page_load_error', 'Не удалось загрузить операции ресторанов.'));
     } finally {
       setLoading(false);
     }
@@ -81,35 +81,35 @@ export default function RestaurantsPage() {
   };
 
   const handleDeleteChain = async (chain: any) => {
-    if (!window.confirm(`${locale === 'uz' ? 'Tarmoq o‘chirilsinmi' : 'Удалить сеть'} ${chain.name}?`)) return;
+    if (!window.confirm(`${t('restaurants_page_delete_chain', 'Удалить сеть')} ${chain.name}?`)) return;
     setError('');
     try {
       await adminAPI.deleteChain(chain.id);
       await load();
     } catch (err: any) {
-      setError(err?.response?.data?.error || (locale === 'uz' ? 'Tarmoqni o‘chirib bo‘lmadi.' : 'Не удалось удалить сеть.'));
+      setError(err?.response?.data?.error || t('restaurants_page_delete_chain_error', 'Не удалось удалить сеть.'));
     }
   };
 
   const handleDeleteRestaurant = async (restaurant: any) => {
-    if (!window.confirm(`${locale === 'uz' ? 'Restoran o‘chirilsinmi' : 'Удалить ресторан'} ${restaurant.name}?`)) return;
+    if (!window.confirm(`${t('restaurants_page_delete_restaurant', 'Удалить ресторан')} ${restaurant.name}?`)) return;
     setError('');
     try {
       await adminAPI.deleteRestaurant(restaurant.id);
       await load();
     } catch (err: any) {
-      setError(err?.response?.data?.error || (locale === 'uz' ? 'Restoranni o‘chirib bo‘lmadi.' : 'Не удалось удалить ресторан.'));
+      setError(err?.response?.data?.error || t('restaurants_page_delete_restaurant_error', 'Не удалось удалить ресторан.'));
     }
   };
 
   const handleRevokeKey = async (key: any) => {
-    if (!window.confirm(`${locale === 'uz' ? 'Kalit bekor qilinsinmi' : 'Отозвать ключ'} ${key.key}?`)) return;
+    if (!window.confirm(`${t('restaurants_page_revoke_key', 'Отозвать ключ')} ${key.key}?`)) return;
     setError('');
     try {
       await adminAPI.revokeKey(key.id);
       await load();
     } catch (err: any) {
-      setError(err?.response?.data?.error || (locale === 'uz' ? 'Kalitni bekor qilib bo‘lmadi.' : 'Не удалось отозвать ключ.'));
+      setError(err?.response?.data?.error || t('restaurants_page_revoke_key_error', 'Не удалось отозвать ключ.'));
     }
   };
 
@@ -118,23 +118,23 @@ export default function RestaurantsPage() {
       <AppShell
         title={t('restaurants_title_superadmin', 'Сети и рестораны')}
         subtitle={t('restaurants_subtitle_superadmin', 'Управление сетями, ресторанами и ключами подписки в одном месте.')}
-        eyebrow={locale === 'uz' ? 'Platforma boshqaruvi' : 'Управление платформой'}
+        eyebrow={t('restaurants_page_platform_control', 'Управление платформой')}
       >
         <div className="space-y-4">
           {error ? <div className="rounded-[24px] border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-100">{error}</div> : null}
           <div className="grid gap-4 md:grid-cols-3">
-            <Panel title={`${chains.length}`} eyebrow={locale === 'uz' ? 'Tarmoqlar' : 'Сети'} description={locale === 'uz' ? 'Platformadagi restoran guruhlari.' : 'Группы ресторанов на платформе.'} className="h-full">
-              <div className="flex items-center gap-3 text-white/52"><Store className="h-4 w-4 text-[#8fd4ff]" /> {locale === 'uz' ? 'Hammasi bir joyda.' : 'Все в одном месте.'}</div>
+            <Panel title={`${chains.length}`} eyebrow={t('restaurants_page_chains', 'Сети')} description={t('restaurants_page_chains_desc', 'Группы ресторанов на платформе.')} className="h-full">
+              <div className="flex items-center gap-3 text-white/52"><Store className="h-4 w-4 text-[#8fd4ff]" /> {t('restaurants_page_chains_note', 'Все в одном месте.')}</div>
             </Panel>
-            <Panel title={`${restaurants.length}`} eyebrow={locale === 'uz' ? 'Restoranlar' : 'Рестораны'} description={locale === 'uz' ? 'Alohida nuqtalarni boshqarish uchun.' : 'Для управления отдельными точками.'} className="h-full">
-              <div className="flex items-center gap-3 text-white/52"><Store className="h-4 w-4 text-[#ffb78f]" /> {locale === 'uz' ? 'Alohida boshqaruv.' : 'Отдельное управление.'}</div>
+            <Panel title={`${restaurants.length}`} eyebrow={t('restaurants_page_restaurants', 'Рестораны')} description={t('restaurants_page_restaurants_desc', 'Для управления отдельными точками.')} className="h-full">
+              <div className="flex items-center gap-3 text-white/52"><Store className="h-4 w-4 text-[#ffb78f]" /> {t('restaurants_page_restaurants_note', 'Отдельное управление.')}</div>
             </Panel>
-            <Panel title={`${keys.length}`} eyebrow={locale === 'uz' ? 'Kalitlar' : 'Ключи'} description={locale === 'uz' ? 'Obuna kalitlari va ularning holati.' : 'Ключи подписки и их состояние.'} className="h-full">
-              <div className="flex items-center gap-3 text-white/52"><KeyRound className="h-4 w-4 text-[#a7f3d0]" /> {locale === 'uz' ? 'Faol va bo‘sh kalitlar.' : 'Активные и свободные ключи.'}</div>
+            <Panel title={`${keys.length}`} eyebrow={t('restaurants_page_keys', 'Ключи')} description={t('restaurants_page_keys_desc', 'Ключи подписки и их состояние.')} className="h-full">
+              <div className="flex items-center gap-3 text-white/52"><KeyRound className="h-4 w-4 text-[#a7f3d0]" /> {t('restaurants_page_keys_note', 'Активные и свободные ключи.')}</div>
             </Panel>
           </div>
 
-          <Panel title={locale === 'uz' ? 'Tarmoqlar' : 'Сети'} eyebrow={locale === 'uz' ? 'Boshqaruv' : 'Управление'} description={locale === 'uz' ? 'Tarmoqni to‘liq o‘chirish yoki tuzilmani tekshirish mumkin.' : 'Можно удалить сеть целиком или проверить структуру.'}>
+          <Panel title={t('restaurants_page_chains', 'Сети')} eyebrow={t('restaurants_page_management', 'Управление')} description={t('restaurants_page_chains_manage', 'Можно удалить сеть целиком или проверить структуру.')}>
             <div className="grid gap-4 xl:grid-cols-2">
               {chains.map((chain) => (
                 <div key={chain.id} className="rounded-[24px] border border-white/8 bg-black/12 p-5">
@@ -142,11 +142,11 @@ export default function RestaurantsPage() {
                     <div>
                       <div className="font-display text-2xl text-white">{chain.name}</div>
                       <div className="mt-2 text-sm text-white/52">{chain.subdomain}.moonlauncher.org</div>
-                      <div className="mt-4 text-sm text-white/48">{locale === 'uz' ? 'Ega' : 'Владелец'}: {chain.owner}</div>
-                      <div className="mt-1 text-sm text-white/48">{locale === 'uz' ? 'Restoranlar soni' : 'Количество ресторанов'}: {chain.restaurant_count}</div>
+                      <div className="mt-4 text-sm text-white/48">{t('restaurants_page_owner_label', 'Владелец')}: {chain.owner}</div>
+                      <div className="mt-1 text-sm text-white/48">{t('restaurants_page_restaurant_count', 'Количество ресторанов')}: {chain.restaurant_count}</div>
                     </div>
                     <Button variant="destructive" size="sm" onClick={() => handleDeleteChain(chain)}>
-                      <Trash2 className="mr-2 h-4 w-4" /> {locale === 'uz' ? 'Tarmoqni o‘chirish' : 'Удалить сеть'}
+                      <Trash2 className="mr-2 h-4 w-4" /> {t('restaurants_page_delete_chain', 'Удалить сеть')}
                     </Button>
                   </div>
                 </div>
@@ -154,28 +154,28 @@ export default function RestaurantsPage() {
             </div>
           </Panel>
 
-          <Panel title={locale === 'uz' ? 'Restoranlar' : 'Рестораны'} eyebrow={locale === 'uz' ? 'Nuqtalar' : 'Точки'} description={locale === 'uz' ? 'Har bir restoranni alohida boshqarish mumkin.' : 'Можно управлять каждым рестораном отдельно.'}>
+          <Panel title={t('restaurants_page_restaurants', 'Рестораны')} eyebrow={t('restaurants_page_points', 'Точки')} description={t('restaurants_page_restaurants_manage', 'Можно управлять каждым рестораном отдельно.')}>
             <DataTable
               rows={restaurants}
               columns={[
-                { label: locale === 'uz' ? 'Restoran' : 'Ресторан', key: 'name', render: (row) => <div><div className="font-semibold text-white">{row.name}</div><div className="text-xs text-white/38">{row.slug}</div></div> },
-                { label: locale === 'uz' ? 'Tarmoq' : 'Сеть', key: 'chain' },
-                { label: locale === 'uz' ? 'Ega' : 'Владелец', key: 'owner' },
-                { label: locale === 'uz' ? 'Obuna' : 'Подписка', key: 'subscription_active', render: (row) => row.subscription_active ? (locale === 'uz' ? 'Faol' : 'Активна') : (locale === 'uz' ? 'Nofaol' : 'Неактивна') },
-                { label: locale === 'uz' ? 'Amal' : 'Действие', key: 'id', render: (row) => <Button variant="outline" size="sm" onClick={() => handleDeleteRestaurant(row)}>{locale === 'uz' ? 'O‘chirish' : 'Удалить'}</Button> },
+                { label: t('restaurants_page_col_restaurant', 'Ресторан'), key: 'name', render: (row) => <div><div className="font-semibold text-white">{row.name}</div><div className="text-xs text-white/38">{row.slug}</div></div> },
+                { label: t('restaurants_page_col_chain', 'Сеть'), key: 'chain' },
+                { label: t('restaurants_page_col_owner', 'Владелец'), key: 'owner' },
+                { label: t('restaurants_page_col_subscription', 'Подписка'), key: 'subscription_active', render: (row) => row.subscription_active ? t('restaurants_page_active', 'Активна') : t('restaurants_page_inactive', 'Неактивна') },
+                { label: t('restaurants_page_col_action', 'Действие'), key: 'id', render: (row) => <Button variant="outline" size="sm" onClick={() => handleDeleteRestaurant(row)}>{t('restaurants_page_delete', 'Удалить')}</Button> },
               ]}
             />
           </Panel>
 
-          <Panel title={locale === 'uz' ? 'Obuna kalitlari' : 'Ключи подписки'} eyebrow={locale === 'uz' ? 'Billing' : 'Биллинг'} description={locale === 'uz' ? 'Kalitlarni boshqarish va bekor qilish.' : 'Управление ключами и их отзыв.'}>
+          <Panel title={t('restaurants_page_keys_title', 'Ключи подписки')} eyebrow={t('restaurants_page_billing', 'Биллинг')} description={t('restaurants_page_keys_manage', 'Управление ключами и их отзыв.')}>
             <DataTable
               rows={keys}
               columns={[
-                { label: locale === 'uz' ? 'Kalit' : 'Ключ', key: 'key' },
-                { label: locale === 'uz' ? 'Muddat' : 'Срок', key: 'duration_months', render: (row) => `${row.duration_months} ${locale === 'uz' ? 'oy' : 'мес.'}` },
-                { label: locale === 'uz' ? 'Faollashtirgan restoran' : 'Активировавший ресторан', key: 'activated_by', render: (row) => row.activated_by || '—' },
-                { label: locale === 'uz' ? 'Holat' : 'Статус', key: 'is_activated', render: (row) => row.is_activated ? (locale === 'uz' ? 'Faollashtirilgan' : 'Активирован') : (locale === 'uz' ? 'Bo‘sh' : 'Свободен') },
-                { label: locale === 'uz' ? 'Amal' : 'Действие', key: 'id', render: (row) => <Button variant="secondary" size="sm" onClick={() => handleRevokeKey(row)}>{locale === 'uz' ? 'Bekor qilish' : 'Отозвать'}</Button> },
+                { label: t('restaurants_page_col_key', 'Ключ'), key: 'key' },
+                { label: t('restaurants_page_col_duration', 'Срок'), key: 'duration_months', render: (row) => `${row.duration_months} ${t('restaurants_page_months', 'мес.')}` },
+                { label: t('restaurants_page_col_activated_by', 'Активировавший ресторан'), key: 'activated_by', render: (row) => row.activated_by || '—' },
+                { label: t('restaurants_page_col_status', 'Статус'), key: 'is_activated', render: (row) => row.is_activated ? t('restaurants_page_activated', 'Активирован') : t('restaurants_page_free', 'Свободен') },
+                { label: t('restaurants_page_col_action', 'Действие'), key: 'id', render: (row) => <Button variant="secondary" size="sm" onClick={() => handleRevokeKey(row)}>{t('restaurants_page_revoke', 'Отозвать')}</Button> },
               ]}
             />
           </Panel>
@@ -187,8 +187,8 @@ export default function RestaurantsPage() {
   if (!isSubscribed) {
     return (
       <AppShell
-        title={locale === 'uz' ? 'Operatsiyalar yopiq' : 'Операции закрыты'}
-        subtitle={locale === 'uz' ? 'Ishni davom ettirish uchun obuna kalitini faollashtiring.' : 'Активируйте ключ подписки, чтобы продолжить работу.'}
+        title={t('restaurants_page_operations_closed', 'Операции закрыты')}
+        subtitle={t('restaurants_page_activate_hint', 'Активируйте ключ подписки, чтобы продолжить работу.')}
         restaurants={workspace.restaurants}
         selectedRestaurantId={workspace.selectedRestaurantId}
         onRestaurantChange={workspace.setSelectedRestaurantId}
@@ -202,7 +202,7 @@ export default function RestaurantsPage() {
     <AppShell
       title={workspace.selectedRestaurant?.name || t('restaurants_title_owner', 'Операционный контур')}
       subtitle={t('restaurants_subtitle_owner', 'Список ресторанов, история заказов и статус подписки без лишних шагов.')}
-      eyebrow={user?.role === 'CHAIN_OWNER' ? (locale === 'uz' ? 'Tarmoq operatsiyasi' : 'Операции сети') : (locale === 'uz' ? 'Restoran operatsiyasi' : 'Операции ресторана')}
+      eyebrow={user?.role === 'CHAIN_OWNER' ? t('restaurants_page_chain_ops', 'Операции сети') : t('restaurants_page_restaurant_ops', 'Операции ресторана')}
       restaurants={workspace.restaurants}
       selectedRestaurantId={workspace.selectedRestaurantId}
       onRestaurantChange={workspace.setSelectedRestaurantId}
@@ -210,14 +210,14 @@ export default function RestaurantsPage() {
       <div className="space-y-4">
         {error ? <div className="rounded-[24px] border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-100">{error}</div> : null}
         <div className="grid gap-4 xl:grid-cols-[1fr_1fr]">
-          <Panel title={locale === 'uz' ? 'Restoranlar ro‘yxati' : 'Список ресторанов'} eyebrow={locale === 'uz' ? 'Tuzilma' : 'Структура'} description={locale === 'uz' ? 'Hisobga bog‘langan barcha restoranlar shu yerda.' : 'Здесь показаны все рестораны, привязанные к аккаунту.'}>
+          <Panel title={t('restaurants_page_owner_restaurants', 'Список ресторанов')} eyebrow={t('restaurants_page_structure', 'Структура')} description={t('restaurants_page_owner_restaurants_desc', 'Здесь показаны все рестораны, привязанные к аккаунту.')}>
             <div className="grid gap-4 md:grid-cols-2">
               {(workspace.restaurants || []).map((restaurant: any) => (
                 <div key={restaurant.id} className={`rounded-[24px] border p-5 ${restaurant.id === workspace.selectedRestaurantId ? 'border-[#8fd4ff]/25 bg-white/[0.04]' : 'border-white/8 bg-black/12'}`}>
                   <div className="flex items-start justify-between gap-3">
                     <div className="font-semibold text-white">{restaurant.name}</div>
                     <div className={`shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${restaurant.subscription_active ? 'bg-emerald-500/12 text-emerald-200' : 'bg-amber-400/12 text-amber-200'}`}>
-                      {restaurant.subscription_active ? (locale === 'uz' ? 'Faol' : 'Активна') : (locale === 'uz' ? 'Nofaol' : 'Неактивна')}
+                      {restaurant.subscription_active ? t('restaurants_page_active', 'Активна') : t('restaurants_page_inactive', 'Неактивна')}
                     </div>
                   </div>
                   <div className="mt-1 text-sm text-white/42">{restaurant.slug}</div>
@@ -232,7 +232,7 @@ export default function RestaurantsPage() {
             </div>
           </Panel>
 
-          <Panel title={locale === 'uz' ? 'Buyurtmalar tarixi' : 'История заказов'} eyebrow={locale === 'uz' ? 'Operatsiyalar' : 'Операции'} description={locale === 'uz' ? 'Bugun, 7 kun, 30 kun yoki barcha davr bo‘yicha ko‘rish mumkin.' : 'Можно смотреть за сегодня, 7 дней, 30 дней или за весь период.'}>
+          <Panel title={t('restaurants_page_orders_history', 'История заказов')} eyebrow={t('restaurants_page_operations', 'Операции')} description={t('restaurants_page_orders_history_desc', 'Можно смотреть за сегодня, 7 дней, 30 дней или за весь период.')}>
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <div className="flex flex-wrap gap-2">
                 {['today', '7d', '30d', 'all'].map((value) => (
@@ -245,21 +245,21 @@ export default function RestaurantsPage() {
                 <div className="flex items-center gap-2 text-sm text-white/70">
                   <DollarSign className="h-4 w-4 text-emerald-400" />
                   <span className="font-semibold text-white">{formatMoney(orders.reduce((s, o) => s + (Number(o.total) || 0), 0))}</span>
-                  <span className="text-white/40">· {orders.length} {locale === 'uz' ? 'ta buyurtma' : 'заказов'}</span>
+                  <span className="text-white/40">· {orders.length} {t('restaurants_page_orders_count', 'заказов')}</span>
                 </div>
               ) : null}
             </div>
             <DataTable
               rows={orders}
               maxHeight={420}
-              emptyMessage={loading ? (locale === 'uz' ? 'Buyurtmalar yuklanmoqda...' : 'Загрузка заказов...') : (locale === 'uz' ? 'Bu davr uchun buyurtmalar yo‘q.' : 'За выбранный период заказов нет.')}
+              emptyMessage={loading ? t('restaurants_page_loading_orders', 'Загрузка заказов...') : t('restaurants_page_no_orders', 'За выбранный период заказов нет.')}
               columns={[
-                { label: locale === 'uz' ? 'Vaqt' : 'Когда', key: 'created_at_display' },
-                { label: locale === 'uz' ? 'Stol' : 'Стол', key: 'table', render: (row) => `${locale === 'uz' ? 'Stol' : 'Стол'} ${row.table}` },
-                { label: locale === 'uz' ? 'Ofitsiant' : 'Официант', key: 'waiter' },
-                { label: locale === 'uz' ? 'Holat' : 'Статус', key: 'status' },
-                { label: locale === 'uz' ? 'Tarkib' : 'Состав', key: 'items', render: (row) => row.items?.length ? row.items.map((item: any) => `${item.qty}x ${item.dish}`).join(', ') : '—' },
-                { label: locale === 'uz' ? 'Jami' : 'Итого', key: 'total', render: (row) => formatMoney(row.total) },
+                { label: t('restaurants_page_col_time', 'Когда'), key: 'created_at_display' },
+                { label: t('restaurants_page_col_table', 'Стол'), key: 'table', render: (row) => `${t('restaurants_page_col_table', 'Стол')} ${row.table}` },
+                { label: t('restaurants_page_col_waiter', 'Официант'), key: 'waiter' },
+                { label: t('restaurants_page_col_status', 'Статус'), key: 'status' },
+                { label: t('restaurants_page_col_items', 'Состав'), key: 'items', render: (row) => row.items?.length ? row.items.map((item: any) => `${item.qty}x ${item.dish}`).join(', ') : '—' },
+                { label: t('restaurants_page_col_total', 'Итого'), key: 'total', render: (row) => formatMoney(row.total) },
               ]}
             />
           </Panel>

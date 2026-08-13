@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ChefHat, Clock3, Flame, RefreshCcw, Soup, UtensilsCrossed } from 'lucide-react';
 import { useParams, useSearchParams } from 'react-router-dom';
+import { useLocale } from '@/context/LocaleContext';
 
 import { kitchenAPI } from '@/services/api';
 
@@ -33,6 +34,7 @@ export default function KitchenDisplayPage() {
   const { restaurantSlug = '', kitchenToken = '' } = useParams();
   const [searchParams] = useSearchParams();
   const displayMode = searchParams.get('display') === '1';
+  const { t } = useLocale();
   const [restaurantName, setRestaurantName] = useState('Kitchen Display');
   const [orders, setOrders] = useState<KitchenOrder[]>([]);
   const [loading, setLoading] = useState(true);
@@ -79,7 +81,7 @@ export default function KitchenDisplayPage() {
 
     const bootstrap = async () => {
       if (!restaurantSlug || !kitchenToken) {
-        setError('Kitchen token is missing.');
+        setError(t('kitchenDisplay_tokenMissing', 'Kitchen token is missing.'));
         setLoading(false);
         return;
       }
@@ -97,7 +99,7 @@ export default function KitchenDisplayPage() {
         }
       } catch (err: any) {
         if (active) {
-          setError(err?.response?.data?.error?.message || 'Kitchen bootstrap failed.');
+          setError(err?.response?.data?.error?.message || t('kitchenDisplay_bootstrapFailed', 'Kitchen bootstrap failed.'));
           setLoading(false);
         }
       }
@@ -120,7 +122,7 @@ export default function KitchenDisplayPage() {
         await reloadOrders();
       } catch (err: any) {
         if (active) {
-          setError(err?.response?.data?.error?.message || 'Failed to load kitchen orders.');
+          setError(err?.response?.data?.error?.message || t('kitchenDisplay_loadFailed', 'Failed to load kitchen orders.'));
         }
       }
       if (active) setLoading(false);
@@ -169,8 +171,27 @@ export default function KitchenDisplayPage() {
     await reloadOrders();
   };
 
+  const handleCooking = async (orderId: string) => {
+    await kitchenAPI.cookingOrder(orderId, kitchenToken);
+    await reloadOrders();
+  };
+
   const handleReady = async (orderId: string) => {
     await kitchenAPI.markReady(orderId, kitchenToken);
+    await reloadOrders();
+  };
+
+  const handleDelay = async (orderId: string) => {
+    const mins = window.prompt('Delay in minutes:', '5');
+    if (!mins) return;
+    const reason = window.prompt('Reason (optional):', '') || '';
+    await kitchenAPI.addDelay(orderId, parseInt(mins), reason, kitchenToken);
+    await reloadOrders();
+  };
+
+  const handleCancel = async (orderId: string) => {
+    if (!window.confirm('Cancel this order? This cannot be undone.')) return;
+    await kitchenAPI.cancelOrder(orderId, kitchenToken);
     await reloadOrders();
   };
 
@@ -178,8 +199,8 @@ export default function KitchenDisplayPage() {
     return (
       <div className="min-h-screen bg-[#07111d] px-6 py-10 text-white">
         <div className="mx-auto max-w-3xl rounded-[32px] border border-red-500/20 bg-red-500/10 p-8">
-          <div className="text-xs font-bold uppercase tracking-[0.32em] text-red-200/70">Kitchen access</div>
-          <h1 className="mt-4 text-3xl font-black">Display unavailable</h1>
+          <div className="text-xs font-bold uppercase tracking-[0.32em] text-red-200/70">{t('kitchenDisplay_kitchenAccess', 'Kitchen access')}</div>
+          <h1 className="mt-4 text-3xl font-black">{t('kitchenDisplay_displayUnavailable', 'Display unavailable')}</h1>
           <p className="mt-3 text-sm text-red-100/80">{error}</p>
         </div>
       </div>
@@ -194,12 +215,12 @@ export default function KitchenDisplayPage() {
             <div>
               <div className="inline-flex items-center gap-2 rounded-full border border-[#ff7b72]/20 bg-[#ff7b72]/10 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.3em] text-[#ffd0cc]">
                 <ChefHat className="h-4 w-4" />
-                Live kitchen pass
+                {t('kitchenDisplay_liveKitchenPass', 'Live kitchen pass')}
               </div>
               <h1 className="mt-4 text-4xl font-black tracking-tight">{restaurantName}</h1>
               {!displayMode ? (
                 <p className="mt-3 max-w-3xl text-sm leading-7 text-white/58">
-                  React kitchen board for active production flow. It watches new orders, cooking load, and ready handoff without the old template logic.
+                  {t('kitchenDisplay_description', 'React kitchen board for active production flow. It watches new orders, cooking load, and ready handoff without the old template logic.')}
                 </p>
               ) : null}
             </div>
@@ -209,36 +230,37 @@ export default function KitchenDisplayPage() {
                 type="button"
                 onClick={async () => {
                   const response = await kitchenAPI.getOrders(kitchenToken);
-                  setOrders(response.data || []);
+                  const raw = response.data;
+                  setOrders(Array.isArray(raw) ? raw : raw?.results || []);
                 }}
                 className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white/82 transition hover:bg-white/10"
               >
                 <RefreshCcw className="h-4 w-4" />
-                Refresh queue
+                {t('kitchenDisplay_refreshQueue', 'Refresh queue')}
               </button>
             ) : null}
           </div>
         </header>
 
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <MetricCard icon={UtensilsCrossed} label="Active tickets" value={metrics.total} tone="from-[#ff7b72]/20 to-transparent" />
-          <MetricCard icon={Soup} label="New" value={metrics.created} tone="from-[#f5b04c]/20 to-transparent" />
-          <MetricCard icon={Flame} label="Cooking" value={metrics.cooking} tone="from-[#55c6ff]/20 to-transparent" />
-          <MetricCard icon={Clock3} label="Ready" value={metrics.ready} tone="from-[#38d39f]/20 to-transparent" />
+          <MetricCard icon={UtensilsCrossed} label={t('kitchenDisplay_activeTickets', 'Active tickets')} value={metrics.total} tone="from-[#ff7b72]/20 to-transparent" />
+          <MetricCard icon={Soup} label={t('kitchenDisplay_new', 'New')} value={metrics.created} tone="from-[#f5b04c]/20 to-transparent" />
+          <MetricCard icon={Flame} label={t('kitchenDisplay_cooking', 'Cooking')} value={metrics.cooking} tone="from-[#55c6ff]/20 to-transparent" />
+          <MetricCard icon={Clock3} label={t('kitchenDisplay_ready', 'Ready')} value={metrics.ready} tone="from-[#38d39f]/20 to-transparent" />
         </section>
 
         <section className="grid gap-4 xl:grid-cols-3">
           {loading ? (
             <div className="xl:col-span-3 rounded-[32px] border border-white/10 bg-white/[0.04] px-6 py-24 text-center text-white/52">
-              Loading kitchen stream...
+              {t('kitchenDisplay_loadingStream', 'Loading kitchen stream...')}
             </div>
           ) : null}
 
           {!loading && orders.length === 0 ? (
             <div className="xl:col-span-3 rounded-[32px] border border-dashed border-white/10 bg-white/[0.03] px-6 py-24 text-center">
-              <div className="text-xs font-bold uppercase tracking-[0.32em] text-white/24">Queue is clear</div>
-              <div className="mt-4 text-3xl font-black">No active orders right now</div>
-              <p className="mt-3 text-sm text-white/44">New tickets will appear here automatically through websocket or timed refresh.</p>
+              <div className="text-xs font-bold uppercase tracking-[0.32em] text-white/24">{t('kitchenDisplay_queueClear', 'Queue is clear')}</div>
+              <div className="mt-4 text-3xl font-black">{t('kitchenDisplay_noActiveOrders', 'No active orders right now')}</div>
+              <p className="mt-3 text-sm text-white/44">{t('kitchenDisplay_newTicketsAuto', 'New tickets will appear here automatically through websocket or timed refresh.')}</p>
             </div>
           ) : null}
 
@@ -246,7 +268,7 @@ export default function KitchenDisplayPage() {
             <article key={order.id} className="rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03))] p-5 shadow-[0_20px_60px_rgba(0,0,0,0.22)]">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <div className="text-[11px] font-bold uppercase tracking-[0.3em] text-white/28">Table</div>
+                  <div className="text-[11px] font-bold uppercase tracking-[0.3em] text-white/28">{t('kitchenDisplay_table', 'Table')}</div>
                   <div className="mt-2 text-3xl font-black">#{order.table_number || '—'}</div>
                 </div>
                 <span className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-bold uppercase tracking-[0.24em] ${statusTone[order.status] || 'border-white/12 bg-white/8 text-white/78'}`}>
@@ -255,8 +277,8 @@ export default function KitchenDisplayPage() {
               </div>
 
               <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
-                <InfoPill label="Created" value={new Date(order.created_at).toLocaleTimeString()} />
-                <InfoPill label="ETA" value={`${(order.estimated_time || 0) + (order.extra_time || 0)} min`} />
+                <InfoPill label={t('kitchenDisplay_created', 'Created')} value={new Date(order.created_at).toLocaleTimeString()} />
+                <InfoPill label={t('kitchenDisplay_eta', 'ETA')} value={`${(order.estimated_time || 0) + (order.extra_time || 0)} ${t('kitchenDisplay_min', 'min')}`} />
               </div>
 
               <div className="mt-5 space-y-3">
@@ -264,7 +286,7 @@ export default function KitchenDisplayPage() {
                   <div key={item.id} className="rounded-2xl border border-white/8 bg-black/16 px-4 py-3">
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <div className="text-sm font-bold text-white">{item.dish_name || item.name || 'Dish'}</div>
+                        <div className="text-sm font-bold text-white">{item.dish_name || item.name || t('kitchenDisplay_dish', 'Dish')}</div>
                         {item.notes ? <div className="mt-1 text-xs text-[#8fd4ff]">{item.notes}</div> : null}
                       </div>
                       <div className="rounded-xl bg-white/6 px-3 py-1 text-xs font-bold text-white/82">x{item.quantity}</div>
@@ -273,12 +295,29 @@ export default function KitchenDisplayPage() {
                 ))}
               </div>
 
-              <div className="mt-5 flex gap-3">
+              <div className="mt-5 flex gap-3 flex-wrap">
                 {order.status === 'CREATED' ? (
-                  <ActionButton label="Accept" tone="orange" onClick={() => handleAccept(order.id)} />
+                  <ActionButton label={t('kitchenDisplay_accept', 'Accept')} tone="orange" onClick={() => handleAccept(order.id)} />
                 ) : null}
-                {order.status === 'ACCEPTED' || order.status === 'COOKING' ? (
-                  <ActionButton label="Mark ready" tone="green" onClick={() => handleReady(order.id)} />
+                {order.status === 'ACCEPTED' ? (
+                  <>
+                    <ActionButton label={t('kitchenDisplay_startCooking', 'Start Cooking')} tone="blue" onClick={() => handleCooking(order.id)} />
+                    <ActionButton label={t('kitchenDisplay_ready', 'Ready')} tone="green" onClick={() => handleReady(order.id)} />
+                  </>
+                ) : null}
+                {order.status === 'COOKING' ? (
+                  <ActionButton label={t('kitchenDisplay_markReady', 'Mark ready')} tone="green" onClick={() => handleReady(order.id)} />
+                ) : null}
+                {order.status !== 'READY' ? (
+                  <>
+                    <ActionButton label={t('kitchenDisplay_delay', '+ Delay')} tone="gray" onClick={() => handleDelay(order.id)} />
+                    <ActionButton label={t('kitchenDisplay_cancel', 'Cancel')} tone="red" onClick={() => handleCancel(order.id)} />
+                  </>
+                ) : null}
+                {order.extra_time > 0 ? (
+                  <div className="rounded-2xl border border-[#f5b04c]/25 bg-[#f5b04c]/10 px-3 py-1 text-xs font-bold text-[#ffe0af]">
+                    +{order.extra_time}min {order.delay_message ? `— ${order.delay_message}` : ''}
+                  </div>
                 ) : null}
               </div>
             </article>
@@ -323,11 +362,15 @@ function InfoPill({ label, value }: { label: string; value: string }) {
   );
 }
 
-function ActionButton({ label, tone, onClick }: { label: string; tone: 'orange' | 'green'; onClick: () => void }) {
-  const className =
-    tone === 'green'
-      ? 'border-[#38d39f]/25 bg-[#38d39f]/14 text-[#d1fff1] hover:bg-[#38d39f]/22'
-      : 'border-[#ff7b72]/25 bg-[#ff7b72]/14 text-[#ffd0cc] hover:bg-[#ff7b72]/22';
+function ActionButton({ label, tone, onClick }: { label: string; tone: 'orange' | 'green' | 'blue' | 'gray' | 'red'; onClick: () => void }) {
+  const toneStyles: Record<string, string> = {
+    green: 'border-[#38d39f]/25 bg-[#38d39f]/14 text-[#d1fff1] hover:bg-[#38d39f]/22',
+    orange: 'border-[#ff7b72]/25 bg-[#ff7b72]/14 text-[#ffd0cc] hover:bg-[#ff7b72]/22',
+    blue: 'border-[#55c6ff]/25 bg-[#55c6ff]/14 text-[#ccefff] hover:bg-[#55c6ff]/22',
+    gray: 'border-white/15 bg-white/8 text-white/70 hover:bg-white/14',
+    red: 'border-[#ff4444]/25 bg-[#ff4444]/12 text-[#ff9999] hover:bg-[#ff4444]/20',
+  };
+  const className = toneStyles[tone] || toneStyles.orange;
 
   return (
     <button
