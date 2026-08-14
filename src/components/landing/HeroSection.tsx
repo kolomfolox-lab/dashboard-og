@@ -30,20 +30,20 @@ export function HeroSection() {
 
           <div className="mt-8 flex flex-wrap gap-3">
             <a
-              href="https://app.moonlauncher.org"
+              href="https://app.waitly.uz"
               className="inline-flex items-center gap-2 rounded-full bg-[#141414] px-6 py-3 text-sm font-semibold text-white transition hover:translate-y-[-1px] hover:bg-black"
             >
               Open Waitly Control
               <ArrowRight className="h-4 w-4" />
             </a>
             <a
-              href="https://reviews.moonlauncher.org"
+              href="https://reviews.waitly.uz"
               className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/80 px-6 py-3 text-sm font-semibold text-[#171717] transition hover:bg-white"
             >
               Explore Reviews Hub
             </a>
             <a
-              href="https://api.moonlauncher.org/api/docs/"
+              href="https://api.waitly.uz/api/docs/"
               className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/60 px-6 py-3 text-sm font-semibold text-black/68 transition hover:bg-white/85"
             >
               API Docs

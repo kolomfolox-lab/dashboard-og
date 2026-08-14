@@ -141,7 +141,7 @@ export default function RestaurantsPage() {
                   <div className="flex items-start justify-between gap-4">
                     <div>
                       <div className="font-display text-2xl text-white">{chain.name}</div>
-                      <div className="mt-2 text-sm text-white/52">{chain.subdomain}.moonlauncher.org</div>
+                      <div className="mt-2 text-sm text-white/52">{chain.subdomain}.waitly.uz</div>
                       <div className="mt-4 text-sm text-white/48">{t('restaurants_page_owner_label', 'Владелец')}: {chain.owner}</div>
                       <div className="mt-1 text-sm text-white/48">{t('restaurants_page_restaurant_count', 'Количество ресторанов')}: {chain.restaurant_count}</div>
                     </div>

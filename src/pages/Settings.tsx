@@ -202,7 +202,7 @@ export default function SettingsPage() {
               <div className="mt-5 flex flex-wrap items-center gap-3">
                 {!googleLinked ? (
                   hasGoogleOAuth ? (
-                    <Button variant="outline" size="sm" onClick={() => setGoogleError('Google auth only on login.moonlauncher.org')}>
+                    <Button variant="outline" size="sm" onClick={() => setGoogleError('Google auth only on login.waitly.uz')}>
                       {t('settings_connect_google_btn', 'Connect Google')}
                     </Button>
                   ) : (

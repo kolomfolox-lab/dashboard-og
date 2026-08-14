@@ -15,14 +15,14 @@ export function FinalCtaSection() {
 
         <div className="flex flex-wrap gap-3">
           <a
-            href="https://app.moonlauncher.org"
+            href="https://app.waitly.uz"
             className="inline-flex items-center gap-2 rounded-full bg-[#151515] px-6 py-3 text-sm font-semibold text-white transition hover:bg-black"
           >
             Launch Waitly Control
             <ArrowRight className="h-4 w-4" />
           </a>
           <a
-            href="https://reviews.moonlauncher.org"
+            href="https://reviews.waitly.uz"
             className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white px-6 py-3 text-sm font-semibold text-[#171717] transition hover:bg-[#fbfaf7]"
           >
             Open public surfaces

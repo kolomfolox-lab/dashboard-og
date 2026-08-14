@@ -4,6 +4,8 @@
 
 export function isReviewHubHost(hostname = getHostname()) {
   return (
+    hostname === 'review.waitly.uz' ||
+    hostname === 'reviews.waitly.uz' ||
     hostname === 'review.moonlauncher.org' ||
     hostname === 'reviews.moonlauncher.org' ||
     hostname.startsWith('review.') ||
@@ -16,11 +18,14 @@ export function isLocalHost(hostname = getHostname()) {
 }
 
 export function isMarketingHost(hostname = getHostname()) {
-  return hostname === 'moonlauncher.org' || hostname === 'www.moonlauncher.org';
+  return (
+    hostname === 'waitly.uz' ||
+    hostname === 'www.waitly.uz' ||
+    hostname === 'moonlauncher.org' ||
+    hostname === 'www.moonlauncher.org'
+  );
 }
 
 export function shouldUseReviewsRoot(hostname = getHostname()) {
   return isReviewHubHost(hostname);
 }
-
-
