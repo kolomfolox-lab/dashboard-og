@@ -36,7 +36,7 @@ const THEMES = [
   },
 ];
 
-const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+const apiBase = import.meta.env.VITE_API_BASE_URL || '/api';
 
 export default function OnlineMenuPage() {
   const { user } = useAuth();
