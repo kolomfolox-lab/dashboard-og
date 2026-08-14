@@ -594,7 +594,7 @@ export function AIAssistant({ restaurantId }: { restaurantId?: string }) {
             <PopoverContent align="end" className="w-56 border-theme bg-[var(--modal-bg)] p-2">
               <button
                 type="button"
-                onClick={() => toast.info('Waitly AI работает на Groq (llama-3.3-70b)')}
+                onClick={() => toast.info('Waitly AI работает на DeepSeek V4 Flash')}
                 className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-theme-secondary transition hover:bg-white/10 hover:text-theme"
               >
                 <Info className="h-4 w-4" /> О провайдере
