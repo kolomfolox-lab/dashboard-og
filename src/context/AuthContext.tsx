@@ -47,26 +47,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const parsed = JSON.parse(savedUser) as AppUser;
         if (mounted) {
           setUser(parsed);
+          setLoading(false);
         }
-        const response = await authAPI.getCurrentUser();
+        const response = await Promise.race([
+          authAPI.getCurrentUser(),
+          new Promise<never>((_, rej) => setTimeout(() => rej(new Error('auth timeout')), 2500)),
+        ]) as any;
         const mergedUser = { ...parsed, ...response.data };
         persistUser(mergedUser);
-        if (mounted) {
-          setUser(mergedUser);
-        }
+        if (mounted) setUser(mergedUser);
       } catch (error: any) {
         if (error?.response?.status === 401) {
           localStorage.removeItem('token');
           localStorage.removeItem('refresh');
           localStorage.removeItem('user');
-          if (mounted) {
-            setUser(null);
-          }
+          if (mounted) setUser(null);
         }
       } finally {
-        if (mounted) {
-          setLoading(false);
-        }
+        if (mounted) setLoading(false);
       }
     };
 

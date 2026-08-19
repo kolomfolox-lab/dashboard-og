@@ -3,6 +3,9 @@ import { useLocale } from '@/context/LocaleContext';
 const LEGAL_LINKS = [
   { to: 'https://waitly.uz/privacy', ru: 'Конфиденциальность', uz: 'Maxfiylik' },
   { to: 'https://waitly.uz/terms', ru: 'Условия', uz: 'Shartlar' },
+  { to: 'https://waitly.uz/offer', ru: 'Оферта', uz: 'Oferta' },
+  { to: 'https://waitly.uz/service', ru: 'Договор услуг', uz: 'Xizmat shartnomasi' },
+  { to: 'https://waitly.uz/agency', ru: 'Агентский', uz: 'Agentlik' },
   { to: 'https://waitly.uz/security', ru: 'Безопасность', uz: 'Xavfsizlik' },
   { to: 'https://waitly.uz/cookies', ru: 'Cookie', uz: 'Cookie' },
 ];

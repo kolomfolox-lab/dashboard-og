@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { DollarSign, Phone, Plus, UserRound, UsersRound, Copy } from 'lucide-react';
+import { DollarSign, KeyRound, Phone, Plus, UserRound, UsersRound, Copy } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { AppShell } from '@/components/app/AppShell';
@@ -52,6 +52,9 @@ export default function UsersPage() {
   const [error, setError] = useState('');
   const [editingRate, setEditingRate] = useState<string | null>(null);
   const [rateValue, setRateValue] = useState('');
+  const [editingPin, setEditingPin] = useState<string | null>(null);
+  const [pinValue, setPinValue] = useState('');
+  const [savingPin, setSavingPin] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [createForm, setCreateForm] = useState({ full_name: '', phone_number: '', role: 'WAITER', email: '' });
   const [saving, setSaving] = useState(false);
@@ -109,6 +112,34 @@ export default function UsersPage() {
 
   const copyPhone = (phone: string) => {
     navigator.clipboard?.writeText(phone).then(() => toast.success(t('users_phone_copied', 'Телефон скопирован')));
+  };
+
+  const savePin = async () => {
+    if (!editingPin) return;
+    if (!/^\d{4}$/.test(pinValue.trim())) {
+      toast.error(t('users_pin_4digits', 'PIN должен быть ровно 4 цифры'));
+      return;
+    }
+    setSavingPin(true);
+    try {
+      await ownerAPI.setStaffPin(editingPin, pinValue.trim());
+      toast.success(t('users_pin_saved', 'PIN сохранён'));
+      setEditingPin(null);
+      setPinValue('');
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error?.message || 'Ошибка');
+    } finally {
+      setSavingPin(false);
+    }
+  };
+
+  const clearPin = async (userId: string) => {
+    try {
+      await ownerAPI.clearStaffPin(userId);
+      toast.success(t('users_pin_cleared', 'PIN удалён'));
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error?.message || 'Ошибка');
+    }
   };
 
   return (
@@ -197,6 +228,7 @@ export default function UsersPage() {
                       <TableHead>{t('name', 'Имя')}</TableHead>
                       <TableHead>{t('role', 'Должность')}</TableHead>
                       <TableHead>{t('phone', 'Телефон')}</TableHead>
+                      {!isSuperAdmin ? <TableHead className="text-right">PIN (касса)</TableHead> : null}
                       <TableHead className="text-right">{t('users_hourly_rate', 'Ставка/час')}</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -235,6 +267,30 @@ export default function UsersPage() {
                                   {row.phone || row.phone_number || '-'}
                                 </button>
                               </TableCell>
+                              {!isSuperAdmin ? (
+                                <TableCell className="text-right">
+                                  <div className="flex items-center justify-end gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() => { setEditingPin(row.id); setPinValue(''); }}
+                                      className="inline-flex items-center gap-1.5 rounded-lg border border-theme px-2.5 py-1 text-xs font-bold text-theme-secondary transition hover:border-emerald-400/50 hover:text-emerald-300"
+                                    >
+                                      <KeyRound className="h-3.5 w-3.5" />
+                                      PIN
+                                    </button>
+                                    {row.has_pin ? (
+                                      <button
+                                        type="button"
+                                        onClick={() => clearPin(row.id)}
+                                        title={t('users_pin_clear', 'Удалить PIN')}
+                                        className="text-[11px] text-theme-muted underline-offset-2 hover:text-red-400 hover:underline"
+                                      >
+                                        сбросить
+                                      </button>
+                                    ) : null}
+                                  </div>
+                                </TableCell>
+                              ) : null}
                               <TableCell className="text-right">
                                 {editingRate === row.id ? (
                                   <div className="flex items-center justify-end gap-2">
@@ -329,6 +385,44 @@ export default function UsersPage() {
             <Button variant="ghost" onClick={() => setShowCreate(false)}>{t('cancel', 'Отмена')}</Button>
             <Button onClick={handleCreate} disabled={saving || !createForm.full_name.trim() || !createForm.phone_number.trim()}>
               {saving ? <Skeleton className="h-4 w-4 rounded-full bg-white/20" /> : <><Plus className="mr-1.5 h-4 w-4" />{t('users_add', 'Добавить')}</>}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!editingPin} onOpenChange={(open) => { if (!open) { setEditingPin(null); setPinValue(''); } }}>
+        <DialogContent className="border-theme bg-[var(--modal-bg)] text-theme">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <KeyRound className="h-4 w-4 text-emerald-300" />
+              {t('users_pin_title', 'PIN для кассы')}
+            </DialogTitle>
+            <DialogDescription>
+              {t('users_pin_desc', '4-значный PIN для входа в POS на планшете. По PIN определяется, кто выполнил действие.')}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="pin-input" className="text-xs font-semibold uppercase tracking-widest text-theme-muted">
+              PIN
+            </Label>
+            <InputGroup>
+              <InputGroupAddon align="inline-start"><KeyRound className="h-4 w-4 text-theme-muted" /></InputGroupAddon>
+              <InputGroupInput
+                id="pin-input"
+                value={pinValue}
+                onChange={(e) => setPinValue(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                inputMode="numeric"
+                placeholder="••••"
+                className="pl-9 tracking-[0.5em]"
+                autoFocus
+              />
+            </InputGroup>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => { setEditingPin(null); setPinValue(''); }}>{t('cancel', 'Отмена')}</Button>
+            <Button onClick={savePin} disabled={savingPin || pinValue.length !== 4}>
+              {savingPin ? <Skeleton className="h-4 w-4 rounded-full bg-white/20" /> : null}
+              {t('users_pin_save', 'Сохранить PIN')}
             </Button>
           </DialogFooter>
         </DialogContent>

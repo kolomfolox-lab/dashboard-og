@@ -1528,5 +1528,16 @@
   "payments_receipts_eyebrow": "GNC logs",
   "payments_col_receipt": "Receipt #",
   "payments_col_fiscal_sign": "Fiscal sign",
-  "payments_receipts_empty": "No fiscal receipts yet. Make a payment to generate one."
+  "payments_receipts_empty": "No fiscal receipts yet. Make a payment to generate one.",
+  "settings_printers_mac_title": "Mac (Apple Silicon M1/M2) — two options",
+  "settings_printers_mac_opt1": "1. Network printer (recommended).",
+  "settings_printers_mac_opt1_desc": "Connect the XPrinter via Wi-Fi/Ethernet and add the address to the command:",
+  "settings_printers_mac_opt2": "2. Simulation without a printer.",
+  "settings_printers_mac_opt2_desc": "Receipts will be printed to the console and saved to ~/waitly-print-sim/. Add the flag",
+  "settings_printers_test_btn": "Test print",
+  "settings_printers_testing": "Sending…",
+  "settings_printers_test_hint": "Sends a test page to all connected agents of this venue.",
+  "settings_printers_test_sent": "Test job sent to the printer",
+  "settings_printers_test_failed": "Failed to send test print",
+  "shell_notifications_open": "Open notifications"
 }

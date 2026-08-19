@@ -1586,5 +1586,16 @@
   "payments_receipts_eyebrow": "GNC jurnali",
   "payments_col_receipt": "Chek №",
   "payments_col_fiscal_sign": "Fiskal belgi",
-  "payments_receipts_empty": "Hali fiskal cheklar yo'q. Chek yaratish uchun to'lovni amalga oshiring."
+  "payments_receipts_empty": "Hali fiskal cheklar yo'q. Chek yaratish uchun to'lovni amalga oshiring.",
+  "settings_printers_mac_title": "Mac (Apple Silicon M1/M2) — ikkita variant",
+  "settings_printers_mac_opt1": "1. Tarmoq printeri (tavsiya etiladi).",
+  "settings_printers_mac_opt1_desc": "XPrinter’ni Wi-Fi/Ethernet orqali ulang va buyruqqa manzilni qo‘shing:",
+  "settings_printers_mac_opt2": "2. Printersiz simulyatsiya.",
+  "settings_printers_mac_opt2_desc": "Cheklar konsolga chiqadi va ~/waitly-print-sim/ papkasiga saqlanadi. Flag qo‘shing",
+  "settings_printers_test_btn": "Test chop etish",
+  "settings_printers_testing": "Yuborilmoqda…",
+  "settings_printers_test_hint": "Ushbu muassasaning barcha ulangan agentlariga test sahifa yuboradi.",
+  "settings_printers_test_sent": "Test vazifa printerga yuborildi",
+  "settings_printers_test_failed": "Test chop etishni yuborib bo‘lmadi",
+  "shell_notifications_open": "Bildirishnomalarni ochish"
 }

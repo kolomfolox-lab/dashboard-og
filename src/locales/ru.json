@@ -1587,5 +1587,16 @@
   "payments_receipts_eyebrow": "Журнал ГНК",
   "payments_col_receipt": "Чек №",
   "payments_col_fiscal_sign": "Фискальный признак",
-  "payments_receipts_empty": "Фискальных чеков пока нет. Совершите платёж для генерации."
+  "payments_receipts_empty": "Фискальных чеков пока нет. Совершите платёж для генерации.",
+  "settings_printers_mac_title": "Mac (Apple Silicon M1/M2) — два варианта",
+  "settings_printers_mac_opt1": "1. Сетевой принтер (рекомендуется).",
+  "settings_printers_mac_opt1_desc": "Подключите XPrinter по Wi-Fi/Ethernet и добавьте к команде адрес:",
+  "settings_printers_mac_opt2": "2. Симуляция без принтера.",
+  "settings_printers_mac_opt2_desc": "Чеки будут выводиться в консоль и сохраняться в ~/waitly-print-sim/. Добавьте флаг",
+  "settings_printers_test_btn": "Тестовая печать",
+  "settings_printers_testing": "Отправка…",
+  "settings_printers_test_hint": "Отправит тестовую страницу всем подключённым агентам этого заведения.",
+  "settings_printers_test_sent": "Тестовое задание отправлено принтеру",
+  "settings_printers_test_failed": "Не удалось отправить тестовую печать",
+  "shell_notifications_open": "Открыть уведомления"
 }

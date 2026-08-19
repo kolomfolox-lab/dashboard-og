@@ -361,6 +361,9 @@ export const ownerAPI = {
   getPrintSettings: (restaurantId: string) =>
     api.get<{ print_ws_url: string; restaurant_id: string }>('/owner/print-settings/', { params: { restaurant_id: restaurantId } }),
 
+  sendPrintTest: (restaurantId: string) =>
+    api.post<{ status: string }>('/owner/print-test/', { restaurant_id: restaurantId }),
+
   updateIikoSettings: (restaurantId: string, payload: { iiko_api_key?: string; iiko_org_id?: string }) =>
     api.post('/owner/iiko-settings/', { ...payload, restaurant_id: restaurantId }),
 
@@ -499,4 +502,41 @@ export const ownerAPI = {
   // Security events
   getSecurityEvents: (restaurantId: string) =>
     api.get('/analytics/security/', { params: { restaurant_id: restaurantId } }),
+
+  // POS PWA
+  getPosSettings: (restaurantId?: string) =>
+    api.get('/v1/owner/pos-settings/', { params: restaurantId ? { restaurant_id: restaurantId } : {} }),
+  updatePosSettings: (payload: { restaurant_id?: string; pin_required?: boolean; regenerate_secret?: boolean }) =>
+    api.put('/v1/owner/pos-settings/', payload),
+  setStaffPin: (userId: string, pin: string) =>
+    api.post(`/v1/owner/users/${userId}/set-pin/`, { pin }),
+  clearStaffPin: (userId: string) =>
+    api.post(`/v1/owner/users/${userId}/clear-pin/`, {}),
+  setMyPin: (pin: string) =>
+    api.post('/v1/owner/me/set-pin/', { pin }),
+
+  // Gift certificates (POS)
+  getPosCertificates: (restaurantId?: string) =>
+    api.get('/v1/owner/pos/certificates/', { params: restaurantId ? { restaurant_id: restaurantId } : {} }),
+  createPosCertificate: (payload: { restaurant_id?: string; code: string; amount: number }) =>
+    api.post('/v1/owner/pos/certificates/', payload),
+  deletePosCertificate: (id: string) =>
+    api.delete(`/v1/owner/pos/certificates/${id}/`),
+
+  // Printer status for POS
+  getPosPrintStatus: (restaurantId?: string) =>
+    api.get('/v1/pos/print-status/', { params: restaurantId ? { restaurant_id: restaurantId } : {} }),
+
+  // POS Magic Pair (PosPairCode — 90s)
+  createPosPairCode: (restaurantId?: string) =>
+    api.post('/v1/pos/pair-code/', restaurantId ? { restaurant_id: restaurantId } : {}),
+  claimPosPairCode: (code: string, deviceId?: string) =>
+    api.post(`/v1/pos/pair/${code}/`, deviceId ? { device_id: deviceId } : {}),
+  getPosPairCode: (code: string) => api.get(`/v1/pos/pair/${code}/`),
+
+  // POS check archive
+  getPosArchive: (params: { restaurant_id?: string; date_from?: string; date_to?: string; method?: string; q?: string; limit?: number }) =>
+    api.get('/v1/owner/pos/archive/', { params }),
+  addPosArchiveComment: (orderId: string, comment: string) =>
+    api.post(`/v1/owner/pos/archive/${orderId}/comment/`, { comment }),
 };

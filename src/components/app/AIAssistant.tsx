@@ -5,6 +5,7 @@ import {
   ChartColumn,
   Check,
   Copy,
+  ExternalLink,
   Info,
   RotateCcw,
   Send,
@@ -16,6 +17,7 @@ import {
   X,
 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -42,15 +44,15 @@ import { aiAPI, type AiAction, type AiChatMessage } from '@/services/api';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 
 const SUGGESTIONS = [
+  'Открой склад',
+  'Покажи финансы за месяц',
   'Создай банкет на 20 гостей сегодня в 19:00',
   'Покажи аналитику за последние 7 дней',
   'Какие брони на завтра?',
   'Что по инвентарю? Какие продукты заканчиваются?',
-  'Добавь официанта по имени Азиз, телефон +998901234567',
+  'Открой KDS — кухонный экран',
   'Сколько заказов сегодня и какая выручка?',
   'Сводка меню ресторана',
-  'Сделай QR-меню в тёмной теме',
-  'Покажи сотрудников ресторана',
   'Сколько мы заработали за месяц?',
 ];
 
@@ -315,6 +317,7 @@ function ActionDetails({
   pendingStatus?: Record<string, { status: string; message?: string }>;
   onResolvePending?: (key: string, pendingId: string, confirm: boolean) => void;
 }) {
+  const navigate = useNavigate();
   return (
     <Accordion type="multiple" className="mt-3">
       {actions.map((action, idx) => {
@@ -331,6 +334,16 @@ function ActionDetails({
               </span>
             </AccordionTrigger>
             <AccordionContent>
+              {action.tool === 'navigate' && action.detail?.navigate_to ? (
+                <button
+                  type="button"
+                  onClick={() => navigate(action.detail.navigate_to)}
+                  className="mt-2 inline-flex items-center gap-2 rounded-xl border border-[#8fd4ff]/40 bg-[#8fd4ff]/10 px-3.5 py-2 text-[13px] font-medium text-[#8fd4ff] transition hover:brightness-110"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  Открыть: {action.detail.label || action.detail.navigate_to}
+                </button>
+              ) : null}
               {action.tool === 'get_analytics' && (action.detail.days || []).length ? (
                 <AnalyticsChart detail={action.detail} />
               ) : null}
@@ -440,6 +453,7 @@ function PendingConfirmationCard({
 
 export function AIAssistant({ restaurantId }: { restaurantId?: string }) {
   const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [thinking, setThinking] = useState(false);
@@ -501,6 +515,11 @@ export function AIAssistant({ restaurantId }: { restaurantId?: string }) {
           toast.success(created.summary, {
             description: created.detail.error ? created.detail.error : 'Данные сохранены в системе',
           });
+        }
+        const navAction = response.data.actions.find((a) => a.tool === 'navigate' && a.detail?.navigate_to);
+        if (navAction) {
+          navigate(navAction.detail.navigate_to);
+          toast.info(`Открываю: ${navAction.detail.label || navAction.detail.navigate_to}`);
         }
       } catch (err: any) {
         const detail = err?.response?.data?.error;
@@ -625,7 +644,7 @@ export function AIAssistant({ restaurantId }: { restaurantId?: string }) {
                       <div>
                         <div className="font-display text-base font-semibold text-theme">Waitly AI Ассистент</div>
                         <div className="mt-0.5 text-xs text-theme-secondary">
-                          Пишите на русском — ИИ сделает всё как владелец: сотрудники, меню, столы, инвентарь, финансы, модули, дизайн QR-меню. Удаления — только с вашей кнопкой.
+                          Командный центр: «открой склад», «покажи финансы», «создай бронь» — ИИ выполнит и переведёт вас в нужный раздел. Удаления — только с вашей кнопкой.
                         </div>
                       </div>
                     </div>

@@ -7,7 +7,7 @@ import { useLocale } from '@/context/LocaleContext';
 import { useOwnerWorkspace } from '@/hooks/useOwnerWorkspace';
 import { ownerAPI, paymentSettingsAPI } from '@/services/api';
 import { showToast } from '@/lib/toast';
-import { CreditCard, KeyRound, Loader2, Save, RefreshCw, Building2, ShieldCheck } from 'lucide-react';
+import { CreditCard, KeyRound, Loader2, Save, RefreshCw, Building2, ShieldCheck, MonitorSmartphone, Copy } from 'lucide-react';
 
 export default function IntegrationsPage() {
   const { user } = useAuth();
@@ -15,19 +15,23 @@ export default function IntegrationsPage() {
   const workspace = useOwnerWorkspace(user?.role === 'RESTAURANT_OWNER' || user?.role === 'CHAIN_OWNER');
   const [iiko, setIiko] = useState<any>({ api_key: '', org_id: '' });
   const [payments, setPayments] = useState<any>({});
+  const [pos, setPos] = useState<any>({});
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
+  const [savingPos, setSavingPos] = useState(false);
 
   const load = async () => {
     if (!workspace.selectedRestaurantId) return;
     setLoading(true);
     try {
-      const [iikoRes, payRes] = await Promise.allSettled([
+      const [iikoRes, payRes, posRes] = await Promise.allSettled([
         ownerAPI.getIikoSettings(workspace.selectedRestaurantId),
         paymentSettingsAPI.get(workspace.selectedRestaurantId),
+        ownerAPI.getPosSettings(workspace.selectedRestaurantId),
       ]);
       setIiko(iikoRes.status === 'fulfilled' ? (iikoRes.value.data || { api_key: '', org_id: '' }) : { api_key: '', org_id: '' });
       setPayments(payRes.status === 'fulfilled' ? (payRes.value.data || {}) : {});
+      setPos(posRes.status === 'fulfilled' ? (posRes.value.data || {}) : {});
     } catch {}
     finally { setLoading(false); }
   };
@@ -55,6 +59,20 @@ export default function IntegrationsPage() {
     } catch { showToast('Failed', 'error'); }
   };
 
+  const updatePos = async (patch: any) => {
+    try {
+      setSavingPos(true);
+      const res = await ownerAPI.updatePosSettings({ restaurant_id: workspace.selectedRestaurantId, ...patch });
+      setPos(res.data);
+      showToast('POS saved', 'success');
+    } catch { showToast('Failed', 'error'); }
+    finally { setSavingPos(false); }
+  };
+
+  const copyPosLink = () => {
+    navigator.clipboard?.writeText(pos.pos_url || '').then(() => showToast('Ссылка скопирована', 'success'));
+  };
+
   if (loading) return <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-white/20" /></div>;
 
   return (
@@ -78,6 +96,45 @@ export default function IntegrationsPage() {
               onChange={e => setPayments((p: any) => ({ ...p, inn: e.target.value }))}
             />
             <Button onClick={() => savePayments('inn', payments.inn)}><Save className="mr-1 h-4 w-4" /> Сохранить</Button>
+          </div>
+        </Panel>
+
+        <Panel title={<span className="flex items-center gap-2"><MonitorSmartphone className="h-5 w-5" /> Касса (POS PWA)</span>}>
+          <p className="text-sm text-white/50 mb-3">
+            Приложение-касса для планшета. Вход по 4-значному PIN — по нему определяется, кто выполнил действие.
+          </p>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between rounded-xl bg-white/5 px-3 py-2">
+              <span className="text-sm text-white/60">
+                {pos.pin_policy_fixed
+                  ? 'PIN обязателен (кофейня)'
+                  : pos.pin_required
+                    ? 'PIN вход включён'
+                    : 'PIN вход выключен (ресторан)'}
+              </span>
+              <button
+                disabled={pos.pin_policy_fixed || savingPos}
+                onClick={() => updatePos({ pin_required: !pos.pin_required })}
+                className={`relative h-7 w-12 rounded-full transition-colors ${pos.pin_required ? 'bg-emerald-500' : 'bg-white/15'} disabled:opacity-40`}
+              >
+                <span className={`absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition-all ${pos.pin_required ? 'left-[22px]' : 'left-0.5'}`} />
+              </button>
+            </div>
+            <div className="flex items-center gap-2">
+              <code className="min-w-0 flex-1 truncate rounded-xl bg-white/5 px-3 py-2 text-xs text-emerald-300">{pos.pos_url || '—'}</code>
+              <Button size="sm" variant="secondary" onClick={copyPosLink}><Copy className="mr-1 h-3.5 w-3.5" /> Копировать</Button>
+            </div>
+            <p className="text-xs text-white/35">
+              Откройте ссылку на планшете — она добавится на главный экран как приложение (PWA). PIN сотрудникам задаётся в разделе «Команда».
+            </p>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => { if (confirm('Сгенерировать новый секрет кассы? Старая ссылка перестанет работать.')) updatePos({ regenerate_secret: true }); }}
+              disabled={savingPos}
+            >
+              <RefreshCw className="mr-1 h-3.5 w-3.5" /> Перевыпустить ссылку
+            </Button>
           </div>
         </Panel>
 

@@ -89,12 +89,13 @@ export const DesktopSidebar = ({
   return (
     <motion.div
       className={cn(
-        "h-full px-4 py-4 hidden md:flex md:flex-col flex-shrink-0",
+        "h-full hidden md:flex md:flex-col flex-shrink-0 overflow-hidden bg-[#f8f8f8] dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-800",
         className
       )}
       animate={{
-        width: animate ? (open ? "300px" : "80px") : "300px",
+        width: animate ? (open ? "240px" : "64px") : "240px",
       }}
+      transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
       onMouseEnter={() => {
         if (animate) setOpen(true);
       }}
@@ -165,25 +166,29 @@ export const SidebarLink = ({
 }: {
   link: Links;
   className?: string;
-  props?: LinkProps; // We use react-router-dom LinkProps
+  props?: LinkProps;
 }) => {
   const { open, animate } = useSidebar();
   return (
     <Link
       to={link.href}
+      title={!open ? link.label : undefined}
       className={cn(
-        "flex items-center justify-start gap-3 group/sidebar py-3",
+        "flex items-center gap-3 group/sidebar py-2.5 rounded-xl transition-colors",
+        animate && !open ? "justify-center px-2" : "justify-start px-2.5",
         className
       )}
       {...(props as any)}
     >
-      {link.icon}
+      <span className={cn("shrink-0", animate && !open && "mx-auto")}>{link.icon}</span>
       <motion.span
         animate={{
           display: animate ? (open ? "inline-block" : "none") : "inline-block",
           opacity: animate ? (open ? 1 : 0) : 1,
+          width: animate ? (open ? "auto" : 0) : "auto",
         }}
-        className="text-neutral-200 text-sm font-semibold group-hover/sidebar:translate-x-1 transition duration-150 whitespace-pre inline-block !p-0 !m-0"
+        transition={{ duration: 0.18 }}
+        className="text-neutral-200 text-sm font-semibold group-hover/sidebar:translate-x-0.5 whitespace-pre inline-block overflow-hidden !p-0 !m-0"
       >
         {link.label}
       </motion.span>

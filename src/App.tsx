@@ -1,5 +1,5 @@
 ﻿import { Component, type ErrorInfo, type ReactNode, useEffect, useState } from 'react';
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 
 import { VideoSplashLoader } from '@/components/app/VideoSplashLoader';
 import { Toaster } from '@/components/ui/sonner';
@@ -17,7 +17,6 @@ import BookingsPage from '@/pages/Bookings.tsx';
 import BrandStudioPage from '@/pages/BrandStudio.tsx';
 import CRMPage from '@/pages/CRM.tsx';
 import DashboardPage from '@/pages/Dashboard.tsx';
-import DataExportPage from '@/pages/DataExport.tsx';
 import InventoryPage from '@/pages/Inventory.tsx';
 import KeysPage from '@/pages/KeysPage.tsx';
 import KitchenDisplayPage from '@/pages/KitchenDisplay.tsx';
@@ -59,27 +58,37 @@ import ShiftsPage from '@/pages/Shifts.tsx';
 import HRPage from '@/pages/HR.tsx';
 import ChecklistsPage from '@/pages/Checklists.tsx';
 import IntegrationsPage from '@/pages/Integrations.tsx';
+import PosManagementPage from '@/pages/PosManagementPage.tsx';
 import NotificationsPage from '@/pages/Notifications.tsx';
 import ExpensesPage from '@/pages/Expenses.tsx';
+import PrintersPage from '@/pages/PrintersPage.tsx';
+import SecurityPage from '@/pages/SecurityPage.tsx';
+import ApiKeysPage from '@/pages/ApiKeysPage.tsx';
+import PayoutsPage from '@/pages/PayoutsPage.tsx';
+import SplitBillPage from '@/pages/SplitBillPage.tsx';
+import BaristaPage from '@/pages/BaristaPage.tsx';
 
 let authSplashShown = false;
 
 function PrivateRoute({ children, roles }: { children: React.ReactNode; roles?: string[] }) {
-  const { user, loading } = useAuth();
-  const [minSplashDone, setMinSplashDone] = useState(authSplashShown);
+  const { user, loading, logout } = useAuth();
+  const navigate = useNavigate();
+  const isDev = import.meta.env.DEV;
+  const splashMs = isDev ? 400 : 1200;
+  const [minSplashDone, setMinSplashDone] = useState(authSplashShown || isDev);
 
   useEffect(() => {
     if (authSplashShown) return;
+    if (isDev) { authSplashShown = true; setMinSplashDone(true); return; }
     const timer = window.setTimeout(() => {
       authSplashShown = true;
       setMinSplashDone(true);
-    }, 4000);
-
+    }, splashMs);
     return () => window.clearTimeout(timer);
-  }, []);
+  }, [splashMs, isDev]);
 
   if (loading || !minSplashDone) {
-    return <VideoSplashLoader title="Booting Waitly Control" subtitle="Checking the saved session and preparing the workspace." durationMs={4000} />;
+    return <VideoSplashLoader title="Booting Waitly Control" subtitle="Checking the saved session and preparing the workspace." durationMs={splashMs} />;
   }
   if (!user) return <Navigate to="/login" replace />;
   if (roles && !roles.includes(user.role)) {
@@ -95,7 +104,7 @@ function PrivateRoute({ children, roles }: { children: React.ReactNode; roles?: 
           {user.role === 'WAITER' || user.role === 'GUEST' ? (
             <p className="mt-3 text-sm leading-7 text-white/60">Официанты не имеют доступа к веб-панели. Используйте мобильное приложение.</p>
           ) : null}
-          <a href="/login" className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#ff6b6b] px-6 py-3 text-sm font-bold text-white transition hover:brightness-105">Выйти и зайти заново</a>
+          <a href="/login" onClick={(e) => { e.preventDefault(); logout(); navigate('/login'); }} className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#ff6b6b] px-6 py-3 text-sm font-bold text-white transition hover:brightness-105">Выйти и зайти заново</a>
         </div>
       </div>
     );
@@ -105,8 +114,8 @@ function PrivateRoute({ children, roles }: { children: React.ReactNode; roles?: 
 
 function HomeRoute() {
   const { user, loading } = useAuth();
-  if (loading && !authSplashShown) {
-    return <VideoSplashLoader title="Launching Waitly" subtitle="Restoring the workspace and preparing the control panel." durationMs={4000} />;
+  if (loading && !authSplashShown && !import.meta.env.DEV) {
+    return <VideoSplashLoader title="Launching Waitly" subtitle="Restoring the workspace and preparing the control panel." durationMs={1200} />;
   }
   return <Navigate to={user ? '/dashboard' : '/login'} replace />;
 }
@@ -130,7 +139,7 @@ function AppRoutes() {
       <Route path="/receipt/:transactionId" element={<ReceiptPage />} />
       <Route path="/owner/invite/:token" element={<OwnerOnboardingPage />} />
       <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <LoginPage />} />
-      <Route path="/dashboard" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MANAGER']}><DashboardPage /></PrivateRoute>} />
+       <Route path="/dashboard" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MANAGER']}><DashboardPage /></PrivateRoute>} />
       <Route path="/accountant" element={<PrivateRoute roles={['ACCOUNTANT','SUPER_ADMIN']}><AccountantDashboardPage /></PrivateRoute>} />
       <Route path="/marketer" element={<PrivateRoute roles={['MARKETER','SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER']}><MarketerDashboardPage /></PrivateRoute>} />
       <Route path="/analyst" element={<PrivateRoute roles={['ANALYST','SUPER_ADMIN']}><AnalystDashboardPage /></PrivateRoute>} />
@@ -141,7 +150,13 @@ function AppRoutes() {
       <Route path="/crm" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MANAGER']}><CRMPage /></PrivateRoute>} />
       <Route path="/loyalty" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER']}><LoyaltyPage /></PrivateRoute>} />
       <Route path="/menu" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MANAGER']}><MenuPage /></PrivateRoute>} />
-      <Route path="/users" element={<UsersPage />} />
+      <Route path="/users" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MANAGER']}><UsersPage /></PrivateRoute>} />
+      <Route path="/printers" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MANAGER','CHEF','KITCHEN_MANAGER']}><PrintersPage /></PrivateRoute>} />
+      <Route path="/security" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','ACCOUNTANT','ANALYST','AUDITOR','SUPPORT']}><SecurityPage /></PrivateRoute>} />
+      <Route path="/api-keys" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER']}><ApiKeysPage /></PrivateRoute>} />
+      <Route path="/payouts" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','ACCOUNTANT']}><PayoutsPage /></PrivateRoute>} />
+      <Route path="/split-bill" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MANAGER']}><SplitBillPage /></PrivateRoute>} />
+      <Route path="/barista" element={<PrivateRoute roles={['BARTENDER','BARISTA','CHEF','KITCHEN_MANAGER','SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MANAGER']}><BaristaPage /></PrivateRoute>} />
       <Route path="/tables" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MANAGER','HOSTESS']}><TablesPage /></PrivateRoute>} />
        <Route path="/inventory" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MANAGER','CHEF','KITCHEN_MANAGER']}><InventoryPage /></PrivateRoute>} />
        <Route path="/suppliers" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MANAGER']}><SupplierPage /></PrivateRoute>} />
@@ -161,7 +176,6 @@ function AppRoutes() {
       <Route path="/promo" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MARKETER']}><PromoPage /></PrivateRoute>} />
       <Route path="/surveys" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MARKETER']}><SurveysPage /></PrivateRoute>} />
       <Route path="/auto-notify" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MARKETER']}><AutoNotifyPage /></PrivateRoute>} />
-      <Route path="/data-export" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','ACCOUNTANT','ANALYST']}><DataExportPage /></PrivateRoute>} />
       <Route path="/permissions" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER']}><PermissionsPage /></PrivateRoute>} />
       <Route path="/shift-leader" element={<PrivateRoute roles={['SHIFT_LEADER']}><ShiftLeaderPage /></PrivateRoute>} />
       <Route path="/dispatcher" element={<PrivateRoute roles={['DISPATCHER']}><DispatcherPage /></PrivateRoute>} />
@@ -173,6 +187,7 @@ function AppRoutes() {
       <Route path="/hr" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MANAGER']}><HRPage /></PrivateRoute>} />
       <Route path="/checklists" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MANAGER']}><ChecklistsPage /></PrivateRoute>} />
       <Route path="/integrations" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MANAGER']}><IntegrationsPage /></PrivateRoute>} />
+      <Route path="/pos" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MANAGER','HEAD_WAITER','WAITER','CASHIER','ADMIN']}><PosManagementPage /></PrivateRoute>} />
       <Route path="/notifications" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MANAGER']}><NotificationsPage /></PrivateRoute>} />
       <Route path="/expenses" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MANAGER']}><ExpensesPage /></PrivateRoute>} />
       <Route path="/register" element={user ? <Navigate to="/dashboard" replace /> : <RegisterPage />} />
@@ -188,7 +203,8 @@ class RootErrorBoundary extends Component<{ children: ReactNode }, { error: Erro
   render() {
     if (this.state.error) {
       const msg = this.state.error.message || 'Unknown error';
-      return <div className="grid min-h-screen place-items-center bg-[#07111d] px-4 text-white"><div className="w-full max-w-2xl rounded-[32px] border border-red-500/20 bg-[#0d1825] p-8 shadow-[0_24px_90px_rgba(0,0,0,0.35)]"><div className="text-[11px] font-bold uppercase tracking-[0.3em] text-red-300/70">Waitly runtime crash</div><h1 className="mt-4 text-3xl font-black tracking-[-0.05em]">The frontend crashed during render.</h1><div className="mt-4 rounded-2xl border border-red-500/30 bg-red-500/10 px-5 py-4 text-sm font-semibold text-red-200">{msg}</div><pre className="mt-4 overflow-auto whitespace-pre-wrap rounded-[24px] border border-white/8 bg-black/20 p-4 text-xs leading-6 text-white/50">{this.state.error.stack || msg}</pre></div></div>;
+      const recover = () => { this.setState({ error: null }); };
+      return <div className="grid min-h-screen place-items-center bg-[#07111d] px-4 text-white"><div className="w-full max-w-2xl rounded-[32px] border border-red-500/20 bg-[#0d1825] p-8 shadow-[0_24px_90px_rgba(0,0,0,0.35)]"><div className="text-[11px] font-bold uppercase tracking-[0.3em] text-red-300/70">Waitly runtime crash</div><h1 className="mt-4 text-3xl font-black tracking-[-0.05em]">The frontend crashed during render.</h1><div className="mt-4 rounded-2xl border border-red-500/30 bg-red-500/10 px-5 py-4 text-sm font-semibold text-red-200">{msg}</div><pre className="mt-4 overflow-auto whitespace-pre-wrap rounded-[24px] border border-white/8 bg-black/20 p-4 text-xs leading-6 text-white/50">{this.state.error.stack || msg}</pre><div className="mt-6 flex flex-wrap gap-3"><button onClick={recover} className="rounded-2xl bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:brightness-110">Продолжить без перезагрузки</button><button onClick={() => window.location.reload()} className="rounded-2xl border border-white/15 px-5 py-2.5 text-sm font-semibold text-white/70 transition hover:text-white">Перезагрузить страницу</button></div></div></div>;
     }
     return this.props.children;
   }

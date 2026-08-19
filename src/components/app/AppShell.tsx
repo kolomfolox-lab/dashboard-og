@@ -1,8 +1,11 @@
-import { Activity, BarChart3, Bell, BookOpenText, Boxes, Calendar, CheckSquare, ChevronDown, ChevronRight, ClipboardList, Coffee, ContactRound, CreditCard, DollarSign, Gift, LayoutDashboard, LineChart, Link, LockKeyhole, Moon, Receipt, RefreshCw, Settings2, ShoppingCart, Store, Sun, TrendingDown, Tv, UsersRound, UtensilsCrossed, Wallet, Waves } from 'lucide-react';
+import { Activity, BarChart3, Bell, BookOpenText, Boxes, Calendar, CheckSquare, ChevronDown, ChevronRight, ClipboardList, Coffee, ContactRound, CreditCard, DollarSign, Gift, LayoutDashboard, LineChart, Link, LockKeyhole, MonitorSmartphone, Moon, Receipt, RefreshCw, Settings2, ShoppingCart, Store, Sun, TrendingDown, Tv, UsersRound, UtensilsCrossed, Wallet, Waves } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { BrandMark } from '@/components/app/BrandMark';
+import logoUrl from '@/assets/waitly-lil.webp';
 import { AIAssistant } from '@/components/app/AIAssistant';
+import { AppNotificationBell } from '@/components/app/AppNotificationBell';
 import { Button } from '@/components/ui/button';
 import { ProfileDropdown } from '@/components/ui/profile-dropdown';
 import { Select } from '@/components/ui/select';
@@ -73,36 +76,186 @@ const navByRole: Record<string, NavGroup[]> = {
       { to: '/notifications', labelKey: 'nav_notifications', fallback: 'Notifications', icon: Bell },
       { to: '/payroll', labelKey: 'nav_payroll', fallback: 'Зарплата', icon: Receipt },
       { to: '/permissions', labelKey: 'nav_permissions', fallback: 'Permissions', icon: LockKeyhole },
+      { to: '/pos', labelKey: 'nav_pos', fallback: 'Касса (POS)', icon: MonitorSmartphone },
       { to: '/subscription', labelKey: 'nav_subscription', fallback: 'Subscription', icon: CreditCard },
       { to: '/settings', labelKey: 'nav_settings', fallback: 'Settings', icon: Settings2 },
     ]},
   ],
-  RESTAURANT_OWNER: [
+   RESTAURANT_OWNER: [
+    { label: '', labelKey: '', items: [
+      { to: '/dashboard', labelKey: 'nav_dashboard', fallback: 'Начало работы', icon: LayoutDashboard },
+      { to: '/analytics', labelKey: 'nav_analytics', fallback: 'Статистика', icon: BarChart3 },
+      { to: '/finances', labelKey: 'nav_finances', fallback: 'Финансы', icon: Wallet },
+      { to: '/menu', labelKey: 'nav_menu', fallback: 'Меню', icon: UtensilsCrossed },
+      { to: '/inventory', labelKey: 'nav_inventory', fallback: 'Склад', icon: Boxes },
+      { to: '/crm', labelKey: 'nav_crm', fallback: 'Маркетинг', icon: Gift },
+      { to: '/users', labelKey: 'nav_users', fallback: 'Доступ', icon: LockKeyhole },
+      { to: '/pos', labelKey: 'nav_pos', fallback: 'Приложения', icon: MonitorSmartphone },
+      { to: '/settings', labelKey: 'nav_settings', fallback: 'Настройки', icon: Settings2 },
+    ]},
+  ],
+  MANAGER: [
     { label: 'Operations', labelKey: 'nav_group_operations', items: [
       { to: '/dashboard', labelKey: 'nav_dashboard', fallback: 'Главная', icon: LayoutDashboard },
-      { to: '/menu', labelKey: 'nav_menu', fallback: 'Меню', icon: UtensilsCrossed },
       { to: '/tables', labelKey: 'nav_tables', fallback: 'Столы', icon: UsersRound },
       { to: '/bookings', labelKey: 'nav_bookings', fallback: 'Брони', icon: Calendar },
+      { to: '/menu', labelKey: 'nav_menu', fallback: 'Меню', icon: UtensilsCrossed },
       { to: '/inventory', labelKey: 'nav_inventory', fallback: 'Склад', icon: Boxes },
       { to: '/tech-cards', labelKey: 'nav_tech_cards', fallback: 'Техкарты', icon: UtensilsCrossed },
+      { to: '/kds', labelKey: 'nav_kds', fallback: 'KDS', icon: Tv },
+      { to: '/printers', labelKey: 'nav_printers', fallback: 'Принтеры', icon: Receipt },
       { to: '/suppliers', labelKey: 'nav_suppliers', fallback: 'Закупки', icon: ShoppingCart },
-      { to: '/kds', labelKey: 'nav_kds', fallback: 'KDS — Кухонный экран', icon: Tv },
-      { to: '/finances', labelKey: 'nav_finances', fallback: 'Финансы', icon: Wallet },
-      { to: '/expenses', labelKey: 'nav_expenses', fallback: 'Расходы', icon: TrendingDown },
-      { to: '/cashflow', labelKey: 'nav_cashflow', fallback: 'Cash Flow', icon: Activity },
     ]},
     { label: 'Guests', labelKey: 'nav_group_guests', items: [
       { to: '/crm', labelKey: 'nav_crm', fallback: 'CRM', icon: ContactRound },
-      { to: '/loyalty', labelKey: 'nav_loyalty', fallback: 'Лояльность', icon: Gift },
+      { to: '/split-bill', labelKey: 'nav_split_bill', fallback: 'Раздел счёта', icon: Waves },
     ]},
-    { label: 'Settings', labelKey: 'nav_group_system', items: [
-      { to: '/analytics', labelKey: 'nav_analytics', fallback: 'Аналитика', icon: LineChart },
+    { label: 'System', labelKey: 'nav_group_system', items: [
       { to: '/hr', labelKey: 'nav_hr', fallback: 'HR', icon: UsersRound },
-      { to: '/notifications', labelKey: 'nav_notifications', fallback: 'Notifications', icon: Bell },
       { to: '/users', labelKey: 'nav_team', fallback: 'Команда', icon: UsersRound },
       { to: '/reports', labelKey: 'nav_reports', fallback: 'Отчёты', icon: BarChart3 },
-      { to: '/payments', labelKey: 'nav_payments', fallback: 'Платежи', icon: Receipt },
+      { to: '/checklists', labelKey: 'nav_checklists', fallback: 'Чек-листы', icon: CheckSquare },
+      { to: '/pos', labelKey: 'nav_pos', fallback: 'Касса', icon: MonitorSmartphone },
+      { to: '/notifications', labelKey: 'nav_notifications', fallback: 'Notifications', icon: Bell },
       { to: '/settings', labelKey: 'nav_settings', fallback: 'Настройки', icon: Settings2 },
+    ]},
+  ],
+  HOSTESS: [
+    { label: '', labelKey: '', items: [
+      { to: '/tables', labelKey: 'nav_tables', fallback: 'Столы', icon: UsersRound },
+      { to: '/bookings', labelKey: 'nav_bookings', fallback: 'Брони', icon: Calendar },
+      { to: '/crm', labelKey: 'nav_crm', fallback: 'CRM', icon: ContactRound },
+    ]},
+  ],
+  CHEF: [
+    { label: '', labelKey: '', items: [
+      { to: '/kds', labelKey: 'nav_kds', fallback: 'KDS', icon: Tv },
+      { to: '/inventory', labelKey: 'nav_inventory', fallback: 'Склад', icon: Boxes },
+      { to: '/tech-cards', labelKey: 'nav_tech_cards', fallback: 'Техкарты', icon: UtensilsCrossed },
+      { to: '/suppliers', labelKey: 'nav_suppliers', fallback: 'Закупки', icon: ShoppingCart },
+      { to: '/printers', labelKey: 'nav_printers', fallback: 'Принтеры', icon: Receipt },
+    ]},
+  ],
+  KITCHEN_MANAGER: [
+    { label: '', labelKey: '', items: [
+      { to: '/kds', labelKey: 'nav_kds', fallback: 'KDS', icon: Tv },
+      { to: '/inventory', labelKey: 'nav_inventory', fallback: 'Склад', icon: Boxes },
+      { to: '/tech-cards', labelKey: 'nav_tech_cards', fallback: 'Техкарты', icon: UtensilsCrossed },
+      { to: '/checklists', labelKey: 'nav_checklists', fallback: 'Чек-листы', icon: CheckSquare },
+    ]},
+  ],
+  HEAD_CHEF: [
+    { label: '', labelKey: '', items: [
+      { to: '/kds', labelKey: 'nav_kds', fallback: 'KDS', icon: Tv },
+      { to: '/tech-cards', labelKey: 'nav_tech_cards', fallback: 'Техкарты', icon: UtensilsCrossed },
+    ]},
+  ],
+  COOK: [
+    { label: '', labelKey: '', items: [
+      { to: '/kds', labelKey: 'nav_kds', fallback: 'KDS', icon: Tv },
+    ]},
+  ],
+  BARTENDER: [
+    { label: '', labelKey: '', items: [
+      { to: '/kds', labelKey: 'nav_kds', fallback: 'KDS', icon: Tv },
+      { to: '/barista', labelKey: 'nav_barista', fallback: 'Бар', icon: Coffee },
+    ]},
+  ],
+  BARISTA: [
+    { label: '', labelKey: '', items: [
+      { to: '/barista', labelKey: 'nav_barista', fallback: 'Бар', icon: Coffee },
+      { to: '/kds', labelKey: 'nav_kds', fallback: 'KDS', icon: Tv },
+    ]},
+  ],
+  ACCOUNTANT: [
+    { label: '', labelKey: '', items: [
+      { to: '/accountant', labelKey: 'nav_accountant', fallback: 'Панель бухгалтера', icon: Wallet },
+      { to: '/finances', labelKey: 'nav_finances', fallback: 'Финансы', icon: Wallet },
+      { to: '/cashflow', labelKey: 'nav_cashflow', fallback: 'Cash Flow', icon: Activity },
+      { to: '/expenses', labelKey: 'nav_expenses', fallback: 'Расходы', icon: TrendingDown },
+      { to: '/payroll', labelKey: 'nav_payroll', fallback: 'Зарплата', icon: Receipt },
+      { to: '/payouts', labelKey: 'nav_payouts', fallback: 'Выплаты', icon: DollarSign },
+      { to: '/payments', labelKey: 'nav_payments', fallback: 'Платежи', icon: Receipt },
+      { to: '/reports', labelKey: 'nav_reports', fallback: 'Отчёты', icon: BarChart3 },
+      { to: '/security', labelKey: 'nav_security', fallback: 'Безопасность', icon: LockKeyhole },
+    ]},
+  ],
+  ANALYST: [
+    { label: '', labelKey: '', items: [
+      { to: '/analyst', labelKey: 'nav_analyst', fallback: 'Панель аналитика', icon: LineChart },
+      { to: '/analytics', labelKey: 'nav_analytics', fallback: 'Аналитика', icon: LineChart },
+      { to: '/attendance', labelKey: 'nav_attendance', fallback: 'Attendance', icon: BarChart3 },
+      { to: '/reports', labelKey: 'nav_reports', fallback: 'Отчёты', icon: BarChart3 },
+      { to: '/security', labelKey: 'nav_security', fallback: 'Безопасность', icon: LockKeyhole },
+    ]},
+  ],
+  MARKETER: [
+    { label: '', labelKey: '', items: [
+      { to: '/marketer', labelKey: 'nav_marketer', fallback: 'Панель маркетолога', icon: Gift },
+      { to: '/crm', labelKey: 'nav_crm', fallback: 'CRM', icon: ContactRound },
+      { to: '/loyalty', labelKey: 'nav_loyalty', fallback: 'Лояльность', icon: Gift },
+      { to: '/promo', labelKey: 'nav_promo', fallback: 'Promo', icon: Gift },
+      { to: '/surveys', labelKey: 'nav_surveys', fallback: 'Опросы', icon: ClipboardList },
+      { to: '/auto-notify', labelKey: 'nav_auto_notify', fallback: 'Авто-уведомления', icon: Bell },
+      { to: '/notifications', labelKey: 'nav_notifications', fallback: 'Notifications', icon: Bell },
+      { to: '/brand-studio', labelKey: 'nav_brand_studio', fallback: 'Брендинг', icon: Store },
+    ]},
+  ],
+  SUPPORT: [
+    { label: '', labelKey: '', items: [
+      { to: '/dashboard', labelKey: 'nav_dashboard', fallback: 'Главная', icon: LayoutDashboard },
+      { to: '/crm', labelKey: 'nav_crm', fallback: 'CRM', icon: ContactRound },
+      { to: '/notifications', labelKey: 'nav_notifications', fallback: 'Notifications', icon: Bell },
+      { to: '/security', labelKey: 'nav_security', fallback: 'Безопасность', icon: LockKeyhole },
+    ]},
+  ],
+  AUDITOR: [
+    { label: '', labelKey: '', items: [
+      { to: '/analytics', labelKey: 'nav_analytics', fallback: 'Аналитика', icon: LineChart },
+      { to: '/reports', labelKey: 'nav_reports', fallback: 'Отчёты', icon: BarChart3 },
+      { to: '/finances', labelKey: 'nav_finances', fallback: 'Финансы', icon: Wallet },
+      { to: '/security', labelKey: 'nav_security', fallback: 'Безопасность', icon: LockKeyhole },
+      { to: '/attendance', labelKey: 'nav_attendance', fallback: 'Attendance', icon: BarChart3 },
+    ]},
+  ],
+  SUPPLIER: [
+    { label: '', labelKey: '', items: [
+      { to: '/supplier', labelKey: 'nav_supplier', fallback: 'Поставки', icon: ShoppingCart },
+    ]},
+  ],
+  COURIER: [
+    { label: '', labelKey: '', items: [
+      { to: '/courier', labelKey: 'nav_courier', fallback: 'Доставка', icon: ShoppingCart },
+    ]},
+  ],
+  DISPATCHER: [
+    { label: '', labelKey: '', items: [
+      { to: '/dispatcher', labelKey: 'nav_dispatcher', fallback: 'Диспетчер', icon: MonitorSmartphone },
+    ]},
+  ],
+  SHIFT_LEADER: [
+    { label: '', labelKey: '', items: [
+      { to: '/attendance', labelKey: 'nav_attendance', fallback: 'Attendance', icon: BarChart3 },
+      { to: '/shifts', labelKey: 'nav_shifts', fallback: 'Смены', icon: ClipboardList },
+      { to: '/checklists', labelKey: 'nav_checklists', fallback: 'Чек-листы', icon: CheckSquare },
+      { to: '/hr', labelKey: 'nav_hr', fallback: 'HR', icon: UsersRound },
+    ]},
+  ],
+  HEAD_WAITER: [
+    { label: '', labelKey: '', items: [
+      { to: '/tables', labelKey: 'nav_tables', fallback: 'Столы', icon: UsersRound },
+      { to: '/pos', labelKey: 'nav_pos', fallback: 'Касса', icon: MonitorSmartphone },
+      { to: '/bookings', labelKey: 'nav_bookings', fallback: 'Брони', icon: Calendar },
+      { to: '/shifts', labelKey: 'nav_shifts', fallback: 'Смены', icon: ClipboardList },
+      { to: '/hr', labelKey: 'nav_hr', fallback: 'HR', icon: UsersRound },
+      { to: '/attendance', labelKey: 'nav_attendance', fallback: 'Attendance', icon: BarChart3 },
+      { to: '/users', labelKey: 'nav_team', fallback: 'Команда', icon: UsersRound },
+    ]},
+  ],
+  WAITER: [
+    { label: '', labelKey: '', items: [
+      { to: '/tables', labelKey: 'nav_tables', fallback: 'Столы', icon: UsersRound },
+      { to: '/pos', labelKey: 'nav_pos', fallback: 'Касса', icon: MonitorSmartphone },
     ]},
   ],
 };
@@ -147,7 +300,12 @@ export function AppShell({ title, subtitle, eyebrow, restaurants = [], selectedR
     localStorage.setItem('waitly-selected-restaurant', restaurantId);
     onRestaurantChange?.(restaurantId);
   };
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(() => {
+    const saved = localStorage.getItem('waitly-sidebar-open');
+    if (saved !== null) return saved === '1';
+    return false;
+  });
+  useEffect(() => { localStorage.setItem('waitly-sidebar-open', open ? '1' : '0'); }, [open]);
   const selectedRestaurant = availableRestaurants.find((restaurant) => restaurant.id === availableSelectedRestaurantId) || availableRestaurants[0] || null;
   const navItems = (navByRole[user?.role as keyof typeof navByRole] || []).map(group => ({
     ...group,
@@ -169,7 +327,7 @@ export function AppShell({ title, subtitle, eyebrow, restaurants = [], selectedR
     subscription: user?.role === 'SUPER_ADMIN' ? t('profile_control', 'Control') : t('profile_owner', 'Owner'),
     workspace: activeWorkspace,
   };
-  const makeLink = (item: NavItem) => ({ label: t(item.labelKey, item.fallback), href: item.to, icon: <item.icon className="h-4 w-4 flex-shrink-0 text-white/72" /> });
+  const makeLink = (item: NavItem) => ({ label: t(item.labelKey, item.fallback), href: item.to, icon: <item.icon className="h-[18px] w-[18px] shrink-0" /> });
   const handleLogout = () => { logout(); navigate('/login'); };
   const handleRestaurantDelete = async (restaurantId: string) => {
     const restaurant = availableRestaurants.find((item) => item.id === restaurantId);
@@ -198,58 +356,90 @@ export function AppShell({ title, subtitle, eyebrow, restaurants = [], selectedR
       return next;
     });
   };
-  const openNotification = () => {
-    const notification = document.getElementById('waitly-notification');
-    if (!notification) return;
-    notification.classList.remove('translate-y-full', 'opacity-0');
-    setTimeout(() => notification.classList.add('translate-y-full', 'opacity-0'), 4000);
-  };
 
   return (
     <div className="min-h-screen text-white">
       <div className="mx-auto flex min-h-screen w-full max-w-[1920px]">
-        <Sidebar open={open} setOpen={setOpen} animate={false}>
-          <SidebarBody className="bg-theme-sidebar z-50 justify-between gap-8 border-r border-theme-surface px-4 py-5 backdrop-blur-2xl md:sticky md:top-0 md:h-screen">
+        <Sidebar open={open} setOpen={setOpen} animate={true}>
+          <SidebarBody className={`bg-theme-sidebar z-50 justify-between gap-8 border-r border-theme-surface backdrop-blur-2xl md:sticky md:top-0 md:h-screen ${open ? 'px-4 py-5' : 'px-2 py-4'}`}>
             <div className="flex flex-1 flex-col overflow-y-auto overflow-x-hidden">
-              <BrandMark className="mb-8" />
+              {open ? <BrandMark className="mb-6 [&_img]:h-10 [&_img]:w-10 [&_img]:rounded-xl" /> : <div className="flex justify-center mb-6"><img src={logoUrl} alt="Waitly" className="h-9 w-9 object-contain rounded-xl" /></div>}
+              {open ? (
               <div className="mb-5 rounded-[26px] border border-theme-surface bg-theme-panel p-4">
                 <div className="text-[11px] font-semibold uppercase tracking-[0.28em] text-theme-secondary">{t('shell_workspace', 'Workspace')}</div>
                 <div className="mt-2 font-display text-lg text-theme">{activeWorkspace}</div>
                 <div className="mt-1 text-sm text-theme-secondary">{roleLabels[user?.role || ''] || t('shell_workspace_member', 'Workspace member')}</div>
               </div>
-              <div className="flex flex-col gap-1">
-                {navItems.map((group, gi) => {
-                  const isOpen = expandedGroups.has(gi);
-                  return (
-                    <div key={gi}>
-                      <div
-                        onClick={() => group.label ? toggleGroup(gi) : null}
-                        className={`flex items-center justify-between rounded-xl px-2.5 py-2 text-[10px] font-semibold uppercase tracking-[0.22em] ${group.label ? 'cursor-pointer text-theme-muted hover:text-theme-secondary hover:bg-white/[0.03]' : 'text-theme-muted'}`}
-                      >
-                        <span>{group.labelKey ? t(group.labelKey, group.label || '') : (group.label || '')}</span>
-                        {group.label ? (
-                          isOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />
-                        ) : null}
-                      </div>
-                      <div className={`flex flex-col gap-0.5 overflow-hidden transition-all duration-200 ${isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
-                        {group.items.map((item) => {
+              ) : null}
+              <div className={open ? 'space-y-5' : 'flex flex-col items-center gap-1 w-full'}>
+                {(() => {
+                  const allItems = navItems.flatMap(g => g.items);
+                  const collapsedItems = allItems.slice(0, 7);
+                  const hasMore = allItems.length > 7;
+                  if (!open) {
+                    return (
+                      <>
+                        {collapsedItems.map((item) => {
                           const href = item.to;
-                          const active = location.pathname === href;
+                          const active = location.pathname === href || location.pathname.startsWith(href + '/');
                           const link = makeLink(item);
                           return (
                             <SidebarLink key={href} link={link} className={
                               active
-                                ? 'rounded-xl border border-theme bg-theme-panel px-2.5 py-1.5'
-                                : 'rounded-xl px-2.5 py-1.5 hover:bg-[var(--panel-bg)]'
+                                ? 'bg-white text-black shadow-[0_2px_10px_rgba(0,0,0,0.12)]'
+                                : 'text-white/50 hover:text-white hover:bg-white/[0.06]'
                             } />
                           );
                         })}
+                        {hasMore ? <div className="mt-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-white/[0.06] text-[10px] font-bold text-white/30">+{allItems.length - 7}</div> : null}
+                        <div className="mt-2 text-[9px] tracking-[0.12em] text-white/20 uppercase">hover →</div>
+                      </>
+                    );
+                  }
+                  return navItems.map((group, gi) => {
+                    const isOpen = expandedGroups.has(gi);
+                    return (
+                      <div key={gi}>
+                        {group.label ? (
+                          <button
+                            onClick={() => toggleGroup(gi)}
+                            className="w-full flex items-center justify-between px-2 py-1.5 mb-1 rounded-md hover:bg-white/[0.04] transition-colors group"
+                          >
+                            <span className="text-[10px] font-semibold tracking-[0.14em] text-white/35 group-hover:text-white/55 uppercase">{t(group.labelKey, group.label)}</span>
+                            <span className="text-white/20 group-hover:text-white/40">{isOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}</span>
+                          </button>
+                        ) : null}
+                        <AnimatePresence initial={false}>
+                          {isOpen && (
+                            <motion.div
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: 'auto' }}
+                              exit={{ opacity: 0, height: 0 }}
+                              transition={{ duration: 0.18, ease: [0.4, 0, 0.2, 1] }}
+                              className="space-y-0.5 overflow-hidden"
+                            >
+                              {group.items.map((item) => {
+                                const href = item.to;
+                                const active = location.pathname === href || location.pathname.startsWith(href + '/');
+                                const link = makeLink(item);
+                                return (
+                                  <SidebarLink key={href} link={link} className={
+                                    active
+                                      ? 'bg-white text-black shadow-sm'
+                                      : 'text-white/60 hover:text-white hover:bg-white/[0.06]'
+                                  } />
+                                );
+                              })}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  });
+                })()}
               </div>
             </div>
+            {open ? (
             <div className="rounded-[28px] border border-theme-surface bg-theme-panel p-4">
               <div className="flex items-center gap-3">
                 <div className="grid h-11 w-11 place-items-center rounded-2xl bg-[linear-gradient(135deg,rgba(125,211,252,0.3),rgba(52,211,153,0.15))]"><Waves className="h-5 w-5 text-[#8fd4ff]" /></div>
@@ -259,6 +449,11 @@ export function AppShell({ title, subtitle, eyebrow, restaurants = [], selectedR
                 </div>
               </div>
             </div>
+            ) : (
+            <div className="flex justify-center py-2">
+              <div className="grid h-9 w-9 place-items-center rounded-xl bg-white/5" title={roleLabels[user?.role || ''] || ''}><Waves className="h-4 w-4 text-white/60" /></div>
+            </div>
+            )}
           </SidebarBody>
         </Sidebar>
         <div className="flex min-w-0 flex-1 flex-col overflow-visible">
@@ -277,10 +472,9 @@ export function AppShell({ title, subtitle, eyebrow, restaurants = [], selectedR
                 <div className="flex flex-col gap-3 lg:min-w-[520px] sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
                   <label className="flex items-center gap-2 rounded-2xl border border-theme bg-[var(--input-bg)] px-4 py-3 text-sm text-theme-secondary"><span className="text-theme-muted">{t('shell_language', 'Language')}</span><div className="relative"><select value={locale} onChange={(event) => setLocale(event.target.value as 'ru' | 'en' | 'uz')} className="appearance-none bg-transparent pr-7 text-sm font-semibold text-theme outline-none"><option value="ru">RU</option><option value="en">EN</option><option value="uz">UZ</option></select><ChevronDown className="pointer-events-none absolute right-0 top-1/2 h-4 w-4 -translate-y-1/2 text-theme-secondary" /></div></label>
                    {isOwner ? <Select placeholder={t('shell_workspace_select', 'Рабочая зона')} options={availableRestaurants.map(r => ({ value: r.id, label: r.name }))} value={availableSelectedRestaurantId} onChange={handleShellRestaurantChange} actionLabel={t('shell_add_workspace', 'Добавить заведение')} onAction={() => navigate('/setup')} onDelete={availableRestaurants.length > 0 ? handleRestaurantDelete : undefined} /> : null}
-                  <button onClick={toggleTheme} className="rounded-2xl border border-theme bg-[var(--input-bg)] p-3 text-theme-secondary hover:text-theme transition-colors">{theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}</button>
-                  <div className="relative"><Button variant="ghost" size="icon" className="group relative overflow-hidden rounded-2xl border border-theme bg-[var(--input-bg)] hover:bg-theme-panel" onClick={openNotification}><Bell className="h-4 w-4 text-theme-secondary transition-transform group-hover:scale-110" /><span className="absolute right-2 top-2 flex h-1.5 w-1.5 rounded-full bg-[#f97360]" /></Button></div>
-                  <ProfileDropdown className="w-full sm:w-auto" data={profileData} onSignOut={handleLogout} />
-                  <div id="waitly-notification" className="pointer-events-none fixed bottom-8 right-8 z-[100] flex w-80 translate-y-full items-start gap-4 rounded-3xl border border-theme bg-[var(--modal-bg)] p-5 opacity-0 shadow-[0_20px_50px_rgba(0,0,0,0.4)] transition-all duration-500 ease-out"><div className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl border border-[#f97360]/20 bg-[#f97360]/10"><Waves className="h-5 w-5 text-[#f97360]" /></div><div><div className="text-xs font-bold uppercase tracking-widest text-theme-muted">{t('appShell_waitly_pulse', 'Waitly Pulse')}</div><p className="mt-1 text-sm leading-relaxed text-theme-secondary">{effectiveSubscriptionGate && !effectiveSubscriptionGate.active ? t('appShell_subscription_inactive_notification', 'Subscription is inactive. Open the activation page to restore this workspace.') : t('shell_notifications', 'System sync successful. All core modules are running.')}</p></div></div>
+                   <button onClick={toggleTheme} className="rounded-2xl border border-theme bg-[var(--input-bg)] p-3 text-theme-secondary hover:text-theme transition-colors">{theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}</button>
+                   <AppNotificationBell inactive={Boolean(effectiveSubscriptionGate && !effectiveSubscriptionGate.active)} />
+                   <ProfileDropdown className="w-full sm:w-auto" data={profileData} onSignOut={handleLogout} />
                 </div>
               </div>
             </header>

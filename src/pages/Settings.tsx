@@ -81,6 +81,7 @@ export default function SettingsPage() {
   const [iikoLastSync, setIikoLastSync] = useState<string | null>(null);
   const [iikoLoading, setIikoLoading] = useState(false);
   const [printWsUrl, setPrintWsUrl] = useState<string | null>(null);
+  const [printTesting, setPrintTesting] = useState(false);
 
   useEffect(() => {
     if (!restaurantId) return;
@@ -135,6 +136,19 @@ export default function SettingsPage() {
       ownerAPI.getStaffBonuses(restaurantId).then(r => setBonuses(r.data));
       toast.success(t('settings_bonus_added', 'Бонус добавлен'));
     } catch { toast.error(t('settings_save_error', 'Ошибка')); }
+  };
+
+  const handlePrintTest = async () => {
+    if (!restaurantId || printTesting) return;
+    setPrintTesting(true);
+    try {
+      await ownerAPI.sendPrintTest(restaurantId);
+      toast.success(t('settings_printers_test_sent', 'Тестовое задание отправлено принтеру'));
+    } catch {
+      toast.error(t('settings_printers_test_failed', 'Не удалось отправить тестовую печать'));
+    } finally {
+      setPrintTesting(false);
+    }
   };
 
   const saveIikoSettings = async () => {
@@ -399,6 +413,28 @@ export default function SettingsPage() {
                     )}
                   </div>
                   <p className="mt-2 text-xs text-theme-muted">{t('settings_printers_note', 'Агент сам установится в автозагрузку и будет запускаться при включении компьютера. Больше ничего делать не нужно.')}</p>
+
+                  <div className="mt-3 rounded-xl border border-theme bg-black/20 p-3">
+                    <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#8fd4ff]">{t('settings_printers_mac_title', 'Mac (Apple Silicon M1/M2) — два варианта')}</div>
+                    <div className="mt-2 text-xs leading-6 text-theme-secondary">
+                      <span className="font-semibold text-theme">{t('settings_printers_mac_opt1', '1. Сетевой принтер (рекомендуется).')}</span>{' '}
+                      {t('settings_printers_mac_opt1_desc', 'Подключите XPrinter по Wi-Fi/Ethernet и добавьте к команде адрес:')}
+                      {printWsUrl ? <code className="mx-1 whitespace-nowrap rounded-lg border border-theme bg-black/40 px-2 py-0.5 text-[11px] text-emerald-300">{`--host=IP_ПРИНТЕРА --port=9100`}</code> : null}
+                    </div>
+                    <div className="mt-1 text-xs leading-6 text-theme-secondary">
+                      <span className="font-semibold text-theme">{t('settings_printers_mac_opt2', '2. Симуляция без принтера.')}</span>{' '}
+                      {t('settings_printers_mac_opt2_desc', 'Чеки будут выводиться в консоль и сохраняться в ~/waitly-print-sim/. Добавьте флаг')}{' '}
+                      <code className="rounded-lg border border-theme bg-black/40 px-2 py-0.5 text-[11px] text-emerald-300">--simulate</code>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 flex flex-wrap items-center gap-3">
+                    <Button variant="secondary" size="sm" onClick={handlePrintTest} disabled={printTesting || !restaurantId}>
+                      {printTesting ? <Spinner className="h-3.5 w-3.5" /> : <Printer className="h-3.5 w-3.5" />}
+                      {printTesting ? t('settings_printers_testing', 'Отправка…') : t('settings_printers_test_btn', 'Тестовая печать')}
+                    </Button>
+                    <p className="text-xs text-theme-muted">{t('settings_printers_test_hint', 'Отправит тестовую страницу всем подключённым агентам этого заведения.')}</p>
+                  </div>
 
                   <h4 className="mt-4 text-sm font-semibold text-theme">{t('settings_printers_step3', '3. Готово — проверьте')}</h4>
                   <p className="mt-0.5 text-xs text-theme-secondary">{t('settings_printers_step3_desc', 'В консоли введите test — напечатается тестовая страница. Кухонные листы и чеки будут печататься автоматически при каждом заказе и оплате.')}</p>

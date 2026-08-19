@@ -81,20 +81,6 @@ export default function ReportsPage() {
               </div>
             </CardContent>
           </Card>
-
-          <Card className="border-theme bg-[var(--panel-bg)]">
-            <CardHeader>
-              <div className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[#8fd4ff]">{t('reports_tax_eyebrow', 'Uzbekistan')}</div>
-              <CardTitle className="mt-2 text-lg text-theme">{t('reports_tax_title', 'Tax reports')}</CardTitle>
-              <CardDescription>{t('reports_tax_desc', 'Reports for the Tax Committee of Uzbekistan.')}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-theme-secondary">{t('reports_tax_note', 'Tax report generation is available from the Data Export page.')}</p>
-              <Button variant="secondary" size="sm" className="mt-4" onClick={() => window.location.href = '/data-export'}>
-                <FileSpreadsheet className="mr-2 h-4 w-4" />{t('reports_tax_go', 'Go to Data Export')}
-              </Button>
-            </CardContent>
-          </Card>
         </div>
 
         <Card className="border-theme bg-[var(--panel-bg)]">
