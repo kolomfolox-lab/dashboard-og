@@ -91,7 +91,7 @@ export function OnboardingDialog({ defaultOpen = true, onComplete }: { defaultOp
                     <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(7,17,29,0)_0%,rgba(7,17,29,0.72)_100%)]" />
                     <div className="absolute inset-x-0 bottom-0 p-6">
                       <span className="inline-flex rounded-full border border-white/16 bg-black/24 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-white/72">
-                        {t('onboardingDialog_badge', '21st.dev inspired flow')}
+                        {t('onboardingDialog_badge', 'Waitly onboarding')}
                       </span>
                     </div>
                   </div>

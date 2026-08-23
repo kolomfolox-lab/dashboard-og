@@ -163,10 +163,14 @@ export default function InventoryPage() {
     return rows.filter((row: any) => String(row.name || '').toLowerCase().includes(search.trim().toLowerCase()));
   }, [inventory, search]);
 
+  const totalValue = useMemo(() => {
+    if (!inventory?.stock) return 0;
+    return inventory.stock.reduce((sum: number, row: any) => sum + (parseFloat(row.quantity) || 0) * (parseFloat(row.avg_price) || 0), 0);
+  }, [inventory]);
   const metricCards = [
     { title: t('inventory_metric_ingredients', 'Ингредиенты'), value: inventory?.ingredients.length || 0, note: workspace.selectedRestaurant?.name || t('shell_workspace', 'Workspace'), icon: Boxes, tone: 'text-[#8fd4ff] bg-[#8fd4ff]/12' },
     { title: t('inventory_metric_low', 'Низкий остаток'), value: inventory?.low_stock_count || 0, note: t('inventory_metric_low_note', 'Нужно проверить закупку'), icon: TriangleAlert, tone: 'text-[#ffd28d] bg-[#ffd28d]/12' },
-    { title: t('inventory_metric_empty', 'Пустые позиции'), value: inventory?.empty_stock_count || 0, note: t('inventory_metric_empty_note', 'Стоп-лист будет опираться на это'), icon: Scale, tone: 'text-[#f97360] bg-[#f97360]/12' },
+    { title: 'Общая стоимость', value: `${Math.round(totalValue).toLocaleString()} сум`, note: 'Считает автоматом', icon: Scale, tone: 'text-emerald-400 bg-emerald-500/12' },
   ];
 
   return (
@@ -265,11 +269,19 @@ export default function InventoryPage() {
                         </TableCell>
                       </TableRow>
                     ) : (
-                      filteredStock.map((row: any) => (
-                        <TableRow key={row.id}>
-                          <TableCell className="font-semibold text-theme">{row.name}</TableCell>
-                          <TableCell className={row.is_low ? 'font-semibold text-[#ffd28d]' : 'text-theme'}>
+                      filteredStock.map((row: any) => {
+                        const pct = Math.min(100, Math.max(5, (parseFloat(row.quantity) / Math.max(1, parseFloat(row.minimum_quantity) || 1)) * 50));
+                        return (
+                        <TableRow key={row.id} className="group hover:bg-white/[0.03] transition-colors">
+                          <TableCell>
+                            <div className="font-semibold text-theme">{row.name}</div>
+                            <div className="mt-1 h-1.5 w-24 overflow-hidden rounded-full bg-white/10">
+                              <div className={`h-full rounded-full transition-all ${row.is_empty ? 'bg-[#f97360] w-[8%]' : row.is_low ? 'bg-[#ffd28d]' : 'bg-emerald-400'}`} style={{ width: `${pct}%` }} />
+                            </div>
+                          </TableCell>
+                          <TableCell className={row.is_low ? 'font-bold text-[#ffd28d]' : 'font-medium text-theme'}>
                             {row.quantity} {row.unit}
+                            <span className="ml-2 text-xs text-theme-muted hidden group-hover:inline">{row.avg_price ? `· ${Number(row.avg_price).toLocaleString()} сум/ед` : ''}</span>
                           </TableCell>
                           <TableCell className="text-theme-secondary">{row.minimum_quantity} {row.unit}</TableCell>
                           <TableCell>
@@ -280,7 +292,7 @@ export default function InventoryPage() {
                             </span>
                           </TableCell>
                         </TableRow>
-                      ))
+                      );})
                     )}
                   </TableBody>
                 </Table>

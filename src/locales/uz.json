@@ -1268,7 +1268,7 @@
   "onboardingDialog_alt_launch": "Analitika va ishga tushirish vizuali",
   "onboardingDialog_title_launch": "Ishlab chiqarishga chiqarish uchun yaratilgan",
   "onboardingDialog_desc_launch": "Bu React shell email OTP, Telegram autentifikatsiyasi, backend analitikasi va kelajakdagi subdomain joylashuvi uchun tayyor.",
-  "onboardingDialog_badge": "21st.dev inspired flow",
+  "onboardingDialog_badge": "Waitly onboarding",
   "onboardingDialog_launch_walkthrough": "Ishga tushirish sharhi",
   "onboardingDialog_back": "Orqaga",
   "onboardingDialog_skip": "O'tkazib yuborish",

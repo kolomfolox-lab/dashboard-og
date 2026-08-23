@@ -855,7 +855,7 @@
   "onboardingDialog_alt_launch": "Визуал аналитики и запуска",
   "onboardingDialog_title_launch": "Создан для масштабирования в промышленный запуск",
   "onboardingDialog_desc_launch": "Этот React shell готов к email OTP, Telegram авторизации, бэкенд аналитике и будущему развёртыванию поддоменов.",
-  "onboardingDialog_badge": "21st.dev inspired flow",
+  "onboardingDialog_badge": "Waitly onboarding",
   "onboardingDialog_launch_walkthrough": "Обзор запуска",
   "onboardingDialog_back": "Назад",
   "onboardingDialog_skip": "Пропустить",

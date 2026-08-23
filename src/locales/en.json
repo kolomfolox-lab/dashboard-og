@@ -1210,7 +1210,7 @@
   "onboardingDialog_alt_launch": "Analytics and launch visual",
   "onboardingDialog_title_launch": "Built to scale into production rollout",
   "onboardingDialog_desc_launch": "This React shell is ready for email OTP, Telegram auth, backend analytics, and future subdomain deployment.",
-  "onboardingDialog_badge": "21st.dev inspired flow",
+  "onboardingDialog_badge": "Waitly onboarding",
   "onboardingDialog_launch_walkthrough": "Launch walkthrough",
   "onboardingDialog_back": "Back",
   "onboardingDialog_skip": "Skip",

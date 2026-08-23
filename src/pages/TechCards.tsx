@@ -125,6 +125,7 @@ export default function TechCardsPage() {
     if (!search.trim()) return techCards;
     return techCards.filter(tc => (tc.dish_name || '').toLowerCase().includes(search.toLowerCase()));
   }, [techCards, search]);
+  const canCreate = dishes.length > 0;
 
   const avgMargin = techCards.length > 0
     ? Math.round(techCards.reduce((s, c) => s + (parseFloat(c.margin_percent) || 0), 0) / techCards.length)
@@ -202,13 +203,19 @@ export default function TechCardsPage() {
                 </TooltipTrigger>
                 <TooltipContent>{t('refresh', 'Обновить')}</TooltipContent>
               </Tooltip>
-              <Button onClick={() => setCreateOpen(true)}>
+              <Button onClick={() => setCreateOpen(true)} disabled={!canCreate} title={!canCreate ? 'Сначала добавьте блюдо в Меню' : ''}>
                 <Plus className="mr-1.5 h-4 w-4" />{t('techCards_new_card', 'Новая карта')}
               </Button>
             </div>
           </div>
         </CardHeader>
         <CardContent>
+          {!canCreate ? (
+            <div className="mb-4 rounded-xl border border-amber-300/20 bg-amber-500/10 p-4 flex items-center justify-between">
+              <div className="text-sm text-amber-200">Нет блюд — сначала добавьте блюда в <a href="/menu" className="underline font-bold">Меню</a>, потом создавайте техкарты</div>
+              <Button size="sm" onClick={() => window.location.href='/menu'}>В меню →</Button>
+            </div>
+          ) : null}
           <div className="overflow-hidden rounded-2xl border border-theme">
             <Table>
               <TableHeader>

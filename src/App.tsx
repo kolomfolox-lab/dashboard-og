@@ -54,6 +54,13 @@ import CourierPage from '@/pages/CourierPage.tsx';
 import SupportPage from '@/pages/SupportPage.tsx';
 import AuditorPage from '@/pages/AuditorPage.tsx';
 import SupplierPage from '@/pages/SupplierPage.tsx';
+import SuppliersPage from '@/pages/Suppliers.tsx';
+import SemisPage from '@/pages/Semis.tsx';
+import IngredientsPage from '@/pages/IngredientsPage.tsx';
+import MenuCategoriesPage from '@/pages/MenuCategories.tsx';
+import IngredientCategoriesPage from '@/pages/IngredientCategories.tsx';
+import WorkshopsPage from '@/pages/Workshops.tsx';
+import QrMenuPage from '@/pages/QrMenuPage.tsx';
 import ShiftsPage from '@/pages/Shifts.tsx';
 import HRPage from '@/pages/HR.tsx';
 import ChecklistsPage from '@/pages/Checklists.tsx';
@@ -150,6 +157,12 @@ function AppRoutes() {
       <Route path="/crm" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MANAGER']}><CRMPage /></PrivateRoute>} />
       <Route path="/loyalty" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER']}><LoyaltyPage /></PrivateRoute>} />
       <Route path="/menu" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MANAGER']}><MenuPage /></PrivateRoute>} />
+      <Route path="/menu/categories" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MANAGER']}><MenuCategoriesPage /></PrivateRoute>} />
+      <Route path="/semis" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MANAGER','CHEF']}><SemisPage /></PrivateRoute>} />
+      <Route path="/ingredients" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MANAGER','CHEF']}><IngredientsPage /></PrivateRoute>} />
+      <Route path="/ingredients/categories" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MANAGER','CHEF']}><IngredientCategoriesPage /></PrivateRoute>} />
+      <Route path="/workshops" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MANAGER','CHEF']}><WorkshopsPage /></PrivateRoute>} />
+      <Route path="/qr-menu" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MANAGER']}><QrMenuPage /></PrivateRoute>} />
       <Route path="/users" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MANAGER']}><UsersPage /></PrivateRoute>} />
       <Route path="/printers" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MANAGER','CHEF','KITCHEN_MANAGER']}><PrintersPage /></PrivateRoute>} />
       <Route path="/security" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','ACCOUNTANT','ANALYST','AUDITOR','SUPPORT']}><SecurityPage /></PrivateRoute>} />
@@ -159,7 +172,7 @@ function AppRoutes() {
       <Route path="/barista" element={<PrivateRoute roles={['BARTENDER','BARISTA','CHEF','KITCHEN_MANAGER','SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MANAGER']}><BaristaPage /></PrivateRoute>} />
       <Route path="/tables" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MANAGER','HOSTESS']}><TablesPage /></PrivateRoute>} />
        <Route path="/inventory" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MANAGER','CHEF','KITCHEN_MANAGER']}><InventoryPage /></PrivateRoute>} />
-       <Route path="/suppliers" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MANAGER']}><SupplierPage /></PrivateRoute>} />
+        <Route path="/suppliers" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MANAGER']}><SuppliersPage /></PrivateRoute>} />
       <Route path="/keys" element={<PrivateRoute roles={['SUPER_ADMIN']}><KeysPage /></PrivateRoute>} />
       <Route path="/settings" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MANAGER']}><SettingsPage /></PrivateRoute>} />
       <Route path="/setup" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER']}><OwnerSetupPage /></PrivateRoute>} />

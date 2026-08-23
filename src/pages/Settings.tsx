@@ -1,5 +1,5 @@
 ﻿import { useEffect, useMemo, useState } from 'react';
-import { ArrowRight, Ban, Gift, Percent, Plus, Printer, RefreshCcw, ShieldAlert, UserRound, Wallet } from 'lucide-react';
+import { ArrowRight, Ban, Gift, Percent, Plus, Printer, RefreshCcw, ShieldAlert, UserRound, Wallet, LayoutGrid } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { AppShell } from '@/components/app/AppShell';
@@ -7,6 +7,8 @@ import { hasGoogleOAuth } from '@/lib/google';
 import { MetricCard } from '@/components/app/MetricCard';
 import { Panel } from '@/components/app/Panel';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { ALL_PAGES, getVisiblePages, setVisiblePages } from '@/lib/pageRegistry';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group';
 import { Label } from '@/components/ui/label';
@@ -473,6 +475,40 @@ export default function SettingsPage() {
             </div>
           </Panel>
         </div>
+        <Panel title="Модули и страницы" eyebrow="Настройка" description="Включайте только нужные страницы — у нас дохера страниц, но показываем только то, что нужно. Переключатели сохраняются для этого заведения.">
+          <div className="space-y-4">
+            {Array.from(new Set(ALL_PAGES.map(p => p.group))).map(group => {
+              const pages = ALL_PAGES.filter(p => p.group === group);
+              const visible = getVisiblePages(restaurantId, user?.role || 'RESTAURANT_OWNER');
+              return (
+                <div key={group} className="rounded-2xl border border-theme bg-black/10 p-4">
+                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-theme-muted mb-3 flex items-center gap-2"><LayoutGrid className="h-3.5 w-3.5" />{group}</div>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {pages.map(p => {
+                      const enabled = visible.has(p.path);
+                      return (
+                        <label key={p.path} className="flex items-center justify-between gap-3 rounded-xl border border-theme bg-white/[0.03] px-3 py-2.5 cursor-pointer hover:bg-white/[0.06]">
+                          <span className="text-sm text-theme">{p.label} <span className="text-xs text-theme-muted">({p.path})</span></span>
+                          <Switch checked={enabled} onCheckedChange={(v) => {
+                            const next = new Set(visible);
+                            if (v) next.add(p.path); else next.delete(p.path);
+                            setVisiblePages(restaurantId, Array.from(next));
+                            window.dispatchEvent(new Event('page-visibility-changed'));
+                            toast.success(v ? `${p.label} включен` : `${p.label} выключен`);
+                          }} />
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => { setVisiblePages(restaurantId, ALL_PAGES.filter(p => p.roles.includes(user?.role || 'RESTAURANT_OWNER')).map(p => p.path)); window.dispatchEvent(new Event('page-visibility-changed')); toast.success('Сброшено к дефолту'); }}>Сбросить к дефолту (9)</Button>
+              <Button variant="secondary" size="sm" onClick={() => { setVisiblePages(restaurantId, ALL_PAGES.filter(p => p.roles.includes(user?.role || 'RESTAURANT_OWNER') || p.roles.includes('RESTAURANT_OWNER')).map(p => p.path)); window.dispatchEvent(new Event('page-visibility-changed')); toast.success('Включены все'); }}>Включить все</Button>
+            </div>
+          </div>
+        </Panel>
         <Panel title={t('settings_workspace_tools_title', 'Workspace tools')} eyebrow={t('settings_separate_pages', 'Separate pages')} description={t('settings_workspace_tools_desc', 'Brand, online menu, and subscription now live on dedicated owner pages instead of one overloaded settings screen.')}>
           <div className="grid gap-4 md:grid-cols-3">
             <QuickLinkCard title={t('settings_brand_studio_title', 'Brand Studio')} description={t('settings_brand_studio_desc', 'Logo, cover, reviews card, and live preview.')} action={t('settings_brand_studio_action', 'Open Brand Studio')} onClick={() => navigate('/brand-studio')} />

@@ -47,7 +47,6 @@ export function ProfileDropdown({ data, className, onSignOut, ...props }: Profil
     { label: data.workspace || t('profileDropdown_workspace', 'Workspace'), onClick: () => navigate('/dashboard'), Icon: <BarChart3 className="h-4 w-4 text-[#8fd4ff]" /> },
     { label: data.subscription || t('profileDropdown_plan', 'Plan'), onClick: () => navigate('/settings'), Icon: <CreditCard className="h-4 w-4 text-[#8fd4ff]" /> },
     { label: t('profileDropdown_settings', 'Settings'), onClick: () => navigate('/settings'), Icon: <Settings className="h-4 w-4 text-[#8fd4ff]" /> },
-    { label: t('profileDropdown_docs', 'Docs'), onClick: () => window.open('https://21st.dev', '_blank'), Icon: <FileText className="h-4 w-4 text-[#8fd4ff]" /> },
     { label: t('profileDropdown_sign_out', 'Sign out'), onClick: onSignOut || (() => {}), Icon: <LogOut className="h-4 w-4 text-[#ef4444]" /> },
   ];
 

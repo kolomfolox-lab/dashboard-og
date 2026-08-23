@@ -1,9 +1,10 @@
-import { Activity, BarChart3, Bell, BookOpenText, Boxes, Calendar, CheckSquare, ChevronDown, ChevronRight, ClipboardList, Coffee, ContactRound, CreditCard, DollarSign, Gift, LayoutDashboard, LineChart, Link, LockKeyhole, MonitorSmartphone, Moon, Receipt, RefreshCw, Settings2, ShoppingCart, Store, Sun, TrendingDown, Tv, UsersRound, UtensilsCrossed, Wallet, Waves } from 'lucide-react';
+import { Activity, BarChart3, Beaker, Bell, BookOpenText, Boxes, Calendar, CheckSquare, ChefHat, ChevronDown, ChevronRight, ClipboardList, Coffee, ContactRound, CreditCard, DollarSign, Gift, LayoutDashboard, Layers, LineChart, Link, LockKeyhole, MonitorSmartphone, Moon, Package, QrCode, Receipt, RefreshCw, Settings2, ShoppingCart, Store, Sun, Tag, TrendingDown, Tv, UsersRound, UtensilsCrossed, Wallet, Waves } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BrandMark } from '@/components/app/BrandMark';
 import logoUrl from '@/assets/waitly-lil.webp';
+import { getVisiblePages } from '@/lib/pageRegistry';
 import { AIAssistant } from '@/components/app/AIAssistant';
 import { AppNotificationBell } from '@/components/app/AppNotificationBell';
 import { Button } from '@/components/ui/button';
@@ -82,15 +83,64 @@ const navByRole: Record<string, NavGroup[]> = {
     ]},
   ],
    RESTAURANT_OWNER: [
-    { label: '', labelKey: '', items: [
+    { label: 'Аналитика', labelKey: 'nav_group_analytics', items: [
       { to: '/dashboard', labelKey: 'nav_dashboard', fallback: 'Начало работы', icon: LayoutDashboard },
       { to: '/analytics', labelKey: 'nav_analytics', fallback: 'Статистика', icon: BarChart3 },
+      { to: '/reports', labelKey: 'nav_reports', fallback: 'Отчёты', icon: BarChart3 },
+    ]},
+    { label: 'Финансы', labelKey: 'nav_group_finance', items: [
       { to: '/finances', labelKey: 'nav_finances', fallback: 'Финансы', icon: Wallet },
-      { to: '/menu', labelKey: 'nav_menu', fallback: 'Меню', icon: UtensilsCrossed },
+      { to: '/cashflow', labelKey: 'nav_cashflow', fallback: 'Cash Flow', icon: Activity },
+      { to: '/expenses', labelKey: 'nav_expenses', fallback: 'Расходы', icon: TrendingDown },
+      { to: '/payments', labelKey: 'nav_payments', fallback: 'Платежи', icon: Receipt },
+      { to: '/payouts', labelKey: 'nav_payouts', fallback: 'Выплаты', icon: DollarSign },
+    ]},
+    { label: 'Меню', labelKey: 'nav_group_menu', items: [
+      { to: '/menu', labelKey: 'nav_menu_products', fallback: 'Товары', icon: Package },
+      { to: '/tech-cards', labelKey: 'nav_tech_cards', fallback: 'Тех. карты', icon: UtensilsCrossed },
+      { to: '/semis', labelKey: 'nav_semis', fallback: 'Полуфабрикаты', icon: Layers },
+      { to: '/ingredients', labelKey: 'nav_ingredients', fallback: 'Ингредиенты', icon: Beaker },
+      { to: '/menu/categories', labelKey: 'nav_menu_cats', fallback: 'Категории товаров и тех. карт', icon: Tag },
+      { to: '/ingredients/categories', labelKey: 'nav_ing_cats', fallback: 'Категории ингредиентов', icon: Tag },
+      { to: '/workshops', labelKey: 'nav_workshops', fallback: 'Цехи', icon: ChefHat },
+      { to: '/qr-menu', labelKey: 'nav_qr_menu', fallback: 'QR-меню', icon: QrCode },
+    ]},
+    { label: 'Кухня', labelKey: 'nav_group_kitchen', items: [
+      { to: '/kds', labelKey: 'nav_kds', fallback: 'KDS', icon: Tv },
+      { to: '/printers', labelKey: 'nav_printers', fallback: 'Принтеры', icon: Receipt },
+    ]},
+    { label: 'Склад', labelKey: 'nav_group_stock', items: [
       { to: '/inventory', labelKey: 'nav_inventory', fallback: 'Склад', icon: Boxes },
-      { to: '/crm', labelKey: 'nav_crm', fallback: 'Маркетинг', icon: Gift },
+      { to: '/suppliers', labelKey: 'nav_suppliers', fallback: 'Поставщики', icon: ShoppingCart },
+    ]},
+    { label: 'Гости', labelKey: 'nav_group_guests', items: [
+      { to: '/crm', labelKey: 'nav_crm', fallback: 'CRM', icon: ContactRound },
+      { to: '/loyalty', labelKey: 'nav_loyalty', fallback: 'Лояльность', icon: Gift },
+      { to: '/promo', labelKey: 'nav_promo', fallback: 'Акции', icon: Gift },
+      { to: '/surveys', labelKey: 'nav_surveys', fallback: 'Опросы', icon: ClipboardList },
+    ]},
+    { label: 'Зал', labelKey: 'nav_group_hall', items: [
+      { to: '/bookings', labelKey: 'nav_bookings', fallback: 'Брони', icon: Calendar },
+      { to: '/tables', labelKey: 'nav_tables', fallback: 'Столы', icon: UsersRound },
+    ]},
+    { label: 'Касса', labelKey: 'nav_group_pos', items: [
+      { to: '/pos', labelKey: 'nav_pos', fallback: 'Касса (POS)', icon: MonitorSmartphone },
+      { to: '/split-bill', labelKey: 'nav_split_bill', fallback: 'Раздел счёта', icon: Waves },
+    ]},
+    { label: 'Команда', labelKey: 'nav_group_team', items: [
       { to: '/users', labelKey: 'nav_users', fallback: 'Доступ', icon: LockKeyhole },
-      { to: '/pos', labelKey: 'nav_pos', fallback: 'Приложения', icon: MonitorSmartphone },
+      { to: '/hr', labelKey: 'nav_hr', fallback: 'Персонал', icon: UsersRound },
+      { to: '/shifts', labelKey: 'nav_shifts', fallback: 'Смены', icon: ClipboardList },
+      { to: '/checklists', labelKey: 'nav_checklists', fallback: 'Чек-листы', icon: CheckSquare },
+      { to: '/attendance', labelKey: 'nav_attendance', fallback: 'Посещаемость', icon: BarChart3 },
+    ]},
+    { label: 'Система', labelKey: 'nav_group_system', items: [
+      { to: '/security', labelKey: 'nav_security', fallback: 'Безопасность', icon: LockKeyhole },
+      { to: '/api-keys', labelKey: 'nav_api_keys', fallback: 'API ключи', icon: Link },
+      { to: '/brand-studio', labelKey: 'nav_brand_studio', fallback: 'Брендинг', icon: Store },
+      { to: '/online-menu-studio', labelKey: 'nav_online_menu', fallback: 'Онлайн-меню', icon: BookOpenText },
+      { to: '/notifications', labelKey: 'nav_notifications', fallback: 'Уведомления', icon: Bell },
+      { to: '/integrations', labelKey: 'nav_integrations', fallback: 'Интеграции', icon: Link },
       { to: '/settings', labelKey: 'nav_settings', fallback: 'Настройки', icon: Settings2 },
     ]},
   ],
@@ -314,6 +364,16 @@ export function AppShell({ title, subtitle, eyebrow, restaurants = [], selectedR
       return FEATURES[item.featureKey] === true;
     }),
   })).filter(group => group.items.length > 0);
+  const [visibleTick, setVisibleTick] = useState(0);
+  useEffect(() => {
+    const h = () => setVisibleTick(t => t + 1);
+    window.addEventListener('page-visibility-changed', h);
+    window.addEventListener('storage', h);
+    return () => { window.removeEventListener('page-visibility-changed', h); window.removeEventListener('storage', h); }
+  }, []);
+  const visibleSet = getVisiblePages(availableSelectedRestaurantId || selectedRestaurant?.id || null, user?.role || 'RESTAURANT_OWNER');
+  void visibleTick;
+  const filteredNavItems = navItems.map(g => ({ ...g, items: g.items.filter(i => visibleSet.has(i.to)) })).filter(g => g.items.length > 0);
   const activeWorkspace = selectedRestaurant?.name || (isOwner ? t('shell_workspace_loading', 'Загрузка рабочей зоны…') : t('appShell_active_workspace', 'Waitly dashboard'));
   const effectiveSubscriptionGate = subscriptionGate || (user?.role !== 'SUPER_ADMIN' && selectedRestaurant ? { active: selectedRestaurant.subscription_active !== false, restaurantName: selectedRestaurant.name } : undefined);
   const roleLabels: Record<string, string> = {
@@ -373,7 +433,7 @@ export function AppShell({ title, subtitle, eyebrow, restaurants = [], selectedR
               ) : null}
               <div className={open ? 'space-y-5' : 'flex flex-col items-center gap-1 w-full'}>
                 {(() => {
-                  const allItems = navItems.flatMap(g => g.items);
+                  const allItems = filteredNavItems.flatMap(g => g.items);
                   const collapsedItems = allItems.slice(0, 7);
                   const hasMore = allItems.length > 7;
                   if (!open) {
@@ -396,7 +456,7 @@ export function AppShell({ title, subtitle, eyebrow, restaurants = [], selectedR
                       </>
                     );
                   }
-                  return navItems.map((group, gi) => {
+                  return filteredNavItems.map((group, gi) => {
                     const isOpen = expandedGroups.has(gi);
                     return (
                       <div key={gi}>
@@ -458,15 +518,15 @@ export function AppShell({ title, subtitle, eyebrow, restaurants = [], selectedR
         </Sidebar>
         <div className="flex min-w-0 flex-1 flex-col overflow-visible">
           <div className="flex-1 px-4 py-4 md:px-6 md:py-5 xl:px-8">
-            <header className="sticky top-0 z-30 mb-5 rounded-[30px] border border-theme bg-theme-surface p-4 shadow-[0_20px_80px_rgba(0,0,0,0.2)] backdrop-blur-2xl lg:p-5">
+            <header className="sticky top-0 z-30 mb-4 rounded-2xl border border-theme bg-theme-surface p-3 shadow-[0_8px_30px_rgba(0,0,0,0.12)] backdrop-blur-xl lg:p-4">
               <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                 <div>
-                  {eyebrow ? <div className="text-[11px] font-semibold uppercase tracking-[0.34em] text-[#8fd4ff]">{eyebrow}</div> : null}
-                  <div className="mt-2 flex flex-wrap items-center gap-3">
-                    <h1 className="font-display text-3xl leading-none text-theme md:text-[2.4rem]">{title}</h1>
-                    <span className="inline-flex rounded-full border border-theme bg-theme-panel px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-theme-secondary">{roleLabels[user?.role || ''] || t('appShell_operator', 'Operator')}</span>
+                  {eyebrow ? <div className="text-[10px] font-semibold uppercase tracking-[0.3em] text-[#8fd4ff]">{eyebrow}</div> : null}
+                  <div className="mt-1.5 flex flex-wrap items-center gap-2.5">
+                    <h1 className="font-display text-2xl leading-none text-theme md:text-[1.9rem]">{title}</h1>
+                    <span className="inline-flex rounded-full border border-theme bg-theme-panel px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-theme-secondary">{roleLabels[user?.role || ''] || t('appShell_operator', 'Operator')}</span>
                   </div>
-                  <p className="mt-3 max-w-4xl text-sm leading-7 text-theme-secondary">{subtitle}</p>
+                  <p className="mt-2 max-w-4xl text-[13px] leading-6 text-theme-secondary">{subtitle}</p>
                   {user?.full_name ? <div className="mt-2 flex items-center gap-2 text-xs text-theme-secondary"><span>{t('appShell_welcome_back', 'С возвращением, ')}<strong className="text-theme">{user.full_name.split(' ')[0]}</strong></span></div> : null}
                 </div>
                 <div className="flex flex-col gap-3 lg:min-w-[520px] sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
