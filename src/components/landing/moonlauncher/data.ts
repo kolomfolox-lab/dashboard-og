@@ -52,27 +52,27 @@ export const metrics: MetricItem[] = [
 export const surfaces: SurfaceItem[] = [
   {
     title: 'Waitly Control',
-    host: 'app.waitly.uz',
+    host: 'app.moonlauncher.org',
     body: 'Run owner workflows, tables, QR flows, bookings, analytics, and brand settings from one focused workspace.',
-    href: 'https://app.waitly.uz',
+    href: 'https://app.moonlauncher.org',
     cta: 'Open workspace',
     icon: LayoutDashboard,
     accent: 'from-[#ff8b6a]/30 via-[#f6b56e]/18 to-transparent',
   },
   {
     title: 'Reviews Hub',
-    host: 'reviews.waitly.uz',
+    host: 'reviews.moonlauncher.org',
     body: 'Give every restaurant a sharper public face with review pages, trust signals, and profile surfaces that feel alive.',
-    href: 'https://reviews.waitly.uz',
+    href: 'https://reviews.moonlauncher.org',
     cta: 'See public layer',
     icon: Store,
     accent: 'from-[#8fe6d8]/24 via-[#53b9ff]/16 to-transparent',
   },
   {
     title: 'API Docs',
-    host: 'api.waitly.uz/api/docs/',
+    host: 'api.moonlauncher.org/api/docs/',
     body: 'Expose the product line cleanly for integrations, automation, and future product extensions without muddying the main UX.',
-    href: 'https://api.waitly.uz/api/docs/',
+    href: 'https://api.moonlauncher.org/api/docs/',
     cta: 'Read docs',
     icon: BookOpenText,
     accent: 'from-[#d7c3ff]/20 via-[#7bb6ff]/12 to-transparent',
@@ -81,22 +81,22 @@ export const surfaces: SurfaceItem[] = [
 
 export const hostRows: HostItem[] = [
   {
-    host: 'waitly.uz',
+    host: 'moonlauncher.org',
     title: 'Marketing host',
     body: 'Explains the system in one pass: what the brand is, why the surfaces exist, and where each route should take the visitor next.',
   },
   {
-    host: 'app.waitly.uz',
+    host: 'app.moonlauncher.org',
     title: 'Operator host',
     body: 'Reserved for restaurant teams, owner workflows, subscription state, analytics, and the day-to-day control room.',
   },
   {
-    host: 'reviews.waitly.uz',
+    host: 'reviews.moonlauncher.org',
     title: 'Guest trust host',
     body: 'Built for public discovery, restaurant profiles, social proof, and a cleaner route to bookings and menu exploration.',
   },
   {
-    host: 'api.waitly.uz',
+    host: 'api.moonlauncher.org',
     title: 'Developer host',
     body: 'Keeps technical reference isolated from marketing and operations so the brand stays understandable at every level.',
   },

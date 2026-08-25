@@ -74,6 +74,7 @@ import ApiKeysPage from '@/pages/ApiKeysPage.tsx';
 import PayoutsPage from '@/pages/PayoutsPage.tsx';
 import SplitBillPage from '@/pages/SplitBillPage.tsx';
 import BaristaPage from '@/pages/BaristaPage.tsx';
+import VibeModulePage from '@/pages/VibeModulePage.tsx';
 
 let authSplashShown = false;
 
@@ -203,6 +204,7 @@ function AppRoutes() {
       <Route path="/pos" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MANAGER','HEAD_WAITER','WAITER','CASHIER','ADMIN']}><PosManagementPage /></PrivateRoute>} />
       <Route path="/notifications" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MANAGER']}><NotificationsPage /></PrivateRoute>} />
       <Route path="/expenses" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MANAGER']}><ExpensesPage /></PrivateRoute>} />
+      <Route path="/vibe/:slug" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MANAGER']}><VibeModulePage /></PrivateRoute>} />
       <Route path="/register" element={user ? <Navigate to="/dashboard" replace /> : <RegisterPage />} />
       <Route path="*" element={<FallbackRoute />} />
     </Routes>
