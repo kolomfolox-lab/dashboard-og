@@ -1,7 +1,7 @@
 ﻿import { cn } from '@/lib/utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
-export function Panel({ title, eyebrow, description, action, className, children }: { title: string; eyebrow?: string; description?: string; action?: React.ReactNode; className?: string; children: React.ReactNode }) {
+export function Panel({ title, eyebrow, description, action, className, children }: { title?: React.ReactNode; eyebrow?: string; description?: string; action?: React.ReactNode; className?: string; children: React.ReactNode }) {
   return (
     <Card className={cn('border-theme bg-[var(--panel-bg)] shadow-[0_20px_80px_rgba(0,0,0,0.18)]', className)}>
       <CardHeader>

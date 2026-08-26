@@ -49,21 +49,29 @@ export default function PosManagementPage() {
   const [pairLeft, setPairLeft] = useState(0);
   const [pairLoading, setPairLoading] = useState(false);
 
+  const [registers, setRegisters] = useState<any[]>([]);
+  const [regName, setRegName] = useState('');
+  const [regBusy, setRegBusy] = useState(false);
+  // Password is returned by the API only once (on create/reset) — keep it on screen until dismissed.
+  const [shownSecret, setShownSecret] = useState<{ username: string; password: string } | null>(null);
+
   const load = async () => {
     const rid = workspace.selectedRestaurantId;
     if (!rid) return;
     setLoading(true);
     try {
-      const [posRes, printRes, staffRes, certRes] = await Promise.allSettled([
+      const [posRes, printRes, staffRes, certRes, regRes] = await Promise.allSettled([
         ownerAPI.getPosSettings(rid),
         ownerAPI.getPosPrintStatus(rid),
         ownerAPI.getStaff(rid),
         ownerAPI.getPosCertificates(rid),
+        ownerAPI.getPosRegisters(rid),
       ]);
       setPos(posRes.status === 'fulfilled' ? posRes.value.data : {});
       setPrint(printRes.status === 'fulfilled' ? printRes.value.data : {});
       setStaff(posRes.status === 'fulfilled' ? toArray(staffRes.status === 'fulfilled' ? staffRes.value.data : []) : []);
       setCerts(certRes.status === 'fulfilled' ? toArray(certRes.value.data) : []);
+      setRegisters(regRes.status === 'fulfilled' ? toArray(regRes.value.data?.registers ?? regRes.value.data) : []);
     } catch {
     } finally {
       setLoading(false);
@@ -178,6 +186,48 @@ export default function PosManagementPage() {
     finally { setPairLoading(false); }
   };
 
+  const createRegister = async () => {
+    if (!regName.trim()) { showToast('Введите название кассы', 'error'); return; }
+    try {
+      setRegBusy(true);
+      const res = await ownerAPI.createPosRegister({
+        restaurant_id: workspace.selectedRestaurantId || (user as any)?.restaurant_id || undefined,
+        name: regName.trim(),
+      });
+      setShownSecret({ username: res.data.username, password: res.data.password });
+      setRegName('');
+      showToast('Касса создана', 'success');
+      await load();
+    } catch (e: any) { showToast(e?.response?.data?.error?.message || 'Ошибка', 'error'); }
+    finally { setRegBusy(false); }
+  };
+
+  const resetRegisterPassword = async (id: string) => {
+    if (!confirm('Сгенерировать новый пароль? Старый пароль перестанет работать.')) return;
+    try {
+      const res = await ownerAPI.resetPosRegisterPassword(id);
+      setShownSecret({ username: res.data.username, password: res.data.password });
+      await load();
+    } catch (e: any) { showToast(e?.response?.data?.error?.message || 'Ошибка', 'error'); }
+  };
+
+  const unbindRegister = async (id: string) => {
+    if (!confirm('Отвязать кассу от устройства? После этого к ней сможет подключиться другой браузер.')) return;
+    try {
+      await ownerAPI.unbindPosRegister(id);
+      showToast('Касса отвязана', 'success');
+      await load();
+    } catch (e: any) { showToast(e?.response?.data?.error?.message || 'Ошибка', 'error'); }
+  };
+
+  const toggleRegister = async (id: string, isActive: boolean) => {
+    try {
+      await ownerAPI.updatePosRegister(id, { is_active: isActive });
+      showToast(isActive ? 'Касса включена' : 'Касса выключена', 'success');
+      await load();
+    } catch (e: any) { showToast(e?.response?.data?.error?.message || 'Ошибка', 'error'); }
+  };
+
   const saveComment = async (id: string) => {
     try {
       await ownerAPI.addPosArchiveComment(id, commentDraft[id] || '');
@@ -213,7 +263,7 @@ export default function PosManagementPage() {
       subtitle="Приложение-касса для планшета, PIN-коды сотрудников, сертификаты"
       restaurants={workspace.restaurants}
       selectedRestaurantId={workspace.selectedRestaurantId}
-      onRestaurantChange={workspace.selectRestaurant}
+      onRestaurantChange={workspace.setSelectedRestaurantId}
     >
       <div className="space-y-4">
         <Panel title={<span className="flex items-center gap-2"><MonitorSmartphone className="h-5 w-5" /> Приложение-касса</span>}>
@@ -276,6 +326,84 @@ export default function PosManagementPage() {
                 {print.connected ? '● Принтер подключён' : print.printer_bound ? '● Принтер не подключён' : '● Принтер не привязан'}
               </span>
             </div>
+          </div>
+        </Panel>
+
+        <Panel title={<span className="flex items-center gap-2"><Smartphone className="h-5 w-5" /> Кассы заведения (логин + пароль)</span>}>
+          <p className="mb-3 text-sm text-white/50">
+            Создайте кассу и выдайте сотрудникам логин с паролем — вход на планшете через «Войти по логину кассы».
+            Логин у всех касс одинаковый (название заведения), пароль определяет конкретную кассу. Касса привязывается
+            к первому браузеру; другой браузер сможет войти только после отвязки.
+          </p>
+
+          {shownSecret && (
+            <div className="mb-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4">
+              <div className="text-sm font-bold text-emerald-300">Пароль показан один раз — запишите или скопируйте его сейчас</div>
+              <div className="mt-2 flex flex-wrap items-center gap-3">
+                <span className="rounded-xl bg-black/30 px-4 py-2 font-mono text-xl font-black tracking-[0.25em] text-white">{shownSecret.password}</span>
+                <Button size="sm" variant="secondary" onClick={() => navigator.clipboard?.writeText(`Логин: ${shownSecret.username}\nПароль: ${shownSecret.password}`).then(() => showToast('Скопировано', 'success'))}>
+                  <Copy className="mr-1 h-3.5 w-3.5" /> Копировать
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => setShownSecret(null)}>Скрыть</Button>
+              </div>
+              <div className="mt-1 text-xs text-white/50">Логин: <code className="text-emerald-300">{shownSecret.username}</code></div>
+            </div>
+          )}
+
+          <div className="mb-3 flex flex-wrap items-end gap-3">
+            <div>
+              <label className="mb-1 block text-xs uppercase tracking-wide text-theme-muted">Название кассы</label>
+              <input
+                value={regName}
+                onChange={(e) => setRegName(e.target.value)}
+                placeholder="Касса у входа / Бар"
+                className="w-56 rounded-xl bg-white/10 px-3 py-2 text-sm text-white placeholder:text-white/30"
+              />
+            </div>
+            <Button onClick={createRegister} disabled={regBusy || !workspace.selectedRestaurantId && !(user as any)?.restaurant_id}>
+              {regBusy ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Plus className="mr-1 h-4 w-4" />} Создать кассу
+            </Button>
+          </div>
+
+          <div className="overflow-hidden rounded-2xl border border-theme">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-theme text-left text-xs uppercase tracking-wide text-theme-muted">
+                  <th className="px-3 py-2">Касса</th>
+                  <th className="px-3 py-2">Логин</th>
+                  <th className="px-3 py-2">Устройство</th>
+                  <th className="px-3 py-2">Последний вход</th>
+                  <th className="px-3 py-2 text-right">Действия</th>
+                </tr>
+              </thead>
+              <tbody>
+                {registers.length === 0 ? (
+                  <tr><td colSpan={5} className="px-3 py-6 text-center text-theme-muted">Касс ещё нет — создайте первую</td></tr>
+                ) : registers.map((r: any) => (
+                  <tr key={r.id} className={`border-b border-theme ${!r.is_active ? 'opacity-50' : ''}`}>
+                    <td className="px-3 py-2 font-semibold text-theme">{r.name}</td>
+                    <td className="px-3 py-2"><code className="text-emerald-300">{r.username}</code></td>
+                    <td className="px-3 py-2 text-theme-secondary">
+                      {r.is_bound ? `привязана · ${fmtDate(r.bound_at)}` : 'не привязана'}
+                    </td>
+                    <td className="px-3 py-2 text-theme-secondary">{fmtDate(r.last_login_at)}</td>
+                    <td className="px-3 py-2 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <Button size="sm" variant="secondary" onClick={() => resetRegisterPassword(r.id)}>
+                          <KeyRound className="mr-1 h-3.5 w-3.5" /> Пароль
+                        </Button>
+                        {r.is_bound ? (
+                          <Button size="sm" variant="ghost" onClick={() => unbindRegister(r.id)}>Отвязать</Button>
+                        ) : null}
+                        <Button size="sm" variant="ghost" onClick={() => toggleRegister(r.id, !r.is_active)}>
+                          {r.is_active ? <X className="h-3.5 w-3.5" /> : <Check className="h-3.5 w-3.5" />}
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </Panel>
 

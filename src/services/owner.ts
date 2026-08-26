@@ -519,6 +519,18 @@ export const ownerAPI = {
   setMyPin: (pin: string) =>
     api.post('/v1/owner/me/set-pin/', { pin }),
 
+  // POS registers (касса accounts, Poster-style)
+  getPosRegisters: (restaurantId?: string) =>
+    api.get('/v1/owner/pos/registers/', { params: restaurantId ? { restaurant_id: restaurantId } : {} }),
+  createPosRegister: (payload: { restaurant_id?: string; name: string; username?: string }) =>
+    api.post('/v1/owner/pos/registers/', payload),
+  updatePosRegister: (id: string, payload: { name?: string; username?: string; is_active?: boolean }) =>
+    api.patch(`/v1/owner/pos/registers/${id}/`, payload),
+  resetPosRegisterPassword: (id: string) =>
+    api.post(`/v1/owner/pos/registers/${id}/reset-password/`),
+  unbindPosRegister: (id: string) =>
+    api.post(`/v1/owner/pos/registers/${id}/unbind/`),
+
   // Gift certificates (POS)
   getPosCertificates: (restaurantId?: string) =>
     api.get('/v1/owner/pos/certificates/', { params: restaurantId ? { restaurant_id: restaurantId } : {} }),
