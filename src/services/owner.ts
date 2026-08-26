@@ -352,6 +352,10 @@ export const ownerAPI = {
   getAbcAnalysis: (restaurantId: string, days: number = 30) =>
     api.get('/owner/abc-analysis/', { params: { restaurant_id: restaurantId, days } }),
 
+  // Part 15: ABC/XYZ матрица + предложения автозаказа
+  getAbcXyz: (restaurantId: string, days: number = 30) =>
+    api.get('/owner/abc-xyz/', { params: { restaurant_id: restaurantId, days } }),
+
   getOrderFunnel: (restaurantId: string) =>
     api.get('/owner/order-funnel/', { params: { restaurant_id: restaurantId } }),
 

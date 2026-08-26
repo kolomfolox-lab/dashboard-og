@@ -56,6 +56,7 @@ import AuditorPage from '@/pages/AuditorPage.tsx';
 import SupplierPage from '@/pages/SupplierPage.tsx';
 import SuppliersPage from '@/pages/Suppliers.tsx';
 import SemisPage from '@/pages/Semis.tsx';
+import AbcXyzPage from '@/pages/AbcXyzPage.tsx';
 import IngredientsPage from '@/pages/IngredientsPage.tsx';
 import MenuCategoriesPage from '@/pages/MenuCategories.tsx';
 import IngredientCategoriesPage from '@/pages/IngredientCategories.tsx';
@@ -153,6 +154,7 @@ function AppRoutes() {
       <Route path="/analyst" element={<PrivateRoute roles={['ANALYST','SUPER_ADMIN']}><AnalystDashboardPage /></PrivateRoute>} />
       <Route path="/restaurants" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER']}><RestaurantsPage /></PrivateRoute>} />
       <Route path="/analytics" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','ANALYST']}><AnalyticsPage /></PrivateRoute>} />
+      <Route path="/analytics/abc-xyz" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','ANALYST']}><AbcXyzPage /></PrivateRoute>} />
       <Route path="/attendance" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER']}><AttendanceStatsPage /></PrivateRoute>} />
       <Route path="/bookings" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MANAGER']}><BookingsPage /></PrivateRoute>} />
       <Route path="/crm" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MANAGER']}><CRMPage /></PrivateRoute>} />

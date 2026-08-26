@@ -86,6 +86,7 @@ const navByRole: Record<string, NavGroup[]> = {
     { label: 'Аналитика', labelKey: 'nav_group_analytics', items: [
       { to: '/dashboard', labelKey: 'nav_dashboard', fallback: 'Начало работы', icon: LayoutDashboard },
       { to: '/analytics', labelKey: 'nav_analytics', fallback: 'Статистика', icon: BarChart3 },
+      { to: '/analytics/abc-xyz', labelKey: 'nav_abc_xyz', fallback: 'ABC/XYZ', icon: BarChart3 },
       { to: '/reports', labelKey: 'nav_reports', fallback: 'Отчёты', icon: BarChart3 },
     ]},
     { label: 'Финансы', labelKey: 'nav_group_finance', items: [
