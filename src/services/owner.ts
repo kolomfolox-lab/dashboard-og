@@ -550,6 +550,12 @@ export const ownerAPI = {
     api.post(`/v1/pos/pair/${code}/`, deviceId ? { device_id: deviceId } : {}),
   getPosPairCode: (code: string) => api.get(`/v1/pos/pair/${code}/`),
 
+  // Обратный Magic Pair: касса сама генерирует QR, владелец подтверждает
+  // (страница /pos-pair/:code, эндпоинты PosPairRequest).
+  getPosPairRequest: (code: string) => api.get(`/v1/owner/pos/pair-request/${code}/`),
+  confirmPosPairRequest: (code: string, restaurantId: string) =>
+    api.post(`/v1/owner/pos/pair-request/${code}/`, { restaurant_id: restaurantId }),
+
   // POS check archive
   getPosArchive: (params: { restaurant_id?: string; date_from?: string; date_to?: string; method?: string; q?: string; limit?: number }) =>
     api.get('/v1/owner/pos/archive/', { params }),

@@ -1,4 +1,4 @@
-﻿import { Component, type ErrorInfo, type ReactNode, useEffect, useState } from 'react';
+import { Component, type ErrorInfo, type ReactNode, useEffect, useState } from 'react';
 import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 
 import { VideoSplashLoader } from '@/components/app/VideoSplashLoader';
@@ -45,6 +45,7 @@ import UsersPage from '@/pages/Users.tsx';
 import GuestTrackingPage from '@/pages/public/GuestTrackingPage.tsx';
 import OnlineMenuPage from '@/pages/public/OnlineMenuPage.tsx';
 import OwnerOnboardingPage from '@/pages/public/OwnerOnboardingPage.tsx';
+import PosPairConfirmPage from '@/pages/PosPairConfirmPage.tsx';
 import OwnerSetupPage from '@/pages/OwnerSetupPage.tsx';
 import ReceiptPage from '@/pages/public/ReceiptPage.tsx';
 import TelegramMiniAppPage from '@/pages/public/TelegramMiniAppPage.tsx';
@@ -146,6 +147,7 @@ function AppRoutes() {
       <Route path="/telegram-mini-app/:restaurantSlug/:tableNumber" element={<TelegramMiniAppPage />} />
       <Route path="/menu/:restaurantSlug/*" element={<OnlineMenuPage />} />
       <Route path="/receipt/:transactionId" element={<ReceiptPage />} />
+      <Route path="/pos-pair/:code" element={<PosPairConfirmPage />} />
       <Route path="/owner/invite/:token" element={<OwnerOnboardingPage />} />
       <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <LoginPage />} />
        <Route path="/dashboard" element={<PrivateRoute roles={['SUPER_ADMIN','CHAIN_OWNER','RESTAURANT_OWNER','MANAGER']}><DashboardPage /></PrivateRoute>} />

@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowLeft, ChevronDown, Loader2, Lock, Mail } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 import { BrandMark } from '@/components/app/BrandMark';
 import { OtpInput, type OtpInputHandle, type OtpStatus } from '@/components/ui/otp-input';
@@ -26,6 +26,9 @@ export default function LoginPage() {
   const { loginWithPassword, sendOtp, verifyOtp, setPassword } = useAuth();
   const { t, locale, setLocale } = useLocale();
   const navigate = useNavigate();
+  const location = useLocation();
+  // Куда вернуться после входа (напр. /pos-pair/<code> из QR-сканирования).
+  const afterLogin = (location.state as { from?: string } | null)?.from || '/dashboard';
 
   const [mode, setMode] = useState<AuthMode>('password');
   const [step, setStep] = useState<FlowStep>('input');
@@ -64,7 +67,7 @@ export default function LoginPage() {
       if (mode === 'code') {
         const response = await verifyOtp({ email: identifier.trim(), code: value.trim() });
         setOtpStatus('success');
-        window.setTimeout(() => navigate('/dashboard', { replace: true }), 500);
+        window.setTimeout(() => navigate(afterLogin, { replace: true }), 500);
       } else {
         // Forgot-password: the code is really validated by the backend in setPassword.
         setOtpStatus('success');
@@ -94,7 +97,7 @@ export default function LoginPage() {
       if (mode === 'password') {
         if (step === 'input') {
           await loginWithPassword({ phone_number: identifier.trim(), password: pwd });
-          navigate('/dashboard', { replace: true });
+          navigate(afterLogin, { replace: true });
         }
       } else if (mode === 'code') {
         if (step === 'input') {
