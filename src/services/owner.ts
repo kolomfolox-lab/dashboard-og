@@ -380,7 +380,7 @@ export const ownerAPI = {
   // Tech Cards
   getTechCards: (restaurantId?: string) =>
     api.get('/inventory/tech-cards/', { params: restaurantId ? { restaurant_id: restaurantId } : {} }),
-  createTechCard: (payload: { restaurant: string; dish: string; yield_amount?: number; cooking_instructions?: string; cooking_time_minutes?: number }) =>
+  createTechCard: (payload: { restaurant: string; dish?: string; is_semi?: boolean; name?: string; yield_amount?: number; cooking_instructions?: string; cooking_time_minutes?: number }) =>
     api.post('/inventory/tech-cards/', payload),
   updateTechCard: (id: string, payload: any) =>
     api.patch(`/inventory/tech-cards/${id}/`, payload),

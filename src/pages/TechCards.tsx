@@ -44,7 +44,8 @@ export default function TechCardsPage() {
       const tcRes = await ownerAPI.getTechCards(workspace.selectedRestaurantId);
       const dishRes = await ownerAPI.getMenuDishes(workspace.selectedRestaurantId);
       const ingRes = await ownerAPI.getInventory(workspace.selectedRestaurantId);
-      setTechCards((tcRes.data as any).results || tcRes.data || []);
+      // Полуфабрикаты (is_semi) живут на странице «Полуфабрикаты» — здесь только карты блюд.
+      setTechCards(((tcRes.data as any).results || tcRes.data || []).filter((c: any) => !c.is_semi));
       const dishesData = dishRes.data;
       setDishes(Array.isArray(dishesData) ? dishesData : (dishesData as any).results || []);
       setIngredients(ingRes.data.ingredients || []);
