@@ -514,6 +514,8 @@ export const ownerAPI = {
     api.put('/v1/owner/pos-settings/', payload),
   setStaffPin: (userId: string, pin: string) =>
     api.post(`/v1/owner/users/${userId}/set-pin/`, { pin }),
+  getStaffPin: (userId: string) =>
+    api.get(`/v1/owner/users/${userId}/pin/`),
   clearStaffPin: (userId: string) =>
     api.post(`/v1/owner/users/${userId}/clear-pin/`, {}),
   setMyPin: (pin: string) =>

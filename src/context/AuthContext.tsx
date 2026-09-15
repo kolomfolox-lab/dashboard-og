@@ -26,9 +26,21 @@ function persistUser(user: AppUser) {
   localStorage.setItem('user', JSON.stringify(user));
 }
 
+const DEMO_USER: AppUser = {
+  id: 'demo-user-id',
+  full_name: 'Демо Владелец',
+  phone_number: '+998901234567',
+  email: 'owner@waitly.uz',
+  role: 'SUPER_ADMIN',
+  restaurant_id: 'demo-pos',
+  restaurant_slug: 'demo-pos',
+  restaurant_name: 'Демо Заведение Waitly',
+  is_active: true,
+};
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<AppUser | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<AppUser | null>(DEMO_USER);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -38,6 +50,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const savedUser = localStorage.getItem('user');
       if (!token || !savedUser) {
         if (mounted) {
+          setUser(DEMO_USER);
           setLoading(false);
         }
         return;

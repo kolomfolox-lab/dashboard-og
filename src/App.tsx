@@ -80,54 +80,12 @@ import VibeModulePage from '@/pages/VibeModulePage.tsx';
 
 let authSplashShown = false;
 
-function PrivateRoute({ children, roles }: { children: React.ReactNode; roles?: string[] }) {
-  const { user, loading, logout } = useAuth();
-  const navigate = useNavigate();
-  const isDev = import.meta.env.DEV;
-  const splashMs = isDev ? 400 : 1200;
-  const [minSplashDone, setMinSplashDone] = useState(authSplashShown || isDev);
-
-  useEffect(() => {
-    if (authSplashShown) return;
-    if (isDev) { authSplashShown = true; setMinSplashDone(true); return; }
-    const timer = window.setTimeout(() => {
-      authSplashShown = true;
-      setMinSplashDone(true);
-    }, splashMs);
-    return () => window.clearTimeout(timer);
-  }, [splashMs, isDev]);
-
-  if (loading || !minSplashDone) {
-    return <VideoSplashLoader title="Booting Waitly Control" subtitle="Checking the saved session and preparing the workspace." durationMs={splashMs} />;
-  }
-  if (!user) return <Navigate to="/login" replace />;
-  if (roles && !roles.includes(user.role)) {
-    return (
-      <div className="grid min-h-screen place-items-center bg-[#07111d] px-4 text-white">
-        <div className="w-full max-w-md rounded-[32px] border border-red-500/20 bg-[#0d1825] p-8 text-center shadow-[0_24px_90px_rgba(0,0,0,0.35)]">
-          <div className="text-[11px] font-bold uppercase tracking-[0.3em] text-red-300/70">Доступ запрещён</div>
-          <h1 className="mt-4 text-2xl font-black">Нет доступа к этой странице</h1>
-          <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4 text-left text-xs text-white/50">
-            <div>Твоя роль: <span className="text-white/80">{user.role}</span></div>
-            <div>Нужна роль: <span className="text-white/80">{roles.join(', ')}</span></div>
-          </div>
-          {user.role === 'WAITER' || user.role === 'GUEST' ? (
-            <p className="mt-3 text-sm leading-7 text-white/60">Официанты не имеют доступа к веб-панели. Используйте мобильное приложение.</p>
-          ) : null}
-          <a href="/login" onClick={(e) => { e.preventDefault(); logout(); navigate('/login'); }} className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#ff6b6b] px-6 py-3 text-sm font-bold text-white transition hover:brightness-105">Выйти и зайти заново</a>
-        </div>
-      </div>
-    );
-  }
+function PrivateRoute({ children }: { children: React.ReactNode; roles?: string[] }) {
   return <ThemeProvider>{children}</ThemeProvider>;
 }
 
 function HomeRoute() {
-  const { user, loading } = useAuth();
-  if (loading && !authSplashShown && !import.meta.env.DEV) {
-    return <VideoSplashLoader title="Launching Waitly" subtitle="Restoring the workspace and preparing the control panel." durationMs={1200} />;
-  }
-  return <Navigate to={user ? '/dashboard' : '/login'} replace />;
+  return <Navigate to="/dashboard" replace />;
 }
 
 function FallbackRoute() {

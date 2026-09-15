@@ -270,6 +270,15 @@ export default function UsersPage() {
                               {!isSuperAdmin ? (
                                 <TableCell className="text-right">
                                   <div className="flex items-center justify-end gap-2">
+                                    {row.pin ? (
+                                      <span className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-500/15 border border-emerald-500/30 px-2.5 py-1 text-xs font-black tracking-widest text-emerald-300">
+                                        {row.pin}
+                                      </span>
+                                    ) : row.has_pin ? (
+                                      <span className="inline-flex items-center gap-1.5 rounded-lg bg-white/5 border border-white/10 px-2.5 py-1 text-xs font-bold text-white/50">
+                                        ••••
+                                      </span>
+                                    ) : null}
                                     <button
                                       type="button"
                                       onClick={() => { setEditingPin(row.id); setPinValue(''); }}
