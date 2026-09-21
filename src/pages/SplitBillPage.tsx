@@ -52,7 +52,7 @@ export default function SplitBillPage(){
     <div className="mt-4 space-y-2">{(session.participants||[]).map((p:any)=><div key={p.id} className="flex justify-between border border-theme rounded-xl px-4 py-3 text-sm"><span className="text-theme">{p.name} {p.phone}</span><span className={p.status==='PAID'?'text-emerald-400':'text-theme-secondary'}>{p.status} {p.share_amount||''}</span></div>)}
      {(session.items||[]).map((it:any)=><div key={it.order_item_id} className="flex justify-between border border-theme rounded-xl px-4 py-2 text-xs"><span className="text-theme-secondary">{it.name} x{it.quantity}</span><span className="text-theme">{it.price} — claimed {it.claimed||0}/{it.quantity}</span></div>)}</div>
    </div>}
-   <div className="mt-6 rounded-[28px] border border-theme bg-theme-panel p-6 text-xs text-theme-secondary">Комиссия Waitly на каждого плательщика: cafe 500, restaurant ≤75k 0, &gt;75k 1000, &gt;200k 1500 — via <code>calculate_waitly_fee + build_split_array</code> (SplitPay Payme)</div>
+   <div className="mt-6 rounded-[28px] border border-theme bg-theme-panel p-6 text-xs text-theme-secondary">Комиссия Waitly на каждого плательщика (единый тариф): ≤75k 500, &gt;75k 1000, &gt;200k 1500 — via <code>calculate_waitly_fee + build_split_array</code> (SplitPay Payme)</div>
   </AppShell>
  );
 }
