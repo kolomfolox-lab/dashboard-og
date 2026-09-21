@@ -176,7 +176,8 @@ export default function DashboardPage() {
     const revenueAverage = Number(stats?.revenue_30_days || 0) / 30;
     const ordersToday = Number(stats?.orders_today || lastDay.orders || 0);
     const ordersAverage = Number(stats?.orders_30_days || 0) / 30;
-    const topStaff = stats?.staff_performance?.[0];
+    const _topCandidate = stats?.staff_performance?.[0];
+    const topStaff = _topCandidate && (Number(_topCandidate.revenue || 0) > 0 || Number(_topCandidate.delivered_orders || 0) > 0) ? _topCandidate : null;
 
     return [
       {
