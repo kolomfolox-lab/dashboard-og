@@ -21,6 +21,8 @@ export interface GuestPaymentInitResponse {
   provider: string;
   status: string;
   payment_url: string | null;
+  pay_hint?: { provider: string; service_id: string; account: string; account_field: string } | null;
+  fee_mode?: 'auto_split' | 'ledger';
 }
 
 export const guestPaymentAPI = {
