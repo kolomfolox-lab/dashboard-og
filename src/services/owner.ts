@@ -4,6 +4,8 @@ export interface OwnerTable {
   id: string;
   number: string;
   is_occupied: boolean;
+  table_state?: string;
+  needs_cleaning?: boolean;
   waiter: string | null;
   qr_url: string;
   has_qr: boolean;

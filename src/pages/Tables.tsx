@@ -402,7 +402,7 @@ export default function TablesPage() {
                     <div className="font-semibold text-[var(--text-primary)]">{t('tables_table_label', 'Table {number}').replace('{number}', row.number)}</div>
                   ),
                 },
-                { label: t('tables_col_status', 'Status'), key: 'is_occupied', render: (row) => (row.is_occupied ? t('tables_occupied', 'Occupied') : t('tables_free', 'Free')) },
+                { label: t('tables_col_status', 'Status'), key: 'is_occupied', render: (row) => ((row as OwnerTable).needs_cleaning ? t('tables_needs_cleaning', 'Needs cleaning') : row.is_occupied ? t('tables_occupied', 'Occupied') : t('tables_free', 'Free')) },
                 { label: t('tables_col_waiter', 'Waiter'), key: 'waiter', render: (row) => row.waiter || '\u2014' },
                 {
                   label: t('tables_col_position', 'Position'),
@@ -537,7 +537,9 @@ export default function TablesPage() {
                       ? 'z-50 scale-110 shadow-[0_0_0_2px_#f97360,0_8px_24px_rgba(0,0,0,0.3)]'
                       : 'z-10 shadow-[0_4px_12px_rgba(0,0,0,0.15)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.25)]'
                   } ${
-                    table.is_occupied
+                    table.needs_cleaning
+                      ? 'border-orange-400/60 bg-orange-500/15 text-orange-200'
+                      : table.is_occupied
                       ? 'border-red-400/50 bg-red-500/15 text-red-200'
                       : 'border-[#f97360]/40 bg-[#f97360]/10 text-[#f97360]'
                   }`}
@@ -559,6 +561,12 @@ export default function TablesPage() {
                 className="pointer-events-none absolute rounded-lg border-2 border-dashed border-white/50 bg-white/10"
                 style={{ display: 'none', width: 0, height: 0 }}
               />
+            </div>
+
+            <div className="mt-3 flex flex-wrap items-center gap-3 text-[11px] text-[var(--text-muted)]">
+              <span className="inline-flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-sm border border-[#f97360]/40 bg-[#f97360]/10" /> {t('tables_free', 'Free')}</span>
+              <span className="inline-flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-sm border border-red-400/50 bg-red-500/15" /> {t('tables_occupied', 'Occupied')}</span>
+              <span className="inline-flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-sm border border-orange-400/60 bg-orange-500/15" /> {t('tables_needs_cleaning', 'Needs cleaning')}</span>
             </div>
 
             {unplaced.length > 0 && (
